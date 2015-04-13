@@ -1,4 +1,9 @@
 function clust=CrossCorrImage_global(varargin)
+% BV20150413: goal is to link pixels together that fire together.
+% This way, we could average over soma and process pixels to get better
+% signal to noise.
+%
+% !!!! Still under construction !!!!
 
 input=varargin{1};
 frames=input.Object;
