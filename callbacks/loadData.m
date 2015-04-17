@@ -65,9 +65,9 @@ end
 %%% show mip
 % make sure image is shown at full size
 handles.subplots(1).fig=subplot(121);
-handles.MIP_gamma_val=1;
+%handles.MIP_gamma_val=1;
 MIP=calc_gamma(handles.MIP,handles.MIP_gamma_val);
-handles.subplots(1).h(1)=imshow(MIP,[]);
+handles.subplots(1).h(1)=imshow(MIP,[0 50]);
 hold on
 handles.subplots(1).p(1)=plot(-1,-1,'r-'); % all ROIs
 
@@ -89,7 +89,6 @@ handles.usePoly=0;
 if isfield(session_data,'ROI_definitions') && isfield(session_data.ROI_definitions,'ROI_nr')
     %%% Get ROI definitions if present
     disp('Reloading ROIs')
-    session_data
     handles.ROI=session_data.ROI_definitions;
     handles.ROI_selector=1;
     handles.nROI=length(handles.ROI);

@@ -71,7 +71,8 @@ handles.subplots(1).h(1)=imshow(blank_im);
 % add gamma value buttons
 uicontrol(graphPanel,'Style','pushbutton','units','normalized','position',[.01 .35 .04 .1],'string','^','callback',{@MIP_gamma,'up'})
 uicontrol(graphPanel,'Style','pushbutton','units','normalized','position',[.01 .25 .04 .1],'string','v','callback',{@MIP_gamma,'down'})
-uicontrol(graphPanel,'Style','popupmenu','units','normalized','position',[.01 .1 .08 .01],'string',{'AVG','MAX','STD','CC'},'callback',@select_MIP)
+handles.MIP_selector=uicontrol(graphPanel,'Style','popupmenu','units','normalized','position',[.01 .1 .08 .01],'string',{'AVG','MAX','STD','CC'},'callback',@select_MIP);
+set(handles.MIP_selector,'value',3)
 
 %%% Prepare image placeholder for detail blow-up
 blank_im=zeros(handles.window_size);

@@ -8,7 +8,6 @@ xmax=size(tc,2);
 numFrames=size(tc,3);
 ccimage=zeros(ymax,xmax);
 
-tic
 for y=1+w:ymax-w
     for x=1+w:xmax-w
         % Center pixel
@@ -27,4 +26,3 @@ for y=1+w:ymax-w
         ccimage(y,x) = mean(ccs(:));       % Get the mean cross corr of the local neighborhood
     end
 end
-toc

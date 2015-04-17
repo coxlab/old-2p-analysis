@@ -64,12 +64,12 @@ options.drift_correction.add_mean           =  0;
 
 options.calc_delta_f.method                 =  5;
 
-options.save_data                           =  0;
-options.plot_traces                         =  1;
+options.save_data                           =  1;
+options.plot_traces                         =  0;
 
 
 %%
-for iSess=1%:nSessions
+for iSess=1:nSessions
     session_nr=session_vector(iSess);
     loadName=valid_session_names{iSess};
     short_name=valid_session_names_short{iSess};
@@ -98,16 +98,26 @@ for iSess=1%:nSessions
     %% Extract ROI coordinates and construct time-series for each ROI
     % BV20150409: use motion correction values here to shift ROIs with the
     % movie. 
-    motion_correction=session_data.motion_correction;    
+    if isfield(session_data,'motion_correction')
+        motion_correction=session_data.motion_correction;
+        apply_motion_correction=1;
+    else
+        apply_motion_correction=0;
+    end
     ROIs=session_data.ROI_definitions;
-    nROI=length(ROIs)
+    nROI=length(ROIs);
     tic
     for iFrame=1:nFrames
-        offset=motion_correction.shift_matrix(iFrame,4:5);
+        if apply_motion_correction==1
+            offset=motion_correction.shift_matrix(iFrame,4:5);
+        end
         
         for iROI=1:nROI
-            %ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame);
-            ROI_box=frames(offset(1)+ROIs(iROI).ROI_rect(2):offset(1)+ROIs(iROI).ROI_rect(4),offset(2)+ROIs(iROI).ROI_rect(1):offset(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+            if apply_motion_correction==1
+                ROI_box=frames(offset(1)+ROIs(iROI).ROI_rect(2):offset(1)+ROIs(iROI).ROI_rect(4),offset(2)+ROIs(iROI).ROI_rect(1):offset(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+            else
+                ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+            end
             ROIs(iROI).timeseries_soma(iFrame)=mean(ROI_box(ROIs(iROI).mask_soma==1));
             ROIs(iROI).timeseries_neuropil(iFrame)=mean(ROI_box(ROIs(iROI).mask_neuropil==1));
         end
@@ -126,7 +136,7 @@ for iSess=1%:nSessions
         blank_frames=zscore(mean_lum)<options.neuropil_subtraction.TH_no_data;
         blank_frames(1:find(blank_frames>0,1,'last')+1)=true;
     end    
-    sum(blank_frames)
+    %sum(blank_frames)
     
     %% 
     for iROI=1:nROI % for each ROI

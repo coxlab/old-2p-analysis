@@ -140,7 +140,7 @@ for iFile=1:nFiles
         if W==256
             % don't do it for the bogus files
         else
-            if position_laser-offset>-10000
+            if position_laser(1)-offset>-10000
                 position_laser=position_laser-[offset offset offset 0 0];
             end
         end
@@ -161,6 +161,22 @@ for iFile=1:nFiles
     % 6) FOV => match to MWorks
     data_type=0;
     X=dataMatrix(:,3);Y=dataMatrix(:,4);Z=dataMatrix(:,5);
+    
+    if strcmpi(data_folder,'/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-04-16_AF11')
+        % messed with the coords during these sessions
+        if iFile==3
+            X=dataMatrix(:,3)*0+dataMatrix(1,3);
+            Y=dataMatrix(:,4)*0+dataMatrix(1,4);
+            Z=dataMatrix(:,5)*0+dataMatrix(1,5);
+        end
+        if iFile==4
+            X=dataMatrix(:,3)*0+dataMatrix(1,3);
+            Y=dataMatrix(:,4)*0+dataMatrix(1,4);
+            sel=dataMatrix(:,3)==dataMatrix(1,3);
+            Z=dataMatrix(:,5);
+            Z(sel)=Z(sel)-49;
+        end
+    end
     
     TH_scanning=1000; % if std for x, y, and z coordinate vectors b/w 100-1000, case 2
     TH_stack=80; % if std less than this for x, y, and z, NOT case 4 (std should be greater than 100 for stacks)...
@@ -327,7 +343,7 @@ end
 % For all old files, see if we have an expType field in the codec
 tag_names={event_codec.tagname}';
 code_names=cat(1,event_codec.code);
-exp_tag='exp_type';
+exp_tag='ExpType';
 %exp_tag='stop_it';
 tag_nr=find(ismember(tag_names,exp_tag),1);
 expType=0;
@@ -368,7 +384,7 @@ switch expType
     case 0
         error('No experiment type defined...')
     case 1
-        stim_duration=[2 2]*1e6;
+        stim_duration=[2.5 2]*1e6;
     case 2
         stim_duration=[4 .0167]*1e6;
 end
@@ -381,9 +397,9 @@ TS_matrix=[timestamps [diff(timestamps);0]];
 
 % Find all breaks, longer than stim duration seconds
 %max_stim_time=max([2.1 1])*1e6;
-max_stim_time=max(stim_duration)*1.1;
+max_stim_time=max(stim_duration);
 break_vector=TS_matrix(:,2)>max_stim_time;
-nBreaks=sum(break_vector);
+nBreaks=sum(break_vector)
 
 % These times indicate the idle time between session
 start_break=find(break_vector);
@@ -502,15 +518,15 @@ for iSess=1:nSessions
             stimulus_matrix=[];
             for iEvent=1:nSess_events
                 D=sess_events(iEvent).data; % # of session events
-                timestamp=sess_events(iEvent).time_us;
+                timestamp=double(sess_events(iEvent).time_us);
                 
                 if length(D)==3 % stim
                     D{2}.stim_nr=str2double(D{2}.name);
-                    stimulus_matrix(count,:)=[timestamp 0 D{3}.bit_code stim_counter D{2}.stim_nr D{2}.pos_x D{2}.pos_y];
+                    stimulus_matrix(count,:)=[timestamp 0 double(D{3}.bit_code) stim_counter D{2}.stim_nr D{2}.pos_x D{2}.pos_y];
                     stim_counter=stim_counter+1;
                     count=count+1;
                 elseif length(D)==2 % blank
-                    stimulus_matrix(count,:)=[timestamp 0 D{2}.bit_code -1 -1 -1 -1];
+                    stimulus_matrix(count,:)=[timestamp 0 double(D{2}.bit_code) -1 -1 -1 -1];
                     count=count+1;
                 else
                     % empty event, can occurs at begin and end of MW session file
@@ -590,14 +606,24 @@ for iSess=1:nSessions
                         positions=unique(posMatrix,'rows');
                         nPositions=size(positions,1);
                         if nPositions~=32
-                            error('Not all positions were presented, conversion will be invalid...')
+                            disp('Not all positions were presented, conversion will be done using static reference position matrix')
+                            positions_ref=[-45.5000000000000,-19.5000000000000;-45.5000000000000,-6.50000000000000;-45.5000000000000,6.50000000000000;-45.5000000000000,19.5000000000000;-32.5000000000000,-19.5000000000000;-32.5000000000000,-6.50000000000000;-32.5000000000000,6.50000000000000;-32.5000000000000,19.5000000000000;-19.5000000000000,-19.5000000000000;-19.5000000000000,-6.50000000000000;-19.5000000000000,6.50000000000000;-19.5000000000000,19.5000000000000;-6.50000000000000,-19.5000000000000;-6.50000000000000,-6.50000000000000;-6.50000000000000,6.50000000000000;-6.50000000000000,19.5000000000000;6.50000000000000,-19.5000000000000;6.50000000000000,-6.50000000000000;6.50000000000000,6.50000000000000;6.50000000000000,19.5000000000000;19.5000000000000,-19.5000000000000;19.5000000000000,-6.50000000000000;19.5000000000000,6.50000000000000;19.5000000000000,19.5000000000000;32.5000000000000,-19.5000000000000;32.5000000000000,-6.50000000000000;32.5000000000000,6.50000000000000;32.5000000000000,19.5000000000000;45.5000000000000,-19.5000000000000;45.5000000000000,-6.50000000000000;45.5000000000000,6.50000000000000;45.5000000000000,19.5000000000000];
+                            nPositions=size(positions_ref,1);
+                            position_vector=zeros(nFrames,1);
+                            for iPos=1:nPositions
+                                pos=positions_ref(iPos,:);
+                                indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
+                                position_vector(indices,1)=iPos;
+                            end
+                        else
+                            position_vector=zeros(nFrames,1);
+                            for iPos=1:nPositions
+                                pos=positions(iPos,:);
+                                indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
+                                position_vector(indices,1)=iPos;
+                            end
                         end
-                        position_vector=zeros(nFrames,1);
-                        for iPos=1:nPositions
-                            pos=positions(iPos,:);
-                            indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
-                            position_vector(indices,1)=iPos;
-                        end
+                        
                         stimulus_matrix_ext=[stimulus_matrix_ext position_vector];
                         
                         %% convert combinations of shape and position to 1 number
@@ -636,8 +662,9 @@ for iSess=1:nSessions
                         
                     end
                 catch
-                    disp('Skipped session because of mismatch in bit codes')
-                    die
+                    A=lasterror;
+                    disp(A.message)
+                    %disp('Skipped session because of mismatch in bit codes')                    
                     iSess
                 end
                 %size(stimulus_matrix_ext)
@@ -855,8 +882,7 @@ end
 %%
 if 1
     %%
-    
-    
+        
     %%% Add the frame information only for the sessions we selected and we know are good.
     nGoodSessions=length(data_sessions);
     

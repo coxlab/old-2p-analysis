@@ -140,7 +140,7 @@ for iFile=1:nFiles
         if W==256
             % don't do it for the bogus files
         else
-            if position_laser-offset>-10000
+            if position_laser(1)-offset>-10000
                 position_laser=position_laser-[offset offset offset 0 0];
             end
         end
@@ -161,6 +161,22 @@ for iFile=1:nFiles
     % 6) FOV => match to MWorks
     data_type=0;
     X=dataMatrix(:,3);Y=dataMatrix(:,4);Z=dataMatrix(:,5);
+    
+    if strcmpi(data_folder,'/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-04-16_AF11')
+        % messed with the coords during these sessions
+        if iFile==3
+            X=dataMatrix(:,3)*0+dataMatrix(1,3);
+            Y=dataMatrix(:,4)*0+dataMatrix(1,4);
+            Z=dataMatrix(:,5)*0+dataMatrix(1,5);
+        end
+        if iFile==4
+            X=dataMatrix(:,3)*0+dataMatrix(1,3);
+            Y=dataMatrix(:,4)*0+dataMatrix(1,4);
+            sel=dataMatrix(:,3)==dataMatrix(1,3);
+            Z=dataMatrix(:,5);
+            Z(sel)=Z(sel)-49;
+        end
+    end
     
     TH_scanning=1000; % if std for x, y, and z coordinate vectors b/w 100-1000, case 2
     TH_stack=80; % if std less than this for x, y, and z, NOT case 4 (std should be greater than 100 for stacks)...
@@ -227,8 +243,7 @@ for iFile=1:nFiles
     %%% collect data per file
     file_info(iFile).file_name=file_name;
     file_info(iFile).expType=[];
-    
-    expType_name
+    file_info(iFile).expType_name=[];    
     %file_info(iFile).info=info; % do not save, this is huge and can be
     % rapidly read out from the datafile at any point
     file_info(iFile).state=state;
@@ -360,16 +375,16 @@ else % for older files, find work-around
 end
 
 for iFile=1:nFiles
-    file_info(iFile).expType=expType
+    file_info(iFile).expType=expType;
+    file_info(iFile).expType_name=expType_name;
 end
-die
 
 %% Set experiment specific variables
 switch expType
     case 0
         error('No experiment type defined...')
     case 1
-        stim_duration=[2 2]*1e6;
+        stim_duration=[2.5 2]*1e6;
     case 2
         stim_duration=[4 .0167]*1e6;
 end
@@ -382,9 +397,9 @@ TS_matrix=[timestamps [diff(timestamps);0]];
 
 % Find all breaks, longer than stim duration seconds
 %max_stim_time=max([2.1 1])*1e6;
-max_stim_time=max(stim_duration)*1.1;
+max_stim_time=max(stim_duration);
 break_vector=TS_matrix(:,2)>max_stim_time;
-nBreaks=sum(break_vector);
+nBreaks=sum(break_vector)
 
 % These times indicate the idle time between session
 start_break=find(break_vector);
@@ -477,9 +492,9 @@ end
 % - bitCodes
 
 nSessions=size(matching_matrix,1);
-data_sessions=struct('file_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
+data_sessions=struct('file_name',[],'expType',[],'expType_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
 good_sessions=0;
-for iSess=1:nSessions
+for iSess=3%1:nSessions
     F=file_info(matching_matrix(iSess,1));
     data_type=F.data(end);
     
@@ -637,8 +652,9 @@ for iSess=1:nSessions
                         
                     end
                 catch
-                    disp('Skipped session because of mismatch in bit codes')
-                    die
+                    A=lasterror;
+                    A.msg
+                    disp('Skipped session because of mismatch in bit codes')                    
                     iSess
                 end
                 %size(stimulus_matrix_ext)
@@ -853,7 +869,7 @@ end
 % no way we can recover this type of error with the MWorks-only method (caveat)
 % 2015-04-07_AF11, 2 : 20150407_AF11_002 % some bitCodes were missed during these frames, rest of the trial, bitcodes match. Did manual correction for these
 
-
+%%
 if 1
     %%
     
