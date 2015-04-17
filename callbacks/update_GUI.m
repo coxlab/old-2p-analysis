@@ -10,7 +10,7 @@ set(handles.subplots(1).h(1),'Cdata',MIP);
 %%% Create list names
 if handles.nROI==0
     set(handles.global_properties_table,'String','empty','value',1)
-else
+else    
     %%% Populate listbox with ROI names
     ROI_nr_vector=cat(2,handles.ROI.ROI_nr);
     handles.ROI_names=strcat({'ROI #'},num2str((ROI_nr_vector).')).';

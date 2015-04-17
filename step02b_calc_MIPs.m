@@ -1,9 +1,16 @@
 clear all
 clc
 
+% BV20150416: apply new idea for motion correction:
+% - use frame to frame shift to detect homogeneous blocks (=noisy)
+% - average over blocks and detect big shifts (=reliable)
+% - compute offset between block average and single frames within block (=better reliability then step 01) 
+
 header_script
 
-%%% Use uigetdir for general use
+debugging=0;
+
+%%% Use uigetdir to get data folder
 cd(data_root)
 data_folder=uigetdir(data_root);
 
@@ -13,7 +20,7 @@ nSessions=length(data_sessions);
 
 %%
 t0=clock;
-for iSess=2:nSessions
+for iSess=1:nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
     loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
     load(loadName,'session_data');
@@ -52,16 +59,19 @@ for iSess=2:nSessions
     fprintf('Loading frames took %3.2f seconds.\n',toc)
     
     %% calc projection images
+    tic
+    disp('Computing MIPs...')
     session_data.MIP_avg.data=mean(frames,3);
     session_data.MIP_avg.gamma_val=1;
     session_data.MIP_max.data=max(frames,[],3);
     session_data.MIP_max.gamma_val=1;
     session_data.MIP_std.data=std(frames,[],3);
     session_data.MIP_std.gamma_val=1;
-    if 1 % only if we are not debugging, takes a long time to run
+    if debugging==0 % only if we are not debugging, takes a long time to run
         session_data.MIP_cc_local.data=CrossCorrImage(frames);
         session_data.MIP_cc_local.gamma_val=1;
     end
+    fprintf('Computing MIPs took %3.2f seconds.\n',toc)
     
     if 0
         %% cross-correlation of most active pixels : under construction
@@ -71,7 +81,7 @@ for iSess=2:nSessions
         toc
     end
     
-    if 0
+    if debugging==1
         %%
         subplot(221)
         imshow(calc_gamma(session_data.MIP_avg.data,session_data.MIP_avg.gamma_val),[])
@@ -81,11 +91,11 @@ for iSess=2:nSessions
         imshow(calc_gamma(session_data.MIP_std.data,session_data.MIP_std.gamma_val),[])
         %subplot(224)
         %imshow(calc_gamma(session_data.MIP_cc_local.data,session_data.MIP_cc_local.gamma_val),[])
-        colormap(green)
+        %colormap(green)
     end
     %session_data.frames=frames;
     
-    if 1
+    if debugging==0
         %%
         [save_folder, save_name]=fileparts(session_data.file_name);
         saveName=fullfile(save_folder,'data_analysis',[save_name '.mat'])

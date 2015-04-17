@@ -227,7 +227,8 @@ for iFile=1:nFiles
     %%% collect data per file
     file_info(iFile).file_name=file_name;
     file_info(iFile).expType=[];
-    file_info(iFile).expType_name=[];    
+    
+    expType_name
     %file_info(iFile).info=info; % do not save, this is huge and can be
     % rapidly read out from the datafile at any point
     file_info(iFile).state=state;
@@ -359,9 +360,9 @@ else % for older files, find work-around
 end
 
 for iFile=1:nFiles
-    file_info(iFile).expType=expType;
-    file_info(iFile).expType_name=expType_name;
+    file_info(iFile).expType=expType
 end
+die
 
 %% Set experiment specific variables
 switch expType
@@ -476,7 +477,7 @@ end
 % - bitCodes
 
 nSessions=size(matching_matrix,1);
-data_sessions=struct('file_name',[],'expType',[],'expType_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
+data_sessions=struct('file_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
 good_sessions=0;
 for iSess=1:nSessions
     F=file_info(matching_matrix(iSess,1));
@@ -852,7 +853,7 @@ end
 % no way we can recover this type of error with the MWorks-only method (caveat)
 % 2015-04-07_AF11, 2 : 20150407_AF11_002 % some bitCodes were missed during these frames, rest of the trial, bitcodes match. Did manual correction for these
 
-%%
+
 if 1
     %%
     

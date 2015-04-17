@@ -17,6 +17,7 @@ end
 
 nFrames=session_data.data(2);
 session_data.nFrames=nFrames;
+
 if isfield(session_data,'MIP_std')
     %%% Get MIP projections if present
     disp('Reloading std MIP')
@@ -88,6 +89,7 @@ handles.usePoly=0;
 if isfield(session_data,'ROI_definitions') && isfield(session_data.ROI_definitions,'ROI_nr')
     %%% Get ROI definitions if present
     disp('Reloading ROIs')
+    session_data
     handles.ROI=session_data.ROI_definitions;
     handles.ROI_selector=1;
     handles.nROI=length(handles.ROI);
