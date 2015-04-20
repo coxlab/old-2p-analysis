@@ -4,6 +4,7 @@ handles=guidata(H);
 
 %%% Update MIP
 MIP=calc_gamma(handles.MIP_raw,handles.MIP_gamma_val);
+MIP(MIP(:)<0)=0;
 set(handles.subplots(1).h(1),'Cdata',MIP);
 
 set(handles.MIP_selector,'value',handles.MIP_type)
