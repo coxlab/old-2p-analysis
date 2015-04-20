@@ -198,7 +198,7 @@ end
 
 %folder_selector=2
 % cluster 1: c2shape? c16shape? c19?pos c21pos c23pos? 32?pos
-ROI_nr=27
+ROI_nr=4
 
 %ROI_nr_vector=cat(1,session_data.ROI_definitions.ROI_nr);
 

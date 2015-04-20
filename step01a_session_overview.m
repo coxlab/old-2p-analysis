@@ -140,7 +140,7 @@ for iFile=1:nFiles
         if W==256
             % don't do it for the bogus files
         else
-            if position_laser-offset>-10000
+            if position_laser(1)-offset>-10000
                 position_laser=position_laser-[offset offset offset 0 0];
             end
         end
@@ -161,6 +161,22 @@ for iFile=1:nFiles
     % 6) FOV => match to MWorks
     data_type=0;
     X=dataMatrix(:,3);Y=dataMatrix(:,4);Z=dataMatrix(:,5);
+    
+    if strcmpi(data_folder,'/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-04-16_AF11')
+        % messed with the coords during these sessions
+        if iFile==3
+            X=dataMatrix(:,3)*0+dataMatrix(1,3);
+            Y=dataMatrix(:,4)*0+dataMatrix(1,4);
+            Z=dataMatrix(:,5)*0+dataMatrix(1,5);
+        end
+        if iFile==4
+            X=dataMatrix(:,3)*0+dataMatrix(1,3);
+            Y=dataMatrix(:,4)*0+dataMatrix(1,4);
+            sel=dataMatrix(:,3)==dataMatrix(1,3);
+            Z=dataMatrix(:,5);
+            Z(sel)=Z(sel)-49;
+        end
+    end
     
     TH_scanning=1000; % if std for x, y, and z coordinate vectors b/w 100-1000, case 2
     TH_stack=80; % if std less than this for x, y, and z, NOT case 4 (std should be greater than 100 for stacks)...
@@ -226,6 +242,8 @@ for iFile=1:nFiles
     
     %%% collect data per file
     file_info(iFile).file_name=file_name;
+    file_info(iFile).expType=[];
+    file_info(iFile).expType_name=[];    
     %file_info(iFile).info=info; % do not save, this is huge and can be
     % rapidly read out from the datafile at any point
     file_info(iFile).state=state;
@@ -283,6 +301,8 @@ SI_session_allocation(SI_session_allocation(:,4)<TH_session_duration,:)=[];
 
 
 %% Read MWorks file and extract events
+tic
+disp('Reading MWK file...')
 A=getCodecs(mwk_file_name);
 event_codec=A.codec;
 
@@ -290,16 +310,96 @@ code_selection=8; % collect stim_display_update events
 MW_events=getEvents(mwk_file_name, code_selection);
 nEvents=length(MW_events);
 
+fprintf('Loading MWorks events took %3.2f seconds.\n',toc)
+
+if 0 % testing codes
+    %%
+    for iCodec=1:length(event_codec)
+        disp([num2str(event_codec(iCodec).code) ': ' event_codec(iCodec).tagname])
+    end
+    
+    code_selection=66; % collect stim_display_update events
+    MW_events=getEvents(mwk_file_name, code_selection);
+    nEvents=length(MW_events);
+    
+    %%
+    for iEvent=1:nEvents
+        disp(double([(MW_events(iEvent).time_us-MW_events(1).time_us)/1e6 MW_events(iEvent).data]))
+    end
+    
+end
+
+%% BV20150416: Define experiment type
+% Right now, we have 2 possible experimental protocols, but this will
+% increase with time. We need a unambiguous methods to label each. This
+% expType variable will determine how MWorks events are processed.
+% Perhaps we could add a variable expType to each protocol and read from
+% the codec which field it got assigned to (this may vary depending on
+% number of variables). Then read it out.
+% Since we cannot change MWorks protocol and keep streaming to same file,
+% assume 1 expType per file. Different protocols should then have different
+% folders!
+
+% For all old files, see if we have an expType field in the codec
+tag_names={event_codec.tagname}';
+code_names=cat(1,event_codec.code);
+exp_tag='ExpType';
+%exp_tag='stop_it';
+tag_nr=find(ismember(tag_names,exp_tag),1);
+expType=0;
+expType_name='';
+if ~isempty(tag_nr) % if expType tag is present, just read it out
+    code_selection=code_names(tag_nr);
+    MW_events=getEvents(mwk_file_name, code_selection);
+    nEvents=length(MW_events);
+    type_vector=cat(1,MW_events.data);
+    expType=mode(type_vector);
+else % for older files, find work-around
+    %%% Find tags specific to a certain experiment =risky
+    tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
+    if ~isempty(tag_nr)
+        expType=1; % RSVP
+        expType_name='RSVP';
+    end
+    
+    %%% Find tags specific to a certain experiment =risky
+    tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
+    if ~isempty(tag_nr)
+        expType=2; % Retinomapping
+        expType_name='Retinomapping';
+    end
+    
+    if expType==0
+        disp('Unable to determine experiment type, how do you wish to proceed?')
+    end
+end
+
+for iFile=1:nFiles
+    file_info(iFile).expType=expType;
+    file_info(iFile).expType_name=expType_name;
+end
+
+%% Set experiment specific variables
+switch expType
+    case 0
+        error('No experiment type defined...')
+    case 1
+        stim_duration=[2.5 2]*1e6;
+    case 2
+        stim_duration=[4 .0167]*1e6;
+end
+
 %% Get timestamps
 timestamps=double(cat(1,MW_events.time_us));
 timestamps=timestamps-timestamps(1);
 % Build timestamp matrix with starttime and duration of events
 TS_matrix=[timestamps [diff(timestamps);0]];
 
-% Find all breaks, longer than 5 seconds
-max_stim_time=max([2.1 1])*1e6;
+% Find all breaks, longer than stim duration seconds
+%max_stim_time=max([2.1 1])*1e6;
+max_stim_time=max(stim_duration);
 break_vector=TS_matrix(:,2)>max_stim_time;
-nBreaks=sum(break_vector);
+nBreaks=sum(break_vector)
 
 % These times indicate the idle time between session
 start_break=find(break_vector);
@@ -392,8 +492,8 @@ end
 % - bitCodes
 
 nSessions=size(matching_matrix,1);
-data_sessions=struct('file_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
-good_sessions=1;
+data_sessions=struct('file_name',[],'expType',[],'expType_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
+good_sessions=0;
 for iSess=1:nSessions
     F=file_info(matching_matrix(iSess,1));
     data_type=F.data(end);
@@ -403,107 +503,228 @@ for iSess=1:nSessions
     frame_rate=F.data(5);
     bitCodes_scanimage=F.dataMatrix(:,1:2);
     
-    %% MW
-    sess_events=MW_events(MW_session_times_matched(iSess,8):MW_session_times_matched(iSess,9));
-    T=double(cat(1,sess_events.time_us));
-    % first stim is object and was triggered by the first SI frame so
-    % appears at second frame
-    
-    nSess_events=length(sess_events);
-    count=1;
-    stim_counter=1;
-    stimulus_matrix=[];
-    for iEvent=1:nSess_events
-        D=sess_events(iEvent).data; % # of session events
-        timestamp=sess_events(iEvent).time_us;
-        
-        if length(D)==3 % stim
-            D{2}.stim_nr=str2double(D{2}.name);
-            stimulus_matrix(count,:)=[timestamp 0 D{3}.bit_code stim_counter D{2}.stim_nr D{2}.pos_x D{2}.pos_y];
-            stim_counter=stim_counter+1;
-            count=count+1;
-        elseif length(D)==2 % blank
-            stimulus_matrix(count,:)=[timestamp 0 D{2}.bit_code -1 -1 -1 -1];
-            count=count+1;
-        else
-            % empty event, can occurs at begin and end of MW session file
-        end
-    end
-    
-    % add stimulus duration
-    stimulus_matrix(:,2)=[diff(stimulus_matrix(:,1));0];
-    
-    %% link SI and MW events
-    if data_type==6 % default FOV
-        try
-            cur_bitCode=-1;
-            stim_properties=[];
-            stim_counter=0;
-            stimulus_matrix_ext=zeros(nFrames,7);
+    switch expType
+        case 1
+            %% MW: collect stimulus information
+            sess_events=MW_events(MW_session_times_matched(iSess,8):MW_session_times_matched(iSess,9));
+            T=double(cat(1,sess_events.time_us));
+            % first stim was triggered by the end of the first SI frame so
+            % appears at second frame. first frame is always free of stimulus, plus
+            % it has an artifact of the delayed shutter opening => ignore
             
-            % frame #
-            % MW/SI bitcode
-            % MW/SI bitcode
-            % trial number
-            % stimulus # (0-11)
-            % x position
-            % y position
-            % position # (1-32)
-            % position # * stim # (1-384)
-            
-            stimulus_matrix_ext(1,:)=[1 zeros(1,6)-1]; % first frame is always blank, but has no bitcode
-            glitches=0;
-            
-            for iFrame=2:nFrames
-                % step through all row of the scan image bitcodes
-                if cur_bitCode==bitCodes_scanimage(iFrame,2);
-                    % do nothing
-                else
-                    % if code changes copy next row of stimulus_matrix
-                    cur_bitCode=bitCodes_scanimage(iFrame,2);
+            nSess_events=length(sess_events);
+            count=1;
+            stim_counter=1;
+            stimulus_matrix=[];
+            for iEvent=1:nSess_events
+                D=sess_events(iEvent).data; % # of session events
+                timestamp=double(sess_events(iEvent).time_us);
+                
+                if length(D)==3 % stim
+                    D{2}.stim_nr=str2double(D{2}.name);
+                    stimulus_matrix(count,:)=[timestamp 0 double(D{3}.bit_code) stim_counter D{2}.stim_nr D{2}.pos_x D{2}.pos_y];
                     stim_counter=stim_counter+1;
-                    if stim_counter>size(stimulus_matrix,1)
-                        disp('ignoring end blank')
-                        stim_properties=zeros(1,5)-1;
-                    else
-                        stim_properties=stimulus_matrix(stim_counter+glitches,3:end);
+                    count=count+1;
+                elseif length(D)==2 % blank
+                    stimulus_matrix(count,:)=[timestamp 0 double(D{2}.bit_code) -1 -1 -1 -1];
+                    count=count+1;
+                else
+                    % empty event, can occurs at begin and end of MW session file
+                end
+            end
+            
+            % add stimulus duration
+            stimulus_matrix(:,2)=[diff(stimulus_matrix(:,1));0];
+            
+            %% link SI and MW events
+            if data_type==6 % default FOV
+                try
+                    cur_bitCode=-1;
+                    stim_properties=[];
+                    stim_counter=0;
+                    stimulus_matrix_ext=zeros(nFrames,7);
+                    
+                    % frame #
+                    % MW/SI bitcode
+                    % MW/SI bitcode
+                    % trial number
+                    % stimulus # (0-11)
+                    % x position
+                    % y position
+                    % position # (1-32)
+                    % position # * stim # (1-384)
+                    
+                    stimulus_matrix_ext(1,:)=[1 zeros(1,6)-1]; % first frame is always blank, but has no bitcode
+                    glitches=0;
+                    
+                    for iFrame=2:nFrames
+                        % step through all row of the scan image bitcodes
+                        if cur_bitCode==bitCodes_scanimage(iFrame,2);
+                            % do nothing
+                        else
+                            % if code changes copy next row of stimulus_matrix
+                            cur_bitCode=bitCodes_scanimage(iFrame,2);
+                            stim_counter=stim_counter+1;
+                            if stim_counter>size(stimulus_matrix,1)
+                                disp('ignoring end blank')
+                                stim_properties=zeros(1,5)-1;
+                            else
+                                stim_properties=stimulus_matrix(stim_counter+glitches,3:end);
+                            end
+                            
+                            if cur_bitCode==stim_properties(1)
+                                % safe
+                            else
+                                glitches=glitches+1;
+                                % turns out we loose frames on the SI side sometimes, I
+                                % guess we should throw the corresponding MW stimulus
+                                % presentations out
+                                %iSess
+                                %cur_bitCode
+                                %stimulus_matrix(stim_counter+1,2)
+                                stim_properties=stimulus_matrix(stim_counter+glitches,3:end);
+                            end
+                        end
+                        
+                        stimulus_matrix_ext(iFrame,1:7)=[iFrame cur_bitCode stim_properties];
+                    end
+                    %glitches
+                    
+                    D=diff(stimulus_matrix_ext(:,2:3),[],2);
+                    
+                    %%% try to cut the faulty part out
+                    %stimulus_matrix_ext(diff(stimulus_matrix_ext(:,2:3),[],2)~=0,:)=[];
+                    
+                    if any(D)==1
+                        error_row=find(D~=0,1,'first')
+                        die
+                        %stimulus_matrix_ext(:,2:3)
+                        %error('mismatch in bitcodes, use alternative method')
+                    else % skip this session
+                        %% convert stim position into single number 1-32 % assumes all positions were presented
+                        posMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,6:7);
+                        positions=unique(posMatrix,'rows');
+                        nPositions=size(positions,1);
+                        if nPositions~=32
+                            disp('Not all positions were presented, conversion will be done using static reference position matrix')
+                            positions_ref=[-45.5000000000000,-19.5000000000000;-45.5000000000000,-6.50000000000000;-45.5000000000000,6.50000000000000;-45.5000000000000,19.5000000000000;-32.5000000000000,-19.5000000000000;-32.5000000000000,-6.50000000000000;-32.5000000000000,6.50000000000000;-32.5000000000000,19.5000000000000;-19.5000000000000,-19.5000000000000;-19.5000000000000,-6.50000000000000;-19.5000000000000,6.50000000000000;-19.5000000000000,19.5000000000000;-6.50000000000000,-19.5000000000000;-6.50000000000000,-6.50000000000000;-6.50000000000000,6.50000000000000;-6.50000000000000,19.5000000000000;6.50000000000000,-19.5000000000000;6.50000000000000,-6.50000000000000;6.50000000000000,6.50000000000000;6.50000000000000,19.5000000000000;19.5000000000000,-19.5000000000000;19.5000000000000,-6.50000000000000;19.5000000000000,6.50000000000000;19.5000000000000,19.5000000000000;32.5000000000000,-19.5000000000000;32.5000000000000,-6.50000000000000;32.5000000000000,6.50000000000000;32.5000000000000,19.5000000000000;45.5000000000000,-19.5000000000000;45.5000000000000,-6.50000000000000;45.5000000000000,6.50000000000000;45.5000000000000,19.5000000000000];
+                            nPositions=size(positions_ref,1);
+                            position_vector=zeros(nFrames,1);
+                            for iPos=1:nPositions
+                                pos=positions_ref(iPos,:);
+                                indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
+                                position_vector(indices,1)=iPos;
+                            end
+                        else
+                            position_vector=zeros(nFrames,1);
+                            for iPos=1:nPositions
+                                pos=positions(iPos,:);
+                                indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
+                                position_vector(indices,1)=iPos;
+                            end
+                        end
+                        
+                        stimulus_matrix_ext=[stimulus_matrix_ext position_vector];
+                        
+                        %% convert combinations of shape and position to 1 number
+                        % construct a matrix with all possible combinations of position
+                        % and shape 12*32=384
+                        shape_vector=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,5);
+                        shapes=unique(shape_vector);
+                        cond_matrix_full=[];
+                        for iShape=1:length(shapes)
+                            shape_nr=shapes(iShape);
+                            cond_matrix_full=cat(1,cond_matrix_full,[repmat(shape_nr,size(positions,1),1) positions]);
+                        end
+                        
+                        condition_vector=zeros(nFrames,1);
+                        for iCond=1:size(cond_matrix_full,1)
+                            condition=cond_matrix_full(iCond,:);
+                            indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,6)==condition(2)&stimulus_matrix_ext(:,7)==condition(3));
+                            condition_vector(indices,1)=iCond;
+                        end
+                        %%
+                        %condMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,[5 8]);
+                        %conditions=unique(condMatrix,'rows');
+                        %nConditions=length(conditions);
+                        %condition_vector=zeros(nFrames,1);
+                        %for iCond=1:nConditions
+                        %    condition=conditions(iCond,:);
+                        %    indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,8)==condition(2));
+                        %    condition_vector(indices,1)=iCond;
+                        %end
+                        stimulus_matrix_ext=[stimulus_matrix_ext condition_vector];
+                        
+                        file_info(matching_matrix(iSess,1)).stimulus_matrix_ext=stimulus_matrix_ext;
+                        good_sessions=good_sessions+1;
+                        data_sessions(good_sessions)=file_info(matching_matrix(iSess,1));
+                        
+                        
+                    end
+                catch
+                    A=lasterror;
+                    disp(A.message)
+                    %disp('Skipped session because of mismatch in bit codes')                    
+                    iSess
+                end
+                %size(stimulus_matrix_ext)
+                
+                
+                if 0
+                    %% Match to MWorks only based bitcodes
+                    
+                    %%% Create bitCode vector matching the frames by repeating each
+                    %%% bitCode a given number of frames based on time between MWorks
+                    %%% display update events and frame rate of SI
+                    number_of_frames_per_bitCode=round((stimulus_matrix(:,2)/1e6)*frame_rate);
+                    bitCode_alt=-1;
+                    for iBitCode=1:length(number_of_frames_per_bitCode)
+                        new=repmat(stimulus_matrix(iBitCode,3),number_of_frames_per_bitCode(iBitCode),1);
+                        bitCode_alt=cat(1,bitCode_alt,new);
                     end
                     
-                    if cur_bitCode==stim_properties(1)
-                        % safe
+                    %%% do check
+                    if length(bitCode_alt)>nFrames
+                        bitCode_alt=bitCode_alt(1:nFrames);
+                        check=sum(abs(diff([stimulus_matrix_ext(:,2:3) bitCode_alt],[],2)));
+                    elseif length(bitCode_alt)<nFrames
+                        check=sum(abs(diff([stimulus_matrix_ext(1:length(bitCode_alt),2:3) bitCode_alt],[],2)));
+                    elseif length(bitCode_alt)>size(stimulus_matrix_ext,1)
+                        check=sum(abs(diff([stimulus_matrix_ext(:,2:3) bitCode_alt(1:size(stimulus_matrix_ext,1))],[],2)));
                     else
-                        glitches=glitches+1;
-                        % turns out we loose frames on the SI side sometimes, I
-                        % guess we should throw the corresponding MW stimulus
-                        % presentations out
-                        %iSess
-                        %cur_bitCode
-                        %stimulus_matrix(stim_counter+1,2)
-                        stim_properties=stimulus_matrix(stim_counter+glitches,3:end);
+                        check=sum(abs(diff([stimulus_matrix_ext(:,2:3) bitCode_alt],[],2)));
+                    end
+                    check
+                    if any(check)
+                        error('alternative method proved to be invalid for this session...')
                     end
                 end
+            elseif data_type==1 % bogus flyback does not have data, so we rely soly on MWorks to identify stimulus frames
+                % be careful that no other type of data falls into this category!
+                %%% Match to MWorks only based bitcodes
                 
-                stimulus_matrix_ext(iFrame,1:7)=[iFrame cur_bitCode stim_properties];
-            end
-            %glitches
-            
-            D=diff(stimulus_matrix_ext(:,2:3),[],2);
-            
-            %%% try to cut the faulty part out
-            stimulus_matrix_ext(diff(stimulus_matrix_ext(:,2:3),[],2)~=0,:)=[];
-            
-            if any(D)==1
-                error_row=find(D~=0,1,'first')
-                %stimulus_matrix_ext(:,2:3)
-                %error('mismatch in bitcodes, use alternative method')
-            else % skip this session
-                %% convert stim position into single number 1-32 % assumes all positions were presented
+                %%% Create bitCode vector matching the frames by repeating each
+                %%% bitCode a given number of frames based on time between MWorks
+                %%% display update events and frame rate of SI
+                number_of_frames_per_bitCode=round((stimulus_matrix(:,2)/1e6)*frame_rate);
+                stimulus_matrix_ext=zeros(1,7)-1;
+                for iBitCode=1:length(number_of_frames_per_bitCode)
+                    new=repmat([0 0 stimulus_matrix(iBitCode,3:end)],number_of_frames_per_bitCode(iBitCode),1);
+                    stimulus_matrix_ext=cat(1,stimulus_matrix_ext,new);
+                end
+                if size(stimulus_matrix_ext,1)>nFrames
+                    stimulus_matrix_ext=stimulus_matrix_ext(1:nFrames,:);
+                elseif size(stimulus_matrix_ext,1)<nFrames
+                    %
+                end
+                nFrames=size(stimulus_matrix_ext,1);
+                stimulus_matrix_ext(:,1)=1:nFrames;
+                
+                
+                %%% convert stim position into single number 1-32
                 posMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,6:7);
                 positions=unique(posMatrix,'rows');
                 nPositions=size(positions,1);
-                if nPositions~=32
-                    error('Not all positions were presented, conversion will be invalid...')
-                end
                 position_vector=zeros(nFrames,1);
                 for iPos=1:nPositions
                     pos=positions(iPos,:);
@@ -512,128 +733,144 @@ for iSess=1:nSessions
                 end
                 stimulus_matrix_ext=[stimulus_matrix_ext position_vector];
                 
-                %% convert combinations of shape and position to 1 number
-                % construct a matrix with all possible combinations of position
-                % and shape 12*32=384
-                shape_vector=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,5);
-                shapes=unique(shape_vector);
-                cond_matrix_full=[];
-                for iShape=1:length(shapes)
-                    shape_nr=shapes(iShape);
-                    cond_matrix_full=cat(1,cond_matrix_full,[repmat(shape_nr,size(positions,1),1) positions]);
-                end
-                
+                %%% convert combinations of shape and position to 1 number
+                condMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,[5 8]);
+                conditions=unique(condMatrix,'rows');
+                nConditions=length(conditions);
                 condition_vector=zeros(nFrames,1);
-                for iCond=1:size(cond_matrix_full,1)
-                    condition=cond_matrix_full(iCond,:);
-                    indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,6)==condition(2)&stimulus_matrix_ext(:,7)==condition(3));
+                for iCond=1:nConditions
+                    condition=conditions(iCond,:);
+                    indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,8)==condition(2));
                     condition_vector(indices,1)=iCond;
                 end
-                %%
-                %condMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,[5 8]);
-                %conditions=unique(condMatrix,'rows');
-                %nConditions=length(conditions);
-                %condition_vector=zeros(nFrames,1);
-                %for iCond=1:nConditions
-                %    condition=conditions(iCond,:);
-                %    indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,8)==condition(2));
-                %    condition_vector(indices,1)=iCond;
-                %end
                 stimulus_matrix_ext=[stimulus_matrix_ext condition_vector];
                 
+                %%% Store data for later use
                 file_info(matching_matrix(iSess,1)).stimulus_matrix_ext=stimulus_matrix_ext;
-                data_sessions(good_sessions)=file_info(matching_matrix(iSess,1));
                 good_sessions=good_sessions+1;
+                data_sessions(good_sessions)=file_info(matching_matrix(iSess,1));
+            end
+        case 2
+            disp('Parsing MWorks event data as RetinoMapping experiment')
+            
+            %%% Optimizations in MW protocol:
+            % - include expType variable
+            % - rotate bar to mark condition
+            % - have frame trigger before each repeat of the sweep
+            % - have more repeats
+            % - have motion direction update every time so it is in
+            % stimupdate event struct, so we don't have to query other
+            % event codes.
+                        
+            %% MW: collect stimulus information
+            sess_events=MW_events(MW_session_times_matched(iSess,8):MW_session_times_matched(iSess,9));
+            T=double(cat(1,sess_events.time_us));
+            % first stim was triggered by the end of the first SI frame so
+            % appears at second frame. first frame is always free of stimulus, plus
+            % it has an artifact of the delayed shutter opening => ignore
+            
+            nSess_events=length(sess_events);
+            count=1;
+            stim_counter=1;
+            stimulus_matrix=[];
+            last_pos_x=sess_events(1).data{2}.pos_x;
+            last_pos_y=sess_events(1).data{2}.pos_y;
+            for iEvent=1:nSess_events
+                D=sess_events(iEvent).data; % # of session events
+                timestamp=sess_events(iEvent).time_us;
                 
+                if length(D)==3 % stim
+                    %D{2}.stim_nr=str2double(D{2}.name);
+                    
+                    % crude way to get information about trialtype
+                    dX=D{2}.pos_x-last_pos_x;
+                    dY=D{2}.pos_y-last_pos_y;
+                                        
+                    if D{2}.size_x<D{2}.size_y % vertical
+                        if dX>0 % moving periphery to center
+                            condition_nr=1;
+                        else
+                            condition_nr=2;
+                        end
+                    else % horizontal
+                        if dY>0 % moving up
+                            condition_nr=3;
+                        else
+                            condition_nr=4;
+                        end
+                    end
+                    if dX==0&&dY==0
+                        condition_nr=-1;
+                    end
+                    last_pos_x=D{2}.pos_x;
+                    last_pos_y=D{2}.pos_y;
+                    
+                    %%% ideally we want orientation and direction info in
+                    %%% the stim update event struct
+                    %%% Rotation could be used directly to change bar and
+                    %%% signal the vertical/horizontal condition. 
+                    %%% Direction would then signal dX/dY
+                    %%% Use isfield(D{2},'rotation') to check if variable
+                    %%% is defined to distinguish between old and new format
+                    
+                    stimulus_matrix(count,:)=[timestamp 0 D{3}.bit_code stim_counter condition_nr D{2}.pos_x D{2}.pos_y];
+                    stim_counter=stim_counter+1;
+                    count=count+1;
+                elseif length(D)==2 % blank, does not occur here
+                    stimulus_matrix(count,:)=[timestamp 0 D{2}.bit_code -1 -1 -1 -1];
+                    count=count+1;
+                else
+                    % empty event, can occurs at begin and end of MW session file
+                end
             end
-        catch
-            disp('Skipped session because of mismatch in bit codes')
-            iSess
-        end
-        %size(stimulus_matrix_ext)
-        
-        
-        if 0
-            %% Match to MWorks only based bitcodes
             
-            %%% Create bitCode vector matching the frames by repeating each
-            %%% bitCode a given number of frames based on time between MWorks
-            %%% display update events and frame rate of SI
-            number_of_frames_per_bitCode=round((stimulus_matrix(:,2)/1e6)*frame_rate);
-            bitCode_alt=-1;
-            for iBitCode=1:length(number_of_frames_per_bitCode)
-                new=repmat(stimulus_matrix(iBitCode,3),number_of_frames_per_bitCode(iBitCode),1);
-                bitCode_alt=cat(1,bitCode_alt,new);
+            if 0
+                %%
+                clf
+                hold on
+                plot(T,stimulus_matrix(:,6),'b.')
+                plot(T,stimulus_matrix(:,7),'r.')
             end
             
-            %%% do check
-            if length(bitCode_alt)>nFrames
-                bitCode_alt=bitCode_alt(1:nFrames);
-                check=sum(abs(diff([stimulus_matrix_ext(:,2:3) bitCode_alt],[],2)));
-            elseif length(bitCode_alt)<nFrames
-                check=sum(abs(diff([stimulus_matrix_ext(1:length(bitCode_alt),2:3) bitCode_alt],[],2)));
-            elseif length(bitCode_alt)>size(stimulus_matrix_ext,1)
-                check=sum(abs(diff([stimulus_matrix_ext(:,2:3) bitCode_alt(1:size(stimulus_matrix_ext,1))],[],2)));
-            else
-                check=sum(abs(diff([stimulus_matrix_ext(:,2:3) bitCode_alt],[],2)));
+            
+            %% Now create a matrix with one row per SCIM frame and position of the stimulus per row
+            % We will have to approximate this position, since the stimulus
+            % moves a certain distance (frames*tempFreq=20*0.1=2degrees per scanframe)
+            stimulus_matrix_ext=zeros(nFrames,7)-1;
+            
+            T_MW=(stimulus_matrix(:,1)-stimulus_matrix(1,1))/1e6; % construct timeline for mworks frames (60Hz)
+            T_SC=(0:nFrames)/frame_rate; % construct timeline of SCIM frames
+            
+            for iFrame=1:nFrames
+                frame_time=T_SC(iFrame);
+                
+                % find row in MW event matrix that is the first after the start of the SCIM frame
+                row_index=find(T_MW>frame_time,1,'first');                
+                
+                % check time difference
+                time_diff=T_MW(row_index)-frame_time;
+                if time_diff>(1/frame_rate)*0.5 % blank
+                    stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:4) -1 0 0];
+                else 
+                    stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:end)];
+                end
+                
+                %stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:end)];
             end
-            check
-            if any(check)
-                error('alternative method proved to be invalid for this session...')
+             
+            if 0
+                %%
+                clf
+                plot(stimulus_matrix_ext(:,1),stimulus_matrix_ext(:,2),'ro-')
             end
-        end
-    elseif data_type==1 % bogus flyback does not have data, so we rely soly on MWorks to identify stimulus frames
-        % be careful that no other type of data falls into this category!
-        %%% Match to MWorks only based bitcodes
-        
-        %%% Create bitCode vector matching the frames by repeating each
-        %%% bitCode a given number of frames based on time between MWorks
-        %%% display update events and frame rate of SI
-        number_of_frames_per_bitCode=round((stimulus_matrix(:,2)/1e6)*frame_rate);
-        stimulus_matrix_ext=zeros(1,7)-1;
-        for iBitCode=1:length(number_of_frames_per_bitCode)
-            new=repmat([0 0 stimulus_matrix(iBitCode,3:end)],number_of_frames_per_bitCode(iBitCode),1);
-            stimulus_matrix_ext=cat(1,stimulus_matrix_ext,new);
-        end
-        if size(stimulus_matrix_ext,1)>nFrames
-            stimulus_matrix_ext=stimulus_matrix_ext(1:nFrames,:);
-        elseif size(stimulus_matrix_ext,1)<nFrames
-            %
-        end
-        nFrames=size(stimulus_matrix_ext,1);
-        stimulus_matrix_ext(:,1)=1:nFrames;
-        
-        
-        %%% convert stim position into single number 1-32
-        posMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,6:7);
-        positions=unique(posMatrix,'rows');
-        nPositions=size(positions,1);
-        position_vector=zeros(nFrames,1);
-        for iPos=1:nPositions
-            pos=positions(iPos,:);
-            indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
-            position_vector(indices,1)=iPos;
-        end
-        stimulus_matrix_ext=[stimulus_matrix_ext position_vector];
-        
-        %%% convert combinations of shape and position to 1 number
-        condMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,[5 8]);
-        conditions=unique(condMatrix,'rows');
-        nConditions=length(conditions);
-        condition_vector=zeros(nFrames,1);
-        for iCond=1:nConditions
-            condition=conditions(iCond,:);
-            indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,8)==condition(2));
-            condition_vector(indices,1)=iCond;
-        end
-        stimulus_matrix_ext=[stimulus_matrix_ext condition_vector];
-        
-        %%% Store data for later use
-        file_info(matching_matrix(iSess,1)).stimulus_matrix_ext=stimulus_matrix_ext;
-        data_sessions(good_sessions)=file_info(matching_matrix(iSess,1));
-        good_sessions=good_sessions+1;
+            
+            %%
+            file_info(matching_matrix(iSess,1)).stimulus_matrix_ext=stimulus_matrix_ext;
+            good_sessions=good_sessions+1;
+            data_sessions(good_sessions)=file_info(matching_matrix(iSess,1));
     end
 end
+
 
 
 %%% Know bad sessions
@@ -642,95 +879,32 @@ end
 % no way we can recover this type of error with the MWorks-only method (caveat)
 % 2015-04-07_AF11, 2 : 20150407_AF11_002 % some bitCodes were missed during these frames, rest of the trial, bitcodes match. Did manual correction for these
 
-
 %%
-
-%%% Add the frame information only for the sessions we selected and we know are good.
-nGoodSessions=length(data_sessions);
-
-save_folder=fileparts(data_sessions(1).file_name);
-
-saveName=fullfile(save_folder,'data_analysis','session_overview.mat');
-savec(saveName)
-save(saveName,'data_sessions')
-
-
-%% Save individual sessions: will destroy existing files e.g. motion correction, ROI_definitions 
-t0=clock;
-for iSess=1:nGoodSessions
-    session_data=data_sessions(iSess);
-    [save_folder, save_name]=fileparts(session_data.file_name);
-    saveName=fullfile(save_folder,'data_analysis',[save_name '.mat'])
-    save(saveName,'session_data')
-    progress(iSess,nGoodSessions,t0)
+if 1
+    %%
+        
+    %%% Add the frame information only for the sessions we selected and we know are good.
+    nGoodSessions=length(data_sessions);
+    
+    save_folder=fileparts(data_sessions(1).file_name);
+    
+    saveName=fullfile(save_folder,'data_analysis','session_overview.mat');
+    savec(saveName)
+    save(saveName,'data_sessions')
+    
+    
+    %% Save individual sessions: will destroy existing files e.g. motion correction, ROI_definitions
+    t0=clock;
+    for iSess=1:nGoodSessions
+        session_data=data_sessions(iSess);
+        [save_folder, save_name]=fileparts(session_data.file_name);
+        saveName=fullfile(save_folder,'data_analysis',[save_name '.mat']);
+        save(saveName,'session_data')
+        progress(iSess,nGoodSessions,t0)
+    end
+    disp('All Done!!!')
+else
+    disp('Not saving for now, debugging')
 end
-disp('All Done!!!')
-
-
-
-%% Save individual sessions: now in step 2b
-% if 0
-%     %%
-%     t0=clock;
-%     for iSess=1:nGoodSessions
-%         
-%         session_data=data_sessions(iSess);
-%         
-%         info=imfinfo(session_data.file_name);
-%         nFrames=session_data.data(2);
-%         rows=session_data.data(4);
-%         cols=session_data.data(3);
-%         
-%         frames=zeros(rows-1,cols,nFrames);
-%         for iFrame=1:nFrames
-%             frame=double(imread(session_data.file_name,iFrame,'info',info));
-%             frames(:,:,iFrame)=double(frame(1:end-1,:)); % no flyback line double
-%             %frames(:,:,iFrame)=(frame(1:end-1,:)); % no flyback line uint16
-%             %frames(:,:,iFrame)=uint8(frame(1:end-1,:)); % no flyback line uint8
-%         end
-%         session_data.MIP_avg=mean(frames,3);
-%         session_data.MIP_max=max(frames,[],3);
-%         session_data.MIP_std=std(frames,[],3);
-%         if 1
-%             %%
-%             %session_data.MIP_cc=session_data.MIP_std*0;
-%             tic
-%             session_data.MIP_cc=CrossCorrImage(frames);
-%             toc
-%         end
-%         
-%         if 0
-%             %%
-%              
-%         end
-%         
-%         if 0
-%             %%
-%             subplot(221)
-%             imshow(calc_gamma(session_data.MIP_avg,.5),[])
-%             subplot(222)
-%             imshow(calc_gamma(session_data.MIP_max,.5),[])
-%             subplot(223)
-%             imshow(calc_gamma(session_data.MIP_std,.4),[])
-%             subplot(224)
-%             imshow(calc_gamma(session_data.MIP_cc,.5),[])
-%             colormap(green)
-%         end
-%         %session_data.frames=frames;
-%         
-%         [save_folder, save_name]=fileparts(session_data.file_name);
-%         saveName=fullfile(save_folder,'data_analysis',[save_name '.mat'])
-%         save(saveName,'session_data')
-%         progress(iSess,nGoodSessions,t0)
-%     end
-% end
-
-
-
-%%% Now process the frame information:
-% - use MIP to build ROIs and use those to get activity per frame
-% - adding ROIs as field to session_data
-
-
 
 

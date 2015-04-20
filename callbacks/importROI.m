@@ -17,7 +17,7 @@ load(loadName,'session_data')
 % calc norm x corr
 %im1=handles.session_data.MIP_std; % MIP from current file
 im1=handles.MIP; % MIP from current file
-im2=session_data.MIP_std; % temp MIP from other, existing file
+im2=session_data.MIP_std.data; % temp MIP from other, existing file
 if numel(im1)>numel(im2)
     A=im1;
     template=im2;
@@ -87,6 +87,7 @@ handles.ROI_selector=1;
 handles.nROI=length(handles.ROI);
 handles.ROI_temp=handles.ROI_empty;
 
+set(handles.global_properties_table,'value',handles.ROI_selector)
 fprintf('Imported %d out of %d ROIs from %s \n',[handles.nROI nROI loadName])
 
 guidata(H,handles)

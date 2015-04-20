@@ -17,13 +17,17 @@ end
 
 nFrames=session_data.data(2);
 session_data.nFrames=nFrames;
+
 if isfield(session_data,'MIP_std')
     %%% Get MIP projections if present
     disp('Reloading std MIP')
     if isstruct(session_data.MIP_std)
         handles.MIP_type=3;
         handles.MIP=session_data.MIP_std.data;
+        handles.MIP=handles.MIP/max(handles.MIP(:))*256*256;
+        handles.MIP_raw=handles.MIP;
         handles.MIP_gamma_val=session_data.MIP_std.gamma_val;
+        set(handles.MIP_selector,'value',handles.MIP_type)
     else
         handles.MIP=session_data.MIP_std;
     end
@@ -64,9 +68,9 @@ end
 %%% show mip
 % make sure image is shown at full size
 handles.subplots(1).fig=subplot(121);
-handles.MIP_gamma_val=1;
-MIP=calc_gamma(handles.MIP,handles.MIP_gamma_val);
-handles.subplots(1).h(1)=imshow(MIP,[]);
+%handles.MIP_gamma_val=1;
+MIP=calc_gamma(handles.MIP_raw,handles.MIP_gamma_val);
+handles.subplots(1).h(1)=imshow(MIP,[0 50]);
 hold on
 handles.subplots(1).p(1)=plot(-1,-1,'r-'); % all ROIs
 
@@ -86,11 +90,11 @@ handles.ROI_empty=struct('ROI_nr',[],'base_coord',[],'nCoords',0,'coords',[],'el
 handles.usePoly=0;
 
 if isfield(session_data,'ROI_definitions') && isfield(session_data.ROI_definitions,'ROI_nr')
-    %%% Get ROI definitions if present
-    disp('Reloading ROIs')
+    %%% Get ROI definitions if present    
     handles.ROI=session_data.ROI_definitions;
     handles.ROI_selector=1;
     handles.nROI=length(handles.ROI);
+    fprintf('Reloading %d ROIs\n',handles.nROI)
 else
     %%% if not, set up an empty structure
     disp('Creating new ROI structure')
