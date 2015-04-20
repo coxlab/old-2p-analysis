@@ -87,6 +87,7 @@ handles.ROI_selector=1;
 handles.nROI=length(handles.ROI);
 handles.ROI_temp=handles.ROI_empty;
 
+set(handles.global_properties_table,'value',handles.ROI_selector)
 fprintf('Imported %d out of %d ROIs from %s \n',[handles.nROI nROI loadName])
 
 guidata(H,handles)

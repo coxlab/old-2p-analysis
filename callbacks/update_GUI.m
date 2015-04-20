@@ -3,9 +3,10 @@ H=varargin{1};
 handles=guidata(H);
 
 %%% Update MIP
-MIP=calc_gamma(handles.MIP,handles.MIP_gamma_val);
+MIP=calc_gamma(handles.MIP_raw,handles.MIP_gamma_val);
 set(handles.subplots(1).h(1),'Cdata',MIP);
 
+set(handles.MIP_selector,'value',handles.MIP_type)
 
 %%% Create list names
 if handles.nROI==0

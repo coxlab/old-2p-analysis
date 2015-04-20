@@ -21,6 +21,7 @@ switch MIP_type
 end
 handles.MIP_type=MIP_type;
 handles.MIP=handles.MIP/max(handles.MIP(:))*256*256;
+handles.MIP_raw=handles.MIP;
 guidata(H,handles)
 
 update_GUI(H)

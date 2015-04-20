@@ -19,7 +19,7 @@ switch key_event.Key
     case 'return'
         switch handles.status
             case 0
-                disp('not doing anything')
+                %disp('not doing anything')
             case 1
                 
                 if isfield(handles,'ROI_temp')
