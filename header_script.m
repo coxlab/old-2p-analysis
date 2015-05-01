@@ -4,8 +4,8 @@ if isunix==1
     if ismac
         [~, user_name] = system('whoami');user_name=user_name(1:end-1);
         root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
-    else
-        root_folder='/share/scratch2/benv/2p_data';
+    else % on linux, define path to current location of dropbox folders
+        root_folder='/home/ben/Dropbox\ \(coxlab\)/';
     end
 else % 2p
     [~, user_name] = system('whoami');user_name=user_name(1:end-1);
