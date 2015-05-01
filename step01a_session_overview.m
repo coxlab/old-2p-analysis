@@ -32,6 +32,9 @@ clc
 % BV20150408: need a way to distinguish between experiment types. This
 % should be extractable from the mworks file, <! find out how !>
 
+% BV20150420: need to make -nojvm version where we supply a folder to the
+% script as a function so we can run on the server, if not on linux use uigetdir
+
 header_script
 
 %%
