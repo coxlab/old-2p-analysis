@@ -1,7 +1,9 @@
 clear all
 clc
 
-data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-04-15_AF11';
+header_script
+
+data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-15_AF11'];
 session_name='20150415_AF11_RM_006.mat';
 loadName=fullfile(data_folder,'data_analysis',session_name);
 
@@ -96,6 +98,7 @@ if exist(loadName,'file')
     end
     %for iROI=
     for iROI=ROI_choice
+        ROI_nr=ROI_vector(iROI);
         
         %% Plot raw trace and conditions
         colors={'r','g','m','c'}; % reddish colors for
@@ -114,7 +117,7 @@ if exist(loadName,'file')
         hold off
         axis([time_line([1 end]) -5 20])
         box off
-        title(ROI_vector(iROI))
+        title(ROI_nr)
         
         %% Analyse per condition
         data_matrix=zeros(nConditions,4);
@@ -215,7 +218,7 @@ if exist(loadName,'file')
         axis([0 5 -.5 7])
         box off
         title(session_name)
-        xlabel(ROI_vector(iROI))
+        xlabel(ROI_nr)
         set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
     end
 end
