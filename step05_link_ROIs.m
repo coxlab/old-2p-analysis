@@ -8,8 +8,9 @@ clc
 
 header_script
 
+
 folder_selector=0;
-cluster_nr=1;
+cluster_nr=2;
 
 %%% Select datafiles
 use_gui=0;
@@ -115,7 +116,7 @@ end
 %%% same cells. Deleting ROI and creating new ones results in new unique
 %%% numbers.
 
-% get all unique numbers
+% get all unique numbers, find in all repetitions of the experiment
 unique_cell_numbers=[];
 for iSess=1:nSessions
     cell_numbers=cat(1,ROI_all(iSess).ROI_definitions.ROI_nr);
@@ -187,9 +188,17 @@ end
 
 
 %%
-% do spike detection on traces and sort ROIs by descending number of spikes
+% 20150505: do spike detection on traces and sort ROIs by descending number of spikes. Did we ever implement this function?
+TH=5;
+for iROI=1:nROI
+    sel=RESP_ALL(:,iROI)>TH;
+    start_points=find(diff(sel)==1);
+    nSpikes_vector(iROI)=length(start_points)
+end
+[sorted,order]=sort(nSpikes_vector,'descend');
+cell_numbers_ranked=unique_cell_numbers(order);
 
-
+%%
 %folder_selector=1
 % cluster 1: 12? 26shape 35shape? 43?
 % cluster 2: 1? 11pos 16shape
@@ -198,15 +207,15 @@ end
 
 %folder_selector=2
 % cluster 1: c2shape? c16shape? c19?pos c21pos c23pos? 32?pos
-ROI_nr=4
+ROI_sel=6
 
-%ROI_nr_vector=cat(1,session_data.ROI_definitions.ROI_nr);
-
+ROI_nr=cell_numbers_ranked(ROI_sel);
 if ismember(ROI_nr,unique_cell_numbers)
     iROI=find(unique_cell_numbers==ROI_nr); % Cluster3 11 13 24   
 else
     error('no such ROI nr')
 end
+
 %ROI_nr=session_data.ROI_definitions(iROI).ROI_nr
 
 %%% look at response per stimulus condition
@@ -285,7 +294,7 @@ plot(T,resp_vector,'color','k')
 hold off
 axis([0 total_duration -max_val*.25 max_val])
 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
-title(sprintf('Cell #%d',ROI_nr))
+title(sprintf('Cell #%d - #spikes: %d',[ROI_nr nSpikes_vector(iROI)]))
 xlabel('Time (seconds)')
 ylabel('\DeltaF/F')
 

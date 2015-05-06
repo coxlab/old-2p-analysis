@@ -11,7 +11,7 @@ clc
 
 header_script
 
-debugging=0;
+debugging=1;
 MIP_options.do_medfilt3=1;
 MIP_options.medfilt_values=[1 1 3]; % default 1-1-3, could try 1-1-5
 MIP_options.apply_motion_correction=1; % try only if shift_values are present
@@ -43,6 +43,8 @@ for iSess=1:nSessions
     else
         MIP_options.apply_motion_correction=0;
     end
+    
+    fprintf('Loading frames...')
     tic
     for iFrame=1:nFrames
         frame=double(imread(session_data.file_name,iFrame,'info',info));
@@ -55,15 +57,14 @@ for iSess=1:nSessions
             if any(offset~=0)
                 %frame=offsetIm(frame,offset(1),offset(2),0);
                 frame=offsetIm(frame,offset(1),offset(2),mean(frame(:)));
-                die
             else
                 % as long as offsets are both zero, use uncorrected version
             end
         end
         frames(:,:,iFrame)=frame;
     end
-    fprintf('Loading frames took %3.2f seconds.\n',toc)
-    if MIP_options.do_medfilt3==1
+    fprintf('took %3.2f seconds.\n',toc)
+    if MIP_options.do_medfilt3==1&&debugging==0
         %% BV20150420: added 3D median filt, will make images look prettier, especially max
         tic
         frames=medfilt3(frames,MIP_options.medfilt_values);
@@ -72,18 +73,18 @@ for iSess=1:nSessions
     
     %% calc projection images
     tic
-    disp('Computing MIPs...')
+    fprintf('Computing MIPs...')
     session_data.MIP_avg.data=mean(frames,3);
-    session_data.MIP_avg.gamma_val=.6;
+    session_data.MIP_avg.gamma_val=1;
     session_data.MIP_max.data=max(frames,[],3);
-    session_data.MIP_max.gamma_val=1;
+    session_data.MIP_max.gamma_val=.6;
     session_data.MIP_std.data=std(frames,[],3);
-    session_data.MIP_std.gamma_val=.3;
+    session_data.MIP_std.gamma_val=.8;
     if debugging==0 % only if we are not debugging, takes a long time to run
         session_data.MIP_cc_local.data=CrossCorrImage(frames);
-        session_data.MIP_cc_local.gamma_val=1;
+        session_data.MIP_cc_local.gamma_val=.6;
     end
-    fprintf('Computing MIPs took %3.2f seconds.\n',toc)
+    fprintf('took %3.2f seconds.\n',toc)
     
     if 0
         %% cross-correlation of most active pixels : under construction
@@ -101,8 +102,6 @@ for iSess=1:nSessions
         imshow(calc_gamma(session_data.MIP_max.data,session_data.MIP_max.gamma_val),[])
         subplot(223)
         imshow(calc_gamma(session_data.MIP_std.data,session_data.MIP_std.gamma_val),[])
-        %subplot(224)
-        %imshow(calc_gamma(session_data.MIP_cc_local.data,session_data.MIP_cc_local.gamma_val),[])
         colormap(green)
     end
     %session_data.frames=frames;

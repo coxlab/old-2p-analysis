@@ -75,10 +75,10 @@ options.drift_correction.averaging_interval =  15; % seconds
 options.drift_correction.prctile            =  8;
 options.drift_correction.add_mean           =  0;
 
-options.calc_delta_f.method                 =  6;
+options.calc_delta_f.method                 =  6; % default 6
 
 options.save_data                           =  1;
-options.plot_traces                         =  1;
+options.plot_traces                         =  0;
 
 
 %%
@@ -100,11 +100,9 @@ for iSess=1:nSessions
     cols=session_data.data(3);
     
     frames=zeros(rows-1,cols,nFrames);
-    %mean_lum=zeros(nFrames,1);
     for iFrame=1:nFrames
         frame=double(imread(session_data.file_name,iFrame,'info',info));
         frames(:,:,iFrame)=double(frame(1:end-1,:)); % no flyback line double
-        %mean_lum(iFrame)=mean(mean(frame(1:end-1,:)));
     end
     fprintf('Loading frames took: %3.1fs\n',toc);
     
@@ -122,21 +120,33 @@ for iSess=1:nSessions
     ROI_vector=cat(1,ROIs.ROI_nr);
     
     tic
+    %apply_motion_correction=1;
     for iFrame=1:nFrames
         if apply_motion_correction==1
             offset=motion_correction.shift_matrix(iFrame,4:5);
+            offset=offset+[3 5]; % why????
         end
         
         for iROI=1:nROI
             if apply_motion_correction==1
                 ROI_box=frames(offset(1)+ROIs(iROI).ROI_rect(2):offset(1)+ROIs(iROI).ROI_rect(4),offset(2)+ROIs(iROI).ROI_rect(1):offset(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+                if motion_correction.ignore_frames(iFrame)==1
+                    ROI_box=ROI_box*0;
+                end                                
             else
-                ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+                ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
             end
+            %box_frames(:,:,iFrame)=ROI_box;
             ROIs(iROI).timeseries_soma(iFrame)=mean(ROI_box(ROIs(iROI).mask_soma==1));
             ROIs(iROI).timeseries_neuropil(iFrame)=mean(ROI_box(ROIs(iROI).mask_neuropil==1));
-        end
+        end     
     end
+%     subplot(121)
+%     imagesc(mean(box_frames,3))
+%     %imagesc(box_frames(:,:,50))
+%     subplot(122)
+%     imagesc(mean(box_frames,3).*ROIs(iROI).mask_soma)
+%     die
     fprintf('Extracting %d ROIs data took: %3.1fs\n',[nROI toc]);
     
     %%% Construct activity matrix by processing previously extracted time-series
@@ -148,8 +158,9 @@ for iSess=1:nSessions
     if isfield(session_data,'blank_frames')
         blank_frames=session_data.blank_frames;
     else
-        blank_frames=zscore(mean_lum)<options.neuropil_subtraction.TH_no_data;
-        blank_frames(1:find(blank_frames>0,1,'last')+1)=true;
+        %blank_frames=zscore(mean_lum)<options.neuropil_subtraction.TH_no_data;
+        %blank_frames(1:find(blank_frames>0,1,'last')+1)=true;
+        die
     end
     %sum(blank_frames)
     
@@ -212,7 +223,7 @@ for iSess=1:nSessions
         switch options.calc_delta_f.method
             case 0
                 delta_F_no_drift=F_no_drift; % leave signal as is
-                y_label='F';
+                y_label='raw F';
                 fixed_y_scale=30000;
             case 1 % naive way
                 delta_F_no_drift=(F_no_drift-mean(F_no_drift))/mean(F_no_drift);
@@ -328,11 +339,43 @@ for iSess=1:nSessions
     end
     fprintf('Constructing acitivity matrix took: %3.1fs\n',toc);
     
+    
+    %%
+    
+    if 0
+        %%
+                
+        size(activity_matrix)
+        overview_properties=struct();
+        for iROI=1:nROI
+             trace=activity_matrix(iROI,:);
+             overview_properties(iROI).min=min(trace);
+             overview_properties(iROI).max=max(trace);
+             overview_properties(iROI).range=range(trace);
+             overview_properties(iROI).std=std(trace);
+             
+        end
+        
+        X=cat(1,overview_properties.range)./cat(1,overview_properties.std);
+        [sorted,order]=sort(X,'descend');
+        
+        ROI_sel=1;
+        plot(activity_matrix(order(ROI_sel),:))
+        title(X(order(ROI_sel)))
+        xlabel(ROIs(order(ROI_sel)).ROI_nr)
+        axis([0 nFrames -1000 1e4])
+        
+        
+        %bar(X)
+    end
+    
+    
+    %%
+    
     if options.save_data==1
         %% Save activity and stim_matrix to file
         session_data.activity_matrix=activity_matrix';
         session_data.options=options;
-        %session_data.mean_lum=mean_lum;
         save(loadName,'session_data')
     end
     

@@ -173,6 +173,7 @@ end
 %%
 if 1
     %%
+    disp('Saving FOV data to overview file')
     save(loadName,'FOV_matching','-append')
 end
 
