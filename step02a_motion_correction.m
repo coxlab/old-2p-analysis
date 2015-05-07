@@ -80,7 +80,6 @@ for iSess=1:nSessions
             z_scores=(mean_lum(1:round(end/4))-mean(mean_lum(round(end/4):end)))/std(mean_lum(round(end/4):end));
             blank_frames(1:find(z_scores<-4,1,'last')+1)=true;
     end
-    sum(blank_frames)
     
     %%
     if motion_correction.apply==1
@@ -202,7 +201,9 @@ for iSess=1:nSessions
                 tic
                 shift_matrix(1,:)=[1 0 0 0 0];
                 
-                F1=mean(frames(:,:,motion_correction.ref_frames),3); % create average template
+                %F1=mean(frames(:,:,motion_correction.ref_frames),3); % create average template
+                first_frame=find(blank_frames==0,1,'first');
+                F1=mean(frames(:,:,first_frame+motion_correction.ref_frames),3); % create average template
                 resize_factor=1/motion_correction.downsample_factor;
                 F1=imresize(F1,resize_factor);
                 for iFrame=2:nFrames

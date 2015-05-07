@@ -211,7 +211,7 @@ cell_numbers_ranked=unique_cell_numbers(order);
 
 %folder_selector=2
 % cluster 1: c2shape? c16shape? c19?pos c21pos c23pos? 32?pos
-ROI_sel=1
+ROI_sel=26
 
 ROI_nr=cell_numbers_ranked(ROI_sel);
 if ismember(ROI_nr,unique_cell_numbers)
@@ -310,7 +310,7 @@ ylabel('\DeltaF/F')
 % nTrials=size(resp_matrix,1);
 % new=cat(3,mean(resp_matrix,1)-1,std(resp_matrix,[],1),ste(resp_matrix,1));
 
-%%% find kernel estimate
+%% find kernel estimate
 condition_vector=STIM_ALL(:,8);
 timepoint_vector=1:24;
 nTimepoints=length(timepoint_vector);

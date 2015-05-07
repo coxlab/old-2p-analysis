@@ -126,7 +126,6 @@ for iSess=1:nSessions
     for iFrame=1:nFrames
         if apply_motion_correction==1
             offset=motion_correction.shift_matrix(iFrame,4:5);
-            %offset=offset+[3 5]; % why????
         end
         
         for iROI=1:nROI
@@ -178,8 +177,8 @@ for iSess=1:nSessions
             F_neuropil=ROIs(iROI).timeseries_neuropil;
             
             if any(blank_frames)
-                F_raw(blank_frames)=mean(F_raw);
-                F_neuropil(blank_frames)=mean(F_neuropil);
+                F_raw(blank_frames)=mean(F_raw(~blank_frames));
+                F_neuropil(blank_frames)=mean(F_neuropil(~blank_frames));
             end
             
             %%% subtract neuropil signals
@@ -296,9 +295,12 @@ for iSess=1:nSessions
                 F_no_drift_smooth=smooth(F_no_drift,round(frame_rate*4));
                 
                 TH=prctile(F_no_drift_smooth,2)+512; % optimize!!!
-                selection_vector=F_no_drift_smooth<TH;
+                selection_vector=F_no_drift_smooth<TH&blank_frames==0;
                 mu=mean(F_no_drift(selection_vector));
                 sigma=std(F_no_drift(selection_vector));
+                [mu sigma]
+                %276.4352  479.4144
+                %404.7132  540.4436                
                 
                 delta_F_no_drift=(F_no_drift-mu)/mu;
                 y_label='\DeltaF/F';
