@@ -39,8 +39,8 @@ header_script
 
 %%
 %%% Use uigetdir for general use
-cd(data_root)
-data_folder=uigetdir(data_root);
+%cd(data_root)
+%data_folder=uigetdir(data_root);
 
 %%% Gather all movies
 files=scandir(data_folder,'tif');

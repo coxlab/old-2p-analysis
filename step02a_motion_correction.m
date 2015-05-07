@@ -31,15 +31,16 @@ motion_correction.kernel_size=[6 6];
 motion_correction.sigma=.65;
 motion_correction.kernel=bellCurve2(1,motion_correction.kernel_size/2,[motion_correction.sigma motion_correction.sigma],motion_correction.kernel_size,0);
 motion_correction.downsample_factor=1;
+motion_correction.variability_threshold=10; % ignore parts of the movie where estimates are unreliable
 
 gamma_val=.5;
-plot_it=0;
+%plot_it=0;
 save_it=1;
 
 %%
 %%% Use uigetdir for general use
-cd(data_root)
-data_folder=uigetdir(data_root);
+%cd(data_root)
+%data_folder=uigetdir(data_root);
 
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
 load(loadName,'data_sessions')
@@ -191,6 +192,8 @@ for iSess=1:nSessions
                 shift_matrix(1,:)=[1 0 0 0 0];
                 
                 F1=mean(frames(:,:,motion_correction.ref_frames),3); % create average template
+                resize_factor=1/motion_correction.downsample_factor;
+                F1=imresize(F1,resize_factor);
                 for iFrame=2:nFrames
                     if ismember(iFrame,find(blank_frames))
                         shift_matrix(iFrame,:)=[iFrame 0 0 0 0];
@@ -199,20 +202,14 @@ for iSess=1:nSessions
                         F2=frames(:,:,iFrame);
                         
                         %%% Gaussian filter image with .65px kernel
-                        F1_smooth=F1; % averaged, so will be smooth
                         F2_smooth=convn(F2,motion_correction.kernel,'same');
                         
                         %%% Resize image 2x or 4x
-                        resize_factor=1/motion_correction.downsample_factor;
-                        F1_smooth_resize=imresize(F1_smooth,resize_factor);
                         F2_smooth_resize=imresize(F2_smooth,resize_factor);
                         
                         %%% Estimate displacement: has to be spot on because error will
-                        %%% accumulate and can cause a drift.
-                        A=F1_smooth_resize;
-                        B=F2_smooth_resize;
-                        
-                        [r,c]=PCdemo(A,B);
+                        %%% accumulate and can cause a drift.                        
+                        [r,c]=PCdemo(F1,F2_smooth_resize);
                         
                         shift_matrix(iFrame,:)=[iFrame r/resize_factor c/resize_factor 0 0];
                         progress(iFrame,nFrames,t0)                        
@@ -228,7 +225,7 @@ for iSess=1:nSessions
         T=shift_matrix(:,1);
         D=calc_dist([shift_matrix(:,4:5)*0 shift_matrix(:,4:5)]);
         M=[cat(1,D,[0; 0;0]) cat(1,0,D,[0;0]),cat(1,[0; 0],D,0),cat(1,[0; 0;0],D)];M(end-2:end,:)=[];
-        ignore_frames=std(M,[],2)>10;
+        ignore_frames=std(M,[],2)>motion_correction.variability_threshold;
         
         motion_correction.shift_matrix=shift_matrix;
         motion_correction.ignore_frames=ignore_frames;

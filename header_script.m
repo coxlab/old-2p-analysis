@@ -23,3 +23,21 @@ addpath(genpath(path_dir))
 
 green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
 
+% either set data_folder in code or use uigetdir
+switch 0
+    case 0 % hardcoded
+        data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-07_AF11'];
+        if isdir(data_folder)==0
+            data_folder
+            error('directory not found')
+        end
+    case 1 % using uigetdir
+        curr_dir=pwd;
+        cd(data_root)
+        data_folder=uigetdir(data_root);
+        cd(curr_dir)
+end
+
+% suppress output so we can run in -nojvm mode
+plot_it=0;
+

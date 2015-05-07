@@ -11,14 +11,14 @@ clc
 
 header_script
 
-debugging=1;
+debugging=0;
 MIP_options.do_medfilt3=1;
 MIP_options.medfilt_values=[1 1 3]; % default 1-1-3, could try 1-1-5
 MIP_options.apply_motion_correction=1; % try only if shift_values are present
 
 %%% Use uigetdir to get data folder
-cd(data_root)
-data_folder=uigetdir(data_root);
+%cd(data_root)
+%data_folder=uigetdir(data_root);
 
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
 load(loadName,'data_sessions')

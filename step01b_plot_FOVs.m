@@ -8,8 +8,8 @@ clc
 header_script
 
 %%% Manually select a folder
-cd(data_root)
-data_folder=uigetdir(data_root);
+%cd(data_root)
+%data_folder=uigetdir(data_root);
 
 %%
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
@@ -66,8 +66,11 @@ FOV_matching.clusters=clusters;
 
 
 %%
-switch 1
+switch plot_it
+    case 0
+        % not plotting 
     case 1
+        %%
         figure(1)
         clf
         subplot(121)
@@ -172,9 +175,9 @@ end
 
 %%
 if 1
-    %%
-    disp('Saving FOV data to overview file')
+    %%    
     save(loadName,'FOV_matching','-append')
+    disp('Saved FOV data to overview file')
 end
 
 %% this could then lead to pooling of the data and/or application of the same ROI definition over different sessions

@@ -26,7 +26,7 @@ switch 2
         valid_session_names_short{count}=file_name;
         session_vector=[6];
     case 2 % enitre folder and choose session
-        data_folder=uigetdir(data_root);
+        %data_folder=uigetdir(data_root);
         loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
         load(loadName,'data_sessions')
         nSessions=length(data_sessions);
@@ -66,19 +66,21 @@ session_vector
 % literature, so we can easily compare
 %options.motion_correction.use               =  0; % 0:not 1:TurboReg should be done before ROI definition
 
-options.neuropil_subtraction.use            =  1;
-options.neuropil_subtraction.factor         =  0.7;
-options.neuropil_subtraction.TH_no_data     =  -4; % z-score
+extraction_options.neuropil_subtraction.use            =  1;
+extraction_options.neuropil_subtraction.factor         =  0.7;
+extraction_options.neuropil_subtraction.TH_no_data     =  -4; % z-score
 
-options.drift_correction.use                =  1;
-options.drift_correction.averaging_interval =  15; % seconds
-options.drift_correction.prctile            =  8;
-options.drift_correction.add_mean           =  0;
+extraction_options.drift_correction.use                =  1;
+extraction_options.drift_correction.averaging_interval =  15; % seconds
+extraction_options.drift_correction.prctile            =  8;
+extraction_options.drift_correction.add_mean           =  0;
 
-options.calc_delta_f.method                 =  6; % default 6
+extraction_options.calc_delta_f.method                 =  6; % default 6
 
-options.save_data                           =  1;
-options.plot_traces                         =  0;
+extraction_options.do_FastNegDeconv                    =  1; % use Vogelstein's oopsi
+
+extraction_options.save_data                           =  1;
+extraction_options.plot_traces                         =  plot_it;
 
 
 %%
@@ -124,14 +126,15 @@ for iSess=1:nSessions
     for iFrame=1:nFrames
         if apply_motion_correction==1
             offset=motion_correction.shift_matrix(iFrame,4:5);
-            offset=offset+[3 5]; % why????
+            %offset=offset+[3 5]; % why????
         end
         
         for iROI=1:nROI
-            if apply_motion_correction==1
-                ROI_box=frames(offset(1)+ROIs(iROI).ROI_rect(2):offset(1)+ROIs(iROI).ROI_rect(4),offset(2)+ROIs(iROI).ROI_rect(1):offset(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+            if apply_motion_correction==1                
                 if motion_correction.ignore_frames(iFrame)==1
-                    ROI_box=ROI_box*0;
+                    ROI_box=zeros(size(ROIs(iROI).mask_soma));
+                else
+                    ROI_box=frames(offset(1)+ROIs(iROI).ROI_rect(2):offset(1)+ROIs(iROI).ROI_rect(4),offset(2)+ROIs(iROI).ROI_rect(1):offset(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
                 end                                
             else
                 ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
@@ -151,6 +154,7 @@ for iSess=1:nSessions
     
     %%% Construct activity matrix by processing previously extracted time-series
     activity_matrix=zeros(nROI,nFrames);
+    spike_matrix=activity_matrix;
     tic
     
     
@@ -166,7 +170,7 @@ for iSess=1:nSessions
     
     %%
     for iROI=1:nROI % for each ROI
-        if options.neuropil_subtraction.use==0
+        if extraction_options.neuropil_subtraction.use==0
             F=ROIs(iROI).timeseries_soma; % use raw soma signal
         else
             %%% Get extracted timeseries for soma and neuropil masks
@@ -179,15 +183,15 @@ for iSess=1:nSessions
             end
             
             %%% subtract neuropil signals
-            F=F_raw-F_neuropil*options.neuropil_subtraction.factor; % values .5 (Feinberg) and .7 (Kerlin) have been reported: .7 is used for 16x Nikon
+            F=F_raw-F_neuropil*extraction_options.neuropil_subtraction.factor; % values .5 (Feinberg) and .7 (Kerlin) have been reported: .7 is used for 16x Nikon
         end
         
         %%% take out slow drifts
-        if options.drift_correction.use==0
+        if extraction_options.drift_correction.use==0
             F_no_drift=F; % leave signal as is
         else
             % calc number of frames that correspond to specified averaging interval
-            nFrames_avg=options.drift_correction.averaging_interval*round(frame_rate);
+            nFrames_avg=extraction_options.drift_correction.averaging_interval*round(frame_rate);
             
             % make sure this number even
             if rem(nFrames_avg,2)==1
@@ -205,7 +209,7 @@ for iSess=1:nSessions
                 elseif iSample>nFrames-nFrames_avg % handles end of trace
                     hist_values=F(iSample-nFrames_avg/2+1:end);
                 end
-                prctile_vector(iSample)=prctile(hist_values,options.drift_correction.prctile);
+                prctile_vector(iSample)=prctile(hist_values,extraction_options.drift_correction.prctile);
             end
             
             % subtract prctile vector from signal
@@ -214,13 +218,13 @@ for iSess=1:nSessions
             % optional, add average prctile value back in to restore mean
             % of trace and allow to check for fold changes (Feinberg 2015)
             % pointless when doing mean subtraction after this step
-            if options.drift_correction.add_mean==1
+            if extraction_options.drift_correction.add_mean==1
                 F_no_drift=F_no_drift+mean(prctile_vector);
             end
         end
         
         %%% Calculate delta F over F
-        switch options.calc_delta_f.method
+        switch extraction_options.calc_delta_f.method
             case 0
                 delta_F_no_drift=F_no_drift; % leave signal as is
                 y_label='raw F';
@@ -312,8 +316,8 @@ for iSess=1:nSessions
                     hold off
                 end
         end
-        options.y_label=y_label;
-        options.fixed_y_scale=fixed_y_scale;
+        extraction_options.y_label=y_label;
+        extraction_options.fixed_y_scale=fixed_y_scale;
         
         %%% Replace blank frames at start of movie by average of final trace
         %delta_F_no_drift(sel_no_data)=mean(delta_F_no_drift);
@@ -336,8 +340,18 @@ for iSess=1:nSessions
         end
         activity_matrix(iROI,:)=delta_F_no_drift;
         
+        if extraction_options.do_FastNegDeconv==1
+            %% Fast oopsi
+            oopsi_options.Ncells=1;
+            oopsi_options.T=nFrames;
+            oopsi_options.dt=1/frame_rate;
+            [n_best, P_best, oopsi_options, C]=fast_oopsi(delta_F_no_drift,oopsi_options);
+            spike_matrix(iROI,:)=n_best;
+        end
+        
+        
     end
-    fprintf('Constructing acitivity matrix took: %3.1fs\n',toc);
+    fprintf('Constructing acitivity&spike matrix took: %3.1fs\n',toc);
     
     
     %%
@@ -372,15 +386,17 @@ for iSess=1:nSessions
     
     %%
     
-    if options.save_data==1
+    if extraction_options.save_data==1
         %% Save activity and stim_matrix to file
         session_data.activity_matrix=activity_matrix';
-        session_data.options=options;
+        session_data.extraction_options=extraction_options;
+        session_data.spike_matrix=spike_matrix';
+        session_data.oopsi_options=oopsi_options;
         save(loadName,'session_data')
     end
     
     nROI
-    if options.plot_traces==1
+    if extraction_options.plot_traces==1
         %% plot all traces
         figure(1)
         clf
@@ -404,7 +420,7 @@ for iSess=1:nSessions
             text(nFrames/10,-max_val*.1,info)
             hold off
             
-            ylabel(options.y_label)
+            ylabel(extraction_options.y_label)
             set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             axis([1 nFrames -max_val*.2 max_val])
             

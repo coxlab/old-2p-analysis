@@ -10,7 +10,7 @@ header_script
 
 
 folder_selector=0;
-cluster_nr=2;
+cluster_nr=3;
 
 %%% Select datafiles
 use_gui=0;
@@ -25,7 +25,7 @@ switch folder_selector
             case 2 % select folder and use FOV_matching variable in session_overview to select session that belong together                
                 % this is cool, but we need another matrix that specifies
                 % experiment type so we can focus on same FOV and same exp
-                data_folder=uigetdir(data_root);
+                %data_folder=uigetdir(data_root);
                 
                 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');                
                 load(loadName,'data_sessions','FOV_matching')
@@ -94,6 +94,10 @@ if use_gui==1
         loadName=fullfile(data_folder,filenames{iSess});
         if exist(loadName,'file')
             load(loadName,'session_data')
+            if isfield(session_data,'options')
+                % remove old options field
+                session_data=rmfield(session_data,'options');
+            end
             ROI_all(iSess)=session_data;
         end
     end
@@ -140,7 +144,8 @@ for iSess=1:nSessions
     time_selection=2:size(ROI_all(iSess).stimulus_matrix_ext,1);
     
     STIM=ROI_all(iSess).stimulus_matrix_ext(time_selection,:);
-    RESP=ROI_all(iSess).activity_matrix(time_selection,cell_selection);
+    %RESP=ROI_all(iSess).activity_matrix(time_selection,cell_selection);
+    RESP=ROI_all(iSess).spike_matrix(time_selection,cell_selection);
     %[size(STIM) size(RESP)]
     STIM_ALL=cat(1,STIM_ALL,STIM);
     RESP_ALL=cat(1,RESP_ALL,RESP);
@@ -193,9 +198,9 @@ TH=5;
 for iROI=1:nROI
     sel=RESP_ALL(:,iROI)>TH;
     start_points=find(diff(sel)==1);
-    nSpikes_vector(iROI)=length(start_points)
+    nSpikes_vector(iROI)=length(start_points);
 end
-[sorted,order]=sort(nSpikes_vector,'descend');
+[sorted,order]=sort(nSpikes_vector,'descend')
 cell_numbers_ranked=unique_cell_numbers(order);
 
 %%
@@ -207,7 +212,7 @@ cell_numbers_ranked=unique_cell_numbers(order);
 
 %folder_selector=2
 % cluster 1: c2shape? c16shape? c19?pos c21pos c23pos? 32?pos
-ROI_sel=6
+ROI_sel=18
 
 ROI_nr=cell_numbers_ranked(ROI_sel);
 if ismember(ROI_nr,unique_cell_numbers)
@@ -243,12 +248,13 @@ for iPos=1:nPositions
 end
 [p_pos,t,stats]=anovan(Y(:,iROI),groups,'display','off');
 
+
 figure(2)
 subplot(221)
 bar(resp_data(:,iROI,1))
 hold on
 %errorbar(resp_data(:,iROI,1),resp_data(:,iROI,2),'r.')
-errorbar(resp_data(:,iROI,1),resp_data(:,iROI,3),'r.')
+errorbar(resp_data(:,iROI,1),resp_data(:,iROI,2),'r.')
 hold off
 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
 title('Screen Position')
@@ -304,10 +310,6 @@ ylabel('\DeltaF/F')
 % resp_matrix(:,iROI)
 % nTrials=size(resp_matrix,1);
 % new=cat(3,mean(resp_matrix,1)-1,std(resp_matrix,[],1),ste(resp_matrix,1));
-
-
-
-
 
 
 %%
