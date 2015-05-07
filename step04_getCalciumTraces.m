@@ -366,8 +366,7 @@ for iSess=1:nSessions
              overview_properties(iROI).min=min(trace);
              overview_properties(iROI).max=max(trace);
              overview_properties(iROI).range=range(trace);
-             overview_properties(iROI).std=std(trace);
-             
+             overview_properties(iROI).std=std(trace);             
         end
         
         X=cat(1,overview_properties.range)./cat(1,overview_properties.std);

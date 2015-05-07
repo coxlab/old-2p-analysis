@@ -8,9 +8,8 @@ clc
 
 header_script
 
-
 folder_selector=0;
-cluster_nr=3;
+cluster_nr=2;
 
 %%% Select datafiles
 use_gui=0;
@@ -144,8 +143,8 @@ for iSess=1:nSessions
     time_selection=2:size(ROI_all(iSess).stimulus_matrix_ext,1);
     
     STIM=ROI_all(iSess).stimulus_matrix_ext(time_selection,:);
-    %RESP=ROI_all(iSess).activity_matrix(time_selection,cell_selection);
-    RESP=ROI_all(iSess).spike_matrix(time_selection,cell_selection);
+    RESP=ROI_all(iSess).activity_matrix(time_selection,cell_selection);
+    %RESP=ROI_all(iSess).spike_matrix(time_selection,cell_selection);
     %[size(STIM) size(RESP)]
     STIM_ALL=cat(1,STIM_ALL,STIM);
     RESP_ALL=cat(1,RESP_ALL,RESP);
@@ -212,7 +211,7 @@ cell_numbers_ranked=unique_cell_numbers(order);
 
 %folder_selector=2
 % cluster 1: c2shape? c16shape? c19?pos c21pos c23pos? 32?pos
-ROI_sel=18
+ROI_sel=1
 
 ROI_nr=cell_numbers_ranked(ROI_sel);
 if ismember(ROI_nr,unique_cell_numbers)
@@ -310,6 +309,111 @@ ylabel('\DeltaF/F')
 % resp_matrix(:,iROI)
 % nTrials=size(resp_matrix,1);
 % new=cat(3,mean(resp_matrix,1)-1,std(resp_matrix,[],1),ste(resp_matrix,1));
+
+%%% find kernel estimate
+condition_vector=STIM_ALL(:,8);
+timepoint_vector=1:24;
+nTimepoints=length(timepoint_vector);
+% find all condition start frames
+start_vector=find(diff(condition_vector)>0); % general case
+%start_vector=find(diff(condition_vector)==12); % use 1 stim to yield the kernel
+sel=(start_vector+max(timepoint_vector))>nFrames|(start_vector+min(timepoint_vector))<0;
+start_vector(sel)=[];
+
+design_matrix=ones(size(resp_vector));
+for iTimepoint=1:nTimepoints
+    P=zeros(size(resp_vector));
+    P(start_vector+timepoint_vector(iTimepoint))=1;
+    design_matrix=cat(2,design_matrix,P);
+end
+beta=mvregress(design_matrix,resp_vector);
+kernel_est=beta(2:end);
+kernel_est(kernel_est<0)=0;
+figure(3)
+bar(kernel_est)
+
+
+%% try out multiple regression
+%kernel_est=resp_vector(365:390);
+%kernel_est=[34.7974745645518;29.1844181233045;24.5764182663738;22.8407164563818;18.1783359501114;16.4113462293559;13.4066753860348;14.1086533821770;10.1052434699760;10.0838630155124;8.25588908292035;6.43065557040027;6.04692099511076;5.16536561771791;4.76037094647263;6.56684814422224;3.81085714655538;2.92912801412736;3.03125673618300;1.93144429292142;2.00843847510978;2.23100586840692;0.639220487381043;0.459113580149153;1.01104602349656;0.234196624416639];
+design_matrix=ones(size(resp_vector));
+condition_vector=STIM_ALL(:,8);
+for iStim=1:32
+    P=condition_vector==iStim;
+    switch 2
+        case 1 % use average kernel
+            P_conv=convn(P,kernel_est,'same');
+        case 2 % estimate kernel for each condition
+            start_vector=find(diff(condition_vector)==iStim);
+            sel=(start_vector+max(timepoint_vector))>nFrames|(start_vector+min(timepoint_vector))<0;
+            start_vector(sel)=[];
+            
+            design_matrix_stim=ones(size(resp_vector));
+            for iTimepoint=1:nTimepoints
+                P=zeros(size(resp_vector));
+                P(start_vector+timepoint_vector(iTimepoint))=1;
+                design_matrix_stim=cat(2,design_matrix_stim,P);
+            end            
+            beta=mvregress(design_matrix_stim,resp_vector);
+            kernel_est=beta(2:end);
+            kernel_est_all(:,iStim)=kernel_est;
+            kernel_est(kernel_est<0)=0;
+                        
+            P_conv=convn(P,kernel_est,'same');
+    end
+    design_matrix=cat(2,design_matrix,P_conv);
+end
+beta=mvregress(design_matrix,resp_vector);
+
+RF_regr=flipud(reshape(beta(2:end),4,8));
+
+%%
+CC=corr(resp_vector,design_matrix);
+RF_corr=flipud(reshape(CC(2:end),4,8));
+RF_max_kernel=flipud(reshape(max(kernel_est_all),4,8));
+
+[m,w]=max(CC(:));
+
+figure(3)
+subplot(2,3,[1 3])
+plot(T,resp_vector)
+hold on
+plot(T,design_matrix(:,w),'r')
+hold off
+title(corr(resp_vector,design_matrix(:,w)))
+max_val=max([30 max(resp_vector)*1.2]);
+axis([0 total_duration -max_val*.25 max_val])
+
+subplot(234)
+max_val=max(abs([min(RF_regr(:)) max(RF_regr(:))]));
+imagesc(RF_regr)
+axis equal
+axis tight
+
+set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
+title('''RF multiple regression''')
+colormap parula
+
+subplot(235)
+max_val=max(abs([min(RF_corr(:)) max(RF_corr(:))]));
+imagesc(RF_corr)
+axis equal
+axis tight
+
+set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
+title('RF correlation')
+colormap parula
+
+subplot(236)
+max_val=max(abs([min(RF_max_kernel(:)) max(RF_max_kernel(:))]));
+imagesc(RF_max_kernel)
+axis equal
+axis tight
+
+set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
+title('RF max kernel')
+colormap parula
+
 
 
 %%

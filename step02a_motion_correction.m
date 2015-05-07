@@ -59,17 +59,28 @@ for iSess=1:nSessions
     cols=session_data.data(3);
     
     tic
+    fprintf('Loading frames...')
     frames=zeros(rows-1,cols,nFrames);
     for iFrame=1:nFrames
         frame=double(imread(session_data.file_name,iFrame,'info',info));
         frames(:,:,iFrame)=double(frame(1:end-1,:)); % no flyback line double
     end
-    fprintf('Loading frames took %3.2f seconds.\n',toc)
+    fprintf('took %3.2f seconds.\n',toc)
     
     %% get number of blank frame to ignore at start
     mean_lum=squeeze(mean(mean(frames,1),2));
     blank_frames=false(size(mean_lum));
-    blank_frames(1:find(zscore(mean_lum(1:round(end/4)))<-4,1,'last')+1)=true;
+    switch 2
+        case 1
+            % strict criterion
+            blank_frames(1:find(zscore(mean_lum(1:round(end/4)))<-4,1,'last')+1)=true;
+        case 2
+            % Search for longer periods that might cause previous condition to fail
+            % low std, low mean
+            z_scores=(mean_lum(1:round(end/4))-mean(mean_lum(round(end/4):end)))/std(mean_lum(round(end/4):end));
+            blank_frames(1:find(z_scores<-4,1,'last')+1)=true;
+    end
+    sum(blank_frames)
     
     %%
     if motion_correction.apply==1
