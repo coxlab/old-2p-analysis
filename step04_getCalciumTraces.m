@@ -68,7 +68,7 @@ session_vector
 
 extraction_options.neuropil_subtraction.use            =  1;
 extraction_options.neuropil_subtraction.factor         =  0.7;
-extraction_options.neuropil_subtraction.TH_no_data     =  -4; % z-score
+%extraction_options.neuropil_subtraction.TH_no_data     =  -4; % z-score: done in step02 now
 
 extraction_options.drift_correction.use                =  1;
 extraction_options.drift_correction.averaging_interval =  15; % seconds
@@ -168,6 +168,7 @@ for iSess=1:nSessions
     %sum(blank_frames)
     
     %%
+    normalization_matrix=zeros(nROI,5);
     for iROI=1:nROI % for each ROI
         if extraction_options.neuropil_subtraction.use==0
             F=ROIs(iROI).timeseries_soma; % use raw soma signal
@@ -278,6 +279,9 @@ for iSess=1:nSessions
                 mu=mean(F_no_drift(selection_vector));
                 sigma=std(F_no_drift(selection_vector));
                 
+                % Store normalizaion values
+                normalization_matrix(iROI,1:4)=[iROI extraction_options.calc_delta_f.method mu sigma];
+                
                 delta_F_no_drift=(F_no_drift-mu)/sigma;
                 if 0
                     %%
@@ -292,15 +296,15 @@ for iSess=1:nSessions
                 fixed_y_scale=30;
             case 6 % deltaF over F using non-modulation parts
                 % use rolling average to select no-modulation parts
-                F_no_drift_smooth=smooth(F_no_drift,round(frame_rate*4));
+                F_no_drift_smooth=smooth(F_no_drift(blank_frames==0),round(frame_rate*4));
                 
                 TH=prctile(F_no_drift_smooth,2)+512; % optimize!!!
-                selection_vector=F_no_drift_smooth<TH&blank_frames==0;
+                selection_vector=F_no_drift_smooth<TH;
                 mu=mean(F_no_drift(selection_vector));
                 sigma=std(F_no_drift(selection_vector));
-                [mu sigma]
-                %276.4352  479.4144
-                %404.7132  540.4436                
+                
+                % Store normalizaion values
+                normalization_matrix(iROI,1:4)=[iROI extraction_options.calc_delta_f.method mu sigma];
                 
                 delta_F_no_drift=(F_no_drift-mu)/mu;
                 y_label='\DeltaF/F';
@@ -346,7 +350,7 @@ for iSess=1:nSessions
             %% Fast oopsi
             oopsi_options.Ncells=1;
             oopsi_options.T=nFrames;
-            oopsi_options.dt=1/frame_rate;
+            oopsi_options.dt=1/frame_rate*0.7;
             [n_best, P_best, oopsi_options, C]=fast_oopsi(delta_F_no_drift,oopsi_options);
             spike_matrix(iROI,:)=n_best;
         end
@@ -391,6 +395,7 @@ for iSess=1:nSessions
         %% Save activity and stim_matrix to file
         session_data.activity_matrix=activity_matrix';
         session_data.extraction_options=extraction_options;
+        session_data.normalization_matrix=normalization_matrix;
         session_data.spike_matrix=spike_matrix';
         session_data.oopsi_options=oopsi_options;
         save(loadName,'session_data')
