@@ -3,7 +3,7 @@ clc
 
 header_script
 
-dataset_selector=2;
+dataset_selector=3;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
@@ -77,7 +77,7 @@ clf
 nCols=ceil(sqrt(nROI));
 nRows=ceil(nROI/nCols);
 
-MIP=dataset.MIP.data;
+MIP=dataset.MIP.data*0-10000;
 
 for iROI=1:nROI
     subplot(nRows,nCols,iROI)
@@ -111,6 +111,11 @@ for iROI=1:nROI
 end
 clf
 imshow(MIP,[])
-colormap(green)
+colormap(hot)
+
+%% plot x and y centers values at cell location and interpolate between them, this should give you a smooth RF map
+% use color to code position
+% make one plot for each coord: azimuth and elevation
+
 
 
