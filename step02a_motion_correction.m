@@ -50,13 +50,19 @@ nSessions=length(data_sessions);
 t0=clock;
 for iSess=1:nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
-    loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
-    if ~exist(loadName,'file') % add catch in case we started on a local system and then moved to the server
+    try
+        loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
+        tifName=session_data.file_name;
+        load(loadName,'session_data');
+    catch % add catch in case we started on a local system and then moved to the server
+        disp('Reading from  ')
         loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
+        tifName=fullfile(data_folder,[file_name '.tif']);
+        load(loadName,'session_data');
     end
-    load(loadName,'session_data');
     
-    info=imfinfo(session_data.file_name);
+    
+    info=imfinfo();
     nFrames=session_data.data(2);
     rows=session_data.data(4);
     cols=session_data.data(3);
