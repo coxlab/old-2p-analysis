@@ -51,6 +51,9 @@ t0=clock;
 for iSess=1:nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
     loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
+    if ~exist(loadName,'file') % add catch in case we started on a local system and then moved to the server
+        loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
+    end
     load(loadName,'session_data');
     
     info=imfinfo(session_data.file_name);
