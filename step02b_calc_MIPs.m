@@ -28,10 +28,18 @@ nSessions=length(data_sessions);
 t0=clock;
 for iSess=1:nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
-    loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
-    load(loadName,'session_data');
+    try
+        loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
+        tifName=session_data.file_name;
+        load(loadName,'session_data');
+    catch % add catch in case we started on a local system and then moved to the server
+        disp('Reading from alternate location...')
+        loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
+        tifName=fullfile(data_folder,[file_name '.tif']);
+        load(loadName,'session_data');
+    end    
     
-    info=imfinfo(session_data.file_name);
+    info=imfinfo(tifName);
     nFrames=session_data.data(2);
     rows=session_data.data(4);
     cols=session_data.data(3);
@@ -47,7 +55,7 @@ for iSess=1:nSessions
     fprintf('Loading frames...')
     tic
     for iFrame=1:nFrames
-        frame=double(imread(session_data.file_name,iFrame,'info',info));
+        frame=double(imread(tifName,iFrame,'info',info));
         frame=double(frame(1:end-1,:)); % no flyback line
         
         if MIP_options.apply_motion_correction==1
@@ -64,6 +72,7 @@ for iSess=1:nSessions
         frames(:,:,iFrame)=frame;
     end
     fprintf('took %3.2f seconds.\n',toc)
+    
     if MIP_options.do_medfilt3==1&&debugging==0
         %% BV20150420: added 3D median filt, will make images look prettier, especially max
         tic
@@ -115,3 +124,5 @@ for iSess=1:nSessions
         progress(iSess,nSessions,t0)
     end
 end
+
+
