@@ -55,7 +55,7 @@ for iSess=1:nSessions
         tifName=session_data.file_name;
         load(loadName,'session_data');
     catch % add catch in case we started on a local system and then moved to the server
-        disp('Reading from  ')
+        disp('Reading from alternate location...')
         loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
         tifName=fullfile(data_folder,[file_name '.tif']);
         load(loadName,'session_data');
@@ -141,7 +141,7 @@ for iSess=1:nSessions
                 end
                 data_matrix(:,7)=cumsum(data_matrix(:,5));
                 data_matrix(:,8)=cumsum(data_matrix(:,6));
-                data_matrix
+                %data_matrix
                 fprintf('Calculating offsets took: %3.2fs\n',toc)
                 
                 %% do fine analysis
@@ -208,11 +208,14 @@ for iSess=1:nSessions
                 %% do fine analysis
                 t0=clock;
                 tic
+                shift_matrix=zeros(nFrames,5);
                 shift_matrix(1,:)=[1 0 0 0 0];
                 
                 %F1=mean(frames(:,:,motion_correction.ref_frames),3); % create average template
                 first_frame=find(blank_frames==0,1,'first');
-                F1=mean(frames(:,:,first_frame+motion_correction.ref_frames),3); % create average template
+                frame_idxs=first_frame+motion_correction.ref_frames;
+                fprintf('Using frames %d-%d as reference.\n',frame_idxs([1 end]))
+                F1=mean(frames(:,:,frame_idxs),3); % create average template
                 resize_factor=1/motion_correction.downsample_factor;
                 F1=imresize(F1,resize_factor);
                 for iFrame=2:nFrames
