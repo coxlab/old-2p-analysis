@@ -6,7 +6,7 @@ if isunix==1
         root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
     else % on linux, define path to current location of dropbox folders
         [~, user_name] = system('whoami');user_name=user_name(1:end-1);
-        root_folder='/home/ben/Dropbox\ \(coxlab\)/';
+        root_folder='/home/ben/Dropbox'' (coxlab)''/';
     end
 else % 2p
     [~, user_name] = system('whoami');user_name=user_name(1:end-1);
