@@ -118,8 +118,13 @@ for iSess=1:nSessions
     if debugging==0
         %%
         session_data.MIP_options=MIP_options;
-        [save_folder, save_name]=fileparts(session_data.file_name);
-        saveName=fullfile(save_folder,'data_analysis',[save_name '.mat'])
+        try
+            [save_folder, save_name]=fileparts(session_data.file_name);
+            saveName=fullfile(save_folder,'data_analysis',[save_name '.mat']);
+        catch    
+            saveName=loadName;
+        end
+        fprintf('Saving MIPs to file: %s\n',saveName)
         save(saveName,'session_data')
         progress(iSess,nSessions,t0)
     end
