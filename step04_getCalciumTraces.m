@@ -36,8 +36,16 @@ switch 2
         valid_sessions=[];
         for iSess=1:nSessions
             [folder,file_name]=fileparts(data_sessions(iSess).file_name);
-            loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
-            load(loadName,'session_data');
+            
+            try
+                loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
+                load(loadName,'session_data');
+            catch % add catch in case we started on a local system and then moved to the server
+                disp('Reading from alternate location...')
+                loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
+                load(loadName,'session_data');
+            end
+            
             if length(session_data.ROI_definitions)>1
                 valid_sessions(count)=data_sessions(iSess).data(1);
                 valid_session_names{count}=loadName;

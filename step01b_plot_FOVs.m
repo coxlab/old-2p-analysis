@@ -10,6 +10,8 @@ header_script
 %%% Manually select a folder
 %cd(data_root)
 %data_folder=uigetdir(data_root);
+plot_it=1;
+save_it=0;
 
 %%
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
@@ -174,7 +176,7 @@ end
 
 
 %%
-if 1
+if save_it==1
     %%    
     save(loadName,'FOV_matching','-append')
     disp('Saved FOV data to overview file')

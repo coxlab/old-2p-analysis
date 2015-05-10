@@ -37,7 +37,7 @@ for iSess=1:nSessions
         loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
         tifName=fullfile(data_folder,[file_name '.tif']);
         load(loadName,'session_data');
-    end    
+    end
     
     info=imfinfo(tifName);
     nFrames=session_data.data(2);
