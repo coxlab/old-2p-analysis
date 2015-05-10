@@ -39,10 +39,12 @@ switch 2
             
             try
                 loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
+                tifName=session_data.file_name;
                 load(loadName,'session_data');
             catch % add catch in case we started on a local system and then moved to the server
                 disp('Reading from alternate location...')
                 loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
+                tifName=fullfile(data_folder,[file_name '.tif']);
                 load(loadName,'session_data');
             end
             
@@ -50,6 +52,7 @@ switch 2
                 valid_sessions(count)=data_sessions(iSess).data(1);
                 valid_session_names{count}=loadName;
                 valid_session_names_short{count}=file_name;
+                valid_session_tif_name{count}=tifName;
                 count=count+1;
             end
         end
@@ -97,14 +100,13 @@ for iSess=1:nSessions
     loadName=valid_session_names{iSess};
     short_name=valid_session_names_short{iSess};
     short_name=strrep(short_name,'_',' ');
-    load(loadName)
+    load(loadName,'session_data')
     loadName
     
     %%% Get all data from tif file
     tic
     frame_rate=session_data.data(5);
-    file_name=session_data.file_name;
-    info=imfinfo(file_name);
+    info=imfinfo(valid_session_tif_name{iSess});
     nFrames=length(info);
     rows=session_data.data(4);
     cols=session_data.data(3);
