@@ -106,14 +106,15 @@ for iSess=1:nSessions
     %%% Get all data from tif file
     tic
     frame_rate=session_data.data(5);
-    info=imfinfo(valid_session_tif_name{iSess});
+    tifName=valid_session_tif_name{iSess};
+    info=imfinfo(tifName);
     nFrames=length(info);
     rows=session_data.data(4);
     cols=session_data.data(3);
     
     frames=zeros(rows-1,cols,nFrames);
     for iFrame=1:nFrames
-        frame=double(imread(session_data.file_name,iFrame,'info',info));
+        frame=double(imread(tifName,iFrame,'info',info));
         frames(:,:,iFrame)=double(frame(1:end-1,:)); % no flyback line double
     end
     fprintf('Loading frames took: %3.1fs\n',toc);
