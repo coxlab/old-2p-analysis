@@ -62,7 +62,7 @@ for iSess=1:nSessions
     end
     
     
-    info=imfinfo();
+    info=imfinfo(tifName);
     nFrames=session_data.data(2);
     rows=session_data.data(4);
     cols=session_data.data(3);
