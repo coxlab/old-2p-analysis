@@ -121,11 +121,13 @@ for iSess=1:nSessions
         try
             [save_folder, save_name]=fileparts(session_data.file_name);
             saveName=fullfile(save_folder,'data_analysis',[save_name '.mat']);
+            save(saveName,'session_data')
         catch    
             saveName=loadName;
+            save(saveName,'session_data')
         end
         fprintf('Saving MIPs to file: %s\n',saveName)
-        save(saveName,'session_data')
+        
         progress(iSess,nSessions,t0)
     end
 end
