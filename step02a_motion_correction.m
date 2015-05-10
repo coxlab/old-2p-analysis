@@ -71,7 +71,7 @@ for iSess=1:nSessions
     fprintf('Loading frames...')
     frames=zeros(rows-1,cols,nFrames);
     for iFrame=1:nFrames
-        frame=double(imread(session_data.file_name,iFrame,'info',info));
+        frame=double(imread(tifName,iFrame,'info',info));
         frames(:,:,iFrame)=double(frame(1:end-1,:)); % no flyback line double
     end
     fprintf('took %3.2f seconds.\n',toc)
