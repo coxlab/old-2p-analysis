@@ -25,7 +25,8 @@ else
 end
 if nargin>=2
     if mod(iteration,blockSize)==1
-        disp(['Progress: ' padZeros(iteration,length(num2str(nIterations))) '/' num2str(nIterations) ' (' padZeros(floor(iteration/nIterations*100),3) '%)'])
+        %disp(['Progress: ' padZeros(iteration,length(num2str(nIterations))) '/' num2str(nIterations) ' (' padZeros(floor(iteration/nIterations*100),3) '%)'])
+        fprintf('Progress: %04d / %04d (%03.2f)\n',[iteration nIterations floor(iteration/nIterations*100)])
         drawnow
     end
 end
