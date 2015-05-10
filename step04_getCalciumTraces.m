@@ -95,7 +95,7 @@ extraction_options.plot_traces                         =  plot_it;
 
 
 %%
-for iSess=3%1:nSessions
+for iSess=1:nSessions
     session_nr=session_vector(iSess);
     loadName=valid_session_names{iSess};
     short_name=valid_session_names_short{iSess};
