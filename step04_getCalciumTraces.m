@@ -95,7 +95,7 @@ extraction_options.plot_traces                         =  plot_it;
 
 
 %%
-for iSess=1:nSessions
+for iSess=3%1:nSessions
     session_nr=session_vector(iSess);
     loadName=valid_session_names{iSess};
     short_name=valid_session_names_short{iSess};
@@ -136,15 +136,35 @@ for iSess=1:nSessions
     %apply_motion_correction=1;
     for iFrame=1:nFrames
         if apply_motion_correction==1
-            offset=motion_correction.shift_matrix(iFrame,4:5);
+            offset_shift=motion_correction.shift_matrix(iFrame,4:5);
         end
+        
+        %%% Shifts bigger then 1 FOV size will be problematic
+        ROI_size=[diff(ROIs(1).ROI_rect([1 3]))+1 diff(ROIs(1).ROI_rect([2 4]))+1];
+        offset_compensation=ROI_size;
+        
+        frame=frames(:,:,iFrame);
+        frame=centerOnRect(frame,size(frame)+ROI_size*2,0);
+        
         
         for iROI=1:nROI
             if apply_motion_correction==1                
                 if motion_correction.ignore_frames(iFrame)==1
                     ROI_box=zeros(size(ROIs(iROI).mask_soma));
                 else
-                    ROI_box=frames(offset(1)+ROIs(iROI).ROI_rect(2):offset(1)+ROIs(iROI).ROI_rect(4),offset(2)+ROIs(iROI).ROI_rect(1):offset(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+                    ROI_box=frame(offset_compensation(1)+offset_shift(1)+(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4)),offset_compensation(2)+offset_shift(2)+(ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3)));
+%                     try
+%                         ROI_box=frames(offset_shift(1)+ROIs(iROI).ROI_rect(2):offset_shift(1)+ROIs(iROI).ROI_rect(4),offset_shift(2)+ROIs(iROI).ROI_rect(1):offset_shift(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+%                     catch
+%                         disp('ROI bumping edge...')
+%                         switch 1
+%                             case 0 % ignore shift to avoid issue: bad fix                                
+%                                 ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
+%                             case 1 % expand frames by half ROI size and pad with zeros, they may become general practice
+%                                 
+%                                 
+%                         end
+%                     end
                 end                                
             else
                 ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
