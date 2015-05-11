@@ -27,9 +27,11 @@ green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
 % either set data_folder in code or use uigetdir
 switch 0
     case 0 % hardcoded
-        %exp_name='2015-04-07_AF11';
-        exp_name='2015-03-04_AF11';
+        exp_name='2015-03-03_AF03-light_awake';
         %exp_name='2015-03-05_AF03';
+        %exp_name='2015-03-04_AF11';
+        %exp_name='2015-04-07_AF11';
+        
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
         if isdir(data_folder)==0

@@ -34,8 +34,8 @@ motion_correction.downsample_factor=1;
 motion_correction.variability_threshold=10; % ignore parts of the movie where estimates are unreliable
 
 gamma_val=.5;
-%plot_it=0;
-save_it=1;
+%plot_it=1;
+%save_it=0;
 
 %%
 %%% Use uigetdir for general use
@@ -60,7 +60,6 @@ for iSess=1:nSessions
         tifName=fullfile(data_folder,[file_name '.tif']);
         load(loadName,'session_data');
     end
-    
     
     info=imfinfo(tifName);
     nFrames=session_data.data(2);
@@ -203,9 +202,9 @@ for iSess=1:nSessions
                 end
                 
                 
-            case 2 % new method
-                %%%
-                %% do fine analysis
+            case 2 % 2D translation, simple methods, takes care of all non-z shift along the AP and ML axes.
+                %%% Does not take care of rotations or non-rigid body
+                %%% transformations
                 t0=clock;
                 tic
                 shift_matrix=zeros(nFrames,5);

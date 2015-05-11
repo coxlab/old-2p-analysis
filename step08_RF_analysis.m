@@ -77,14 +77,14 @@ clf
 nCols=ceil(sqrt(nROI));
 nRows=ceil(nROI/nCols);
 
-MIP=dataset.MIP.data*0-10000;
+MIP=dataset.MIP.data*NaN;
 
 for iROI=1:nROI
     subplot(nRows,nCols,iROI)
     switch col_nr
         case 5
             RF=flipud(reshape(cond_matrix_mean(:,iROI),3,4));
-        case 8            
+        case 8
             RF=flipud(reshape(cond_matrix_mean(:,iROI),4,8));
     end
     mu=mean(perm_matrix_mean(:,iROI));
@@ -93,9 +93,10 @@ for iROI=1:nROI
     
     RF_zscore_all(:,:,iROI)=RF_zscore;
     
-    %%% Place RF map in FOV    
+    RF_zscore_disp=double(RF_zscore)/5*double(intmax('uint16'))/2+double(intmax('uint16'))/2;
+    %%% Place RF map in FOV
     center=round(dataset.ROI_definitions(iROI).center_coords);
-    RF_disp=imresize(RF_zscore*700,3,'bicubic');
+    RF_disp=imresize(RF_zscore_disp,3,'bicubic');
     MIP(center(2)-size(RF_disp,1)/2+1:center(2)+size(RF_disp,1)/2,center(1)-size(RF_disp,2)/2+1:center(1)+size(RF_disp,2)/2)=RF_disp;
     
     switch 2
@@ -115,10 +116,19 @@ clf
 imshow(MIP,[])
 colormap(hot)
 
-%% show mean map
-imagesc(mean(RF_zscore_all,3))
-set(gca,'Clim',[-1 1]*25)
+if 1
+    %%
+    parts=strsplit('/',data_folder);
+    saveName=fullfile(data_folder,'data_analysis','RF_maps',sprintf([parts{end} '_%03d.eps'],dataset_selector));
+    savec(saveName)
+    print(gcf,saveName,'-depsc')
+end
 
+if 0
+    %% show mean map
+    imagesc(mean(RF_zscore_all,3))
+    set(gca,'Clim',[-1 1]*5)
+end
 %% plot x and y centers values at cell location and interpolate between them, this should give you a smooth RF map
 % use color to code position
 % make one plot for each coord: azimuth and elevation
