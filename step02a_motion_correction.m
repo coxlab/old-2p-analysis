@@ -34,14 +34,10 @@ motion_correction.downsample_factor=1;
 motion_correction.variability_threshold=10; % ignore parts of the movie where estimates are unreliable
 
 gamma_val=.5;
-plot_it=1;
-save_it=0;
+%plot_it=1;
+%save_it=0;
 
 %%
-%%% Use uigetdir for general use
-%cd(data_root)
-%data_folder=uigetdir(data_root);
-
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
 load(loadName,'data_sessions')
 nSessions=length(data_sessions);
