@@ -3,7 +3,7 @@ clc
 
 header_script
 
-dataset_selector=1;
+dataset_selector=3;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));

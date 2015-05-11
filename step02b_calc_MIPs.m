@@ -42,9 +42,7 @@ for iSess=1:nSessions
     info=imfinfo(tifName);
     nFrames=session_data.data(2);
     rows=session_data.data(4);
-    cols=session_data.data(3);
-    
-    frames=zeros(rows-1,cols,nFrames);
+    cols=session_data.data(3);    
     if isfield(session_data,'motion_correction')
         motion_correction=session_data.motion_correction;
         MIP_options.apply_motion_correction=1;
@@ -54,6 +52,7 @@ for iSess=1:nSessions
     
     fprintf('Loading frames...')
     tic
+    frames=zeros(rows-1,cols,nFrames);
     for iFrame=1:nFrames
         frame=double(imread(tifName,iFrame,'info',info));
         frame=double(frame(1:end-1,:)); % no flyback line
@@ -64,7 +63,7 @@ for iSess=1:nSessions
             offset=-motion_correction.shift_matrix(iFrame,4:5);
             if any(offset~=0)
                 %frame=offsetIm(frame,offset(1),offset(2),0);
-                frame=offsetIm(frame,offset(1),offset(2),mean(frame(:)));
+                frame=offsetIm(frame,offset(2),offset(1),mean(frame(:)));
             else
                 % as long as offsets are both zero, use uncorrected version
             end
@@ -72,6 +71,9 @@ for iSess=1:nSessions
         frames(:,:,iFrame)=frame;
     end
     fprintf('took %3.2f seconds.\n',toc)
+    
+    %%% BV20150511: delete ignored frames
+    frames(:,:,motion_correction.ignore_frames==1)=[];
     
     if MIP_options.do_medfilt3==1&&debugging==0
         %% BV20150420: added 3D median filt, will make images look prettier, especially max

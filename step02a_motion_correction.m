@@ -34,8 +34,8 @@ motion_correction.downsample_factor=1;
 motion_correction.variability_threshold=10; % ignore parts of the movie where estimates are unreliable
 
 gamma_val=.5;
-%plot_it=1;
-%save_it=0;
+plot_it=1;
+save_it=0;
 
 %%
 %%% Use uigetdir for general use
@@ -255,6 +255,9 @@ for iSess=1:nSessions
         
         if plot_it==1
             %% visualize shifts over time
+            if gcf==999
+                figure(1)
+            end
             plot(T,shift_matrix(:,4))
             hold on
             plot(T,shift_matrix(:,5),'r')
