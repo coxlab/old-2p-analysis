@@ -72,13 +72,13 @@ for iClust=1:nClusters
         
         cell_numbers=cat(1,session_data.ROI_definitions.ROI_nr);
         cell_selection=ismember(cell_numbers,unique_cell_numbers);
-        time_selection=2:size(session_data_all(iSess).stimulus_matrix_ext,1); % skip first frame
+        time_selection=1:size(session_data_all(iSess).stimulus_matrix_ext,1);
         
-        % skip blank frames
-        time_selection(session_data.blank_frames==1)=[];
+        % skip blank and motion-frenzy frames
+        time_selection(session_data.blank_frames==1|session_data.motion_correction.ignore_frames==1)=[];
         
         % skip unreliable motion frames
-        time_selection(session_data.motion_correction.ignore_frames==1)=[];
+        %time_selection()=[];
         nFrames_selected=length(time_selection);
         
         % concat time scales

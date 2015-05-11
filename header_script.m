@@ -28,8 +28,8 @@ green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
 switch 0
     case 0 % hardcoded
         %exp_name='2015-04-07_AF11';
-        %exp_name='2015-03-04_AF11';
-        exp_name='2015-03-05_AF03';
+        exp_name='2015-03-04_AF11';
+        %exp_name='2015-03-05_AF03';
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
         if isdir(data_folder)==0
@@ -45,4 +45,4 @@ end
 
 % suppress output so we can run in -nojvm mode
 plot_it=0;
-
+save_it=1;

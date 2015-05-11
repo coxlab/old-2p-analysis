@@ -3,7 +3,7 @@ clc
 
 header_script
 
-dataset_selector=3;
+dataset_selector=1;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
@@ -91,6 +91,8 @@ for iROI=1:nROI
     sigma=std(perm_matrix_mean(:,iROI));
     RF_zscore=(RF-mu)/sigma;
     
+    RF_zscore_all(:,:,iROI)=RF_zscore;
+    
     %%% Place RF map in FOV    
     center=round(dataset.ROI_definitions(iROI).center_coords);
     RF_disp=imresize(RF_zscore*700,3,'bicubic');
@@ -112,6 +114,10 @@ end
 clf
 imshow(MIP,[])
 colormap(hot)
+
+%% show mean map
+imagesc(mean(RF_zscore_all,3))
+set(gca,'Clim',[-1 1]*25)
 
 %% plot x and y centers values at cell location and interpolate between them, this should give you a smooth RF map
 % use color to code position
