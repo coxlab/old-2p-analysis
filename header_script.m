@@ -30,8 +30,8 @@ switch 0
         %exp_name='2015-03-03_AF03-light_awake';
         %exp_name='2015-03-04_AF11';
         %exp_name='2015-03-05_AF03';
-        exp_name='2015-03-05_AF11';
-        %exp_name='2015-04-07_AF11';
+        %exp_name='2015-03-05_AF11';
+        exp_name='2015-04-07_AF11';
         %exp_name='2015-04-10_AF11_exp';
         %exp_name='2015-04-15_AF11';
         %exp_name='2015-04-16_AF11';

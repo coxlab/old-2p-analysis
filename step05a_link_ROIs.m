@@ -9,7 +9,7 @@ clc
 header_script
 
 folder_selector=0;
-cluster_nr=2;
+cluster_nr=1;
 
 %%% Select datafiles
 use_gui=0;

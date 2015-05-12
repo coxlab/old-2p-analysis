@@ -3,13 +3,13 @@ clc
 
 header_script
 
-dataset_selector=2;
+dataset_selector=1;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
 load(loadName,'dataset')
 
-nFrames=dataset.nFrames;
+nFrames=dataset.nFrames
 nROI=dataset.nROI;
 stim_matrix=dataset.stim_matrix;
 resp_matrix=dataset.resp_matrix;
@@ -22,7 +22,7 @@ unique_conditions=unique(condition_vector);
 nConditions=length(unique_conditions);
 
 %%% For each ROI, determine response per condition
-stim_length_frames=9;
+stim_length_frames=24;
 cond_matrix_mean=zeros(nConditions,nROI);
 cond_matrix_std=cond_matrix_mean;
 perm_matrix_mean=cond_matrix_mean;
@@ -36,11 +36,14 @@ for iROI=1:nROI
         
         %%% find different presentation of condition
         frames_selected=find(sel);
-        start_frames=[0;diff(frames_selected)>1];
+        start_frames=[1;diff(frames_selected)>1];
         repeat_starts=frames_selected(start_frames==1);
         repeat_starts(repeat_starts+stim_length_frames>nFrames)=[];
         
         nRepeats=length(repeat_starts);
+        if nRepeats==0
+            die
+        end
         repeat_vector=zeros(nRepeats,1);
         for iRepeat=1:nRepeats
             repeat_start=repeat_starts(iRepeat);

@@ -29,6 +29,7 @@ for iClust=1:nClusters
     
     %%% Load data for selected sessions
     nSessions=length(selected_sessions);
+    count=1;
     for iSess=1:nSessions
         [f,fn,ext]=fileparts(data_sessions(selected_sessions(iSess)).file_name);
         
@@ -39,7 +40,10 @@ for iClust=1:nClusters
                 % remove old options field
                 session_data=rmfield(session_data,'options');
             end
-            session_data_all(iSess)=session_data;
+            if isfield(session_data,'activity_matrix')
+                session_data_all(count)=session_data;
+                count=count+1;
+            end
         end
     end
     
