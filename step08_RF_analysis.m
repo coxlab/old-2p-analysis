@@ -3,7 +3,7 @@ clc
 
 header_script
 
-dataset_selector=3;
+dataset_selector=2;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
@@ -80,7 +80,7 @@ nRows=ceil(nROI/nCols);
 MIP=dataset.MIP.data*NaN;
 
 for iROI=1:nROI
-    subplot(nRows,nCols,iROI)
+    
     switch col_nr
         case 5
             RF=flipud(reshape(cond_matrix_mean(:,iROI),3,4));
@@ -99,20 +99,28 @@ for iROI=1:nROI
     RF_disp=imresize(RF_zscore_disp,3,'bicubic');
     MIP(center(2)-size(RF_disp,1)/2+1:center(2)+size(RF_disp,1)/2,center(1)-size(RF_disp,2)/2+1:center(1)+size(RF_disp,2)/2)=RF_disp;
     
-    switch 2
-        case 1
-            imagesc(RF_zscore)
-            set(gca,'Clim',[-1 1]*25)
-        case 2
-            imagesc(RF_zscore>10)
-            set(gca,'Clim',[0 1])
+    if plot_it==1
+        subplot(nRows,nCols,iROI)
+        switch 2
+            case 1
+                imagesc(RF_zscore)
+                set(gca,'Clim',[-1 1]*25)
+            case 2
+                imagesc(RF_zscore>10)
+                set(gca,'Clim',[0 1])
+        end
+        title(dataset.ROI_definitions(iROI).center_coords)
+        axis equal
+        axis tight
+        set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
     end
-    title(dataset.ROI_definitions(iROI).center_coords)
-    axis equal
-    axis tight
-    set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
 end
-clf
+
+figure(dataset_selector)
+subplot(121)
+imshow(dataset.MIP.data,[])
+colormap(green)
+subplot(122)
 imshow(MIP,[])
 colormap(hot)
 
