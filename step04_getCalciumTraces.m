@@ -154,18 +154,18 @@ for iSess=1:nSessions
                     ROI_box=zeros(size(ROIs(iROI).mask_soma));
                 else
                     ROI_box=frame(offset_compensation(1)+offset_shift(1)+(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4)),offset_compensation(2)+offset_shift(2)+(ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3)));
-%                     try
-%                         ROI_box=frames(offset_shift(1)+ROIs(iROI).ROI_rect(2):offset_shift(1)+ROIs(iROI).ROI_rect(4),offset_shift(2)+ROIs(iROI).ROI_rect(1):offset_shift(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
-%                     catch
-%                         disp('ROI bumping edge...')
-%                         switch 1
-%                             case 0 % ignore shift to avoid issue: bad fix                                
-%                                 ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
-%                             case 1 % expand frames by half ROI size and pad with zeros, they may become general practice
-%                                 
-%                                 
-%                         end
-%                     end
+                    try
+                        ROI_box=frames(offset_shift(1)+ROIs(iROI).ROI_rect(2):offset_shift(1)+ROIs(iROI).ROI_rect(4),offset_shift(2)+ROIs(iROI).ROI_rect(1):offset_shift(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+                    catch
+                        %disp('ROI bumping edge...')
+                        switch 2
+                            case 0 % ignore shift to avoid issue: bad fix                                
+                                ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
+                            case 1 % expand frames by half ROI size and pad with zeros, they may become general practice
+                            case 2 % fall of the map => all black
+                                ROI_box=zeros(size(ROIs(iROI).mask_soma));                                
+                        end
+                    end
                 end                                
             else
                 ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
