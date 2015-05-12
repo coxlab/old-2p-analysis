@@ -350,32 +350,34 @@ exp_tag='ExpType';
 %exp_tag='stop_it';
 tag_nr=find(ismember(tag_names,exp_tag),1);
 expType=0;
-expType_name='';
+%expType_name='';
+expType_name_vector={'RSVP','Retinomapping'};
 if ~isempty(tag_nr) % if expType tag is present, just read it out
     code_selection=code_names(tag_nr);
-    MW_events=getEvents(mwk_file_name, code_selection);
-    nEvents=length(MW_events);
-    type_vector=cat(1,MW_events.data);
+    MW_events_expType=getEvents(mwk_file_name, code_selection);
+    nEvents=length(MW_events_expType);
+    type_vector=cat(1,MW_events_expType.data);
     expType=mode(type_vector);
 else % for older files, find work-around
     %%% Find tags specific to a certain experiment =risky
     tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
     if ~isempty(tag_nr)
         expType=1; % RSVP
-        expType_name='RSVP';
+        %expType_name='RSVP';
     end
     
     %%% Find tags specific to a certain experiment =risky
     tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
     if ~isempty(tag_nr)
         expType=2; % Retinomapping
-        expType_name='Retinomapping';
+        %expType_name='Retinomapping';
     end
     
     if expType==0
         disp('Unable to determine experiment type, how do you wish to proceed?')
     end
 end
+expType_name=expType_name_vector{expType};
 
 for iFile=1:nFiles
     file_info(iFile).expType=expType;
@@ -454,7 +456,7 @@ try
     MW_session_times_matched=MW_session_times(match_vector,:);
     
     % compare session durations as a sanity check
-    TH_duration_mismatch=0.100; % in seconds
+    TH_duration_mismatch=0.200; % in seconds
     if any(abs(diff([SI_session_allocation(:,4) MW_session_times_matched(:,4)],[],2))>TH_duration_mismatch)
         error('Difference between session duration detected, go manual')
     end
