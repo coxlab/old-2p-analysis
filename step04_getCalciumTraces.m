@@ -152,10 +152,10 @@ for iSess=1:nSessions
             if apply_motion_correction==1                
                 if motion_correction.ignore_frames(iFrame)==1
                     ROI_box=zeros(size(ROIs(iROI).mask_soma));
-                else
-                    ROI_box=frame(offset_compensation(1)+offset_shift(1)+(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4)),offset_compensation(2)+offset_shift(2)+(ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3)));
+                else                    
                     try
-                        ROI_box=frames(offset_shift(1)+ROIs(iROI).ROI_rect(2):offset_shift(1)+ROIs(iROI).ROI_rect(4),offset_shift(2)+ROIs(iROI).ROI_rect(1):offset_shift(2)+ROIs(iROI).ROI_rect(3),iFrame); % do motion correction on ROIs
+                        %ROI_box=frames(offset_shift(1)+ROIs(iROI).ROI_rect(2):offset_shift(1)+ROIs(iROI).ROI_rect(4),offset_shift(2)+ROIs(iROI).ROI_rect(1):offset_shift(2)+ROIs(iROI).ROI_rect(3),iFrame);
+                        ROI_box=frame(offset_compensation(1)+offset_shift(1)+(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4)),offset_compensation(2)+offset_shift(2)+(ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3)));% do motion correction on ROIs
                     catch
                         %disp('ROI bumping edge...')
                         switch 2
