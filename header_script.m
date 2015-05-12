@@ -48,3 +48,6 @@ end
 % suppress output so we can run in -nojvm mode
 plot_it=0;
 save_it=1;
+
+% display current working folder
+fprintf('Current working folder is : %s\n',data_folder)
