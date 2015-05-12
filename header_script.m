@@ -41,7 +41,8 @@ switch 0
         % Julia data
         %exp_name='20150502_jrat3/Session02';
         %exp_name='20150502_jrat3/Session03-05';
-        exp_name='20150502_jrat3/Session06-10';
+        %exp_name='20150502_jrat3/Session06-10';
+        exp_name='20150502_jrat3/Session11-16';
         
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
