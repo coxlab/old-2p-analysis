@@ -137,6 +137,7 @@ for iSess=1:nSessions
     for iFrame=1:nFrames
         if apply_motion_correction==1
             offset_shift=motion_correction.shift_matrix(iFrame,4:5);
+            motion_correction.ignore_frames=medfilt1(double(motion_correction.ignore_frames),5)==1;
         end
         
         %%% Shifts bigger then 1 FOV size will be problematic
