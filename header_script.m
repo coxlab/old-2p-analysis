@@ -43,7 +43,8 @@ switch 0
         %exp_name='20150502_jrat3/Session03-05';
         %exp_name='20150502_jrat3/Session06-10';
         %exp_name='20150502_jrat3/Session11-16';
-        exp_name='20150502_jrat3/Session17-22';
+        %exp_name='20150502_jrat3/Session17-22';
+        exp_name='20150502_jrat3/Session23-25';
         
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
