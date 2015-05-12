@@ -456,7 +456,7 @@ try
     MW_session_times_matched=MW_session_times(match_vector,:);
     
     % compare session durations as a sanity check
-    TH_duration_mismatch=0.200; % in seconds
+    TH_duration_mismatch=0.500; % in seconds
     if any(abs(diff([SI_session_allocation(:,4) MW_session_times_matched(:,4)],[],2))>TH_duration_mismatch)
         error('Difference between session duration detected, go manual')
     end
