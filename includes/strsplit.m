@@ -1,53 +1,131 @@
-function parts = strsplit(splitstr, str, option)
-%STRSPLIT Split string into pieces.
+function [c, matches] = strsplit(str, aDelim, varargin)
+%STRSPLIT  Split string at delimiter
+%   C = STRSPLIT(S) splits the string S at whitespace into the cell array
+%   of strings C.
 %
-%   STRSPLIT(SPLITSTR, STR, OPTION) splits the string STR at every occurrence
-%   of SPLITSTR and returns the result as a cell array of strings.  By default,
-%   SPLITSTR is not included in the output.
+%   C = STRSPLIT(S, DELIMITER) splits S at DELIMITER into C. DELIMITER can
+%   be a string or a cell array of strings. If DELIMITER is a cell array of
+%   strings, STRSPLIT splits S along the elements in DELIMITER, in the
+%   order in which they appear in the cell array.
 %
-%   STRSPLIT(SPLITSTR, STR, OPTION) can be used to control how SPLITSTR is
-%   included in the output.  If OPTION is 'include', SPLITSTR will be included
-%   as a separate string.  If OPTION is 'append', SPLITSTR will be appended to
-%   each output string, as if the input string was split at the position right
-%   after the occurrence SPLITSTR.  If OPTION is 'omit', SPLITSTR will not be
-%   included in the output.
+%   C = STRSPLIT(S, DELIMITER, PARAM1, VALUE1, ... PARAMN, VALUEN) modifies
+%   the way in which S is split at DELIMITER.
+%   Valid parameters are:
+%     'CollapseDelimiters' - If true (default), consecutive delimiters in S
+%       are treated as one. If false, consecutive delimiters are treated as
+%       separate delimiters, resulting in empty string '' elements between
+%       matched delimiters.
+%     'DelimiterType' - DelimiterType can have the following values:
+%       'Simple' (default) - Except for escape sequences, STRSPLIT treats
+%         DELIMITER as a literal string.
+%       'RegularExpression' - STRSPLIT treats DELIMITER as a regular
+%         expression.
+%       In both cases, DELIMITER can include the following escape
+%       sequences:
+%           \\   Backslash
+%           \0   Null
+%           \a   Alarm
+%           \b   Backspace
+%           \f   Form feed
+%           \n   New line
+%           \r   Carriage return
+%           \t   Horizontal tab
+%           \v   Vertical tab
+%
+%   [C, MATCHES] = STRSPLIT(...) also returns the cell array of strings
+%   MATCHES containing the DELIMITERs upon which S was split. Note that
+%   MATCHES always contains one fewer element than C.
+%
+%   Examples:
+%
+%       str = 'The rain in Spain stays mainly in the plain.';
+%
+%       % Split on all whitespace.
+%       strsplit(str)
+%       % {'The', 'rain', 'in', 'Spain', 'stays',
+%       %  'mainly', 'in', 'the', 'plain.'}
+%
+%       % Split on 'ain'.
+%       strsplit(str, 'ain')
+%       % {'The r', ' in Sp', ' stays m', 'ly in the pl', '.'}
+%
+%       % Split on ' ' and on 'ain' (treating multiple delimiters as one).
+%       strsplit(str, {' ', 'ain'})
+%       % ('The', 'r', 'in', 'Sp', 'stays',
+%       %  'm', 'ly', 'in', 'the', 'pl', '.'}
+%
+%       % Split on all whitespace and on 'ain', and treat multiple
+%       % delimiters separately.
+%       strsplit(str, {'\s', 'ain'}, 'CollapseDelimiters', false, ...
+%                     'DelimiterType', 'RegularExpression')
+%       % {'The', 'r', '', 'in', 'Sp', '', 'stays',
+%       %  'm', 'ly', 'in', 'the', 'pl', '.'}
+%
+%   See also REGEXP, STRFIND, STRJOIN.
 
-%   Author:      Peter J. Acklam
-%   Time-stamp:  2004-09-22 08:48:01 +0200
-%   E-mail:      pjacklam@online.no
-%   URL:         http://home.online.no/~pjacklam
+%   Copyright 2012 The MathWorks, Inc.
 
-   nargsin = nargin;
-   error(nargchk(2, 3, nargsin));
-   if nargsin < 3
-      option = 'omit';
-   else
-      option = lower(option);
-   end
+narginchk(1, Inf);
 
-   splitlen = length(splitstr);
-   parts = {};
+% Initialize default values.
+collapseDelimiters = true;
+delimiterType = 'Simple';
 
-   while 1
+% Check input arguments.
+if nargin < 2
+    delimiterType = 'RegularExpression';
+    aDelim = '\s';
+end
+if ~isString(str)
+    error(message('MATLAB:strsplit:InvalidStringType'));
+end
+if isString(aDelim)
+    aDelim = {aDelim};
+elseif ~isCellString(aDelim)
+    error(message('MATLAB:strsplit:InvalidDelimiterType'));
+end
+if nargin > 2
+    funcName = mfilename;
+    p = inputParser;
+    p.FunctionName = funcName;
+    p.addParamValue('CollapseDelimiters', collapseDelimiters);
+    p.addParamValue('DelimiterType', delimiterType);
+    p.parse(varargin{:});
+    collapseDelimiters = verifyScalarLogical(p.Results.CollapseDelimiters, ...
+        funcName, 'CollapseDelimiters');
+    delimiterType = validatestring(p.Results.DelimiterType, ...
+        {'RegularExpression', 'Simple'}, funcName, 'DelimiterType');
+end
 
-      k = strfind(str, splitstr);
-      if isempty(k)
-         parts{end+1} = str;
-         break
-      end
+% Handle DelimiterType.
+if strcmp(delimiterType, 'Simple')
+    % Handle escape sequences and translate.
+    aDelim = strescape(aDelim);
+    aDelim = regexptranslate('escape', aDelim);
+else
+    % Check delimiter for regexp warnings.
+    regexp('', aDelim, 'warnings');
+end
 
-      switch option
-         case 'include'
-            parts(end+1:end+2) = {str(1:k(1)-1), splitstr};
-         case 'append'
-            parts{end+1} = str(1 : k(1)+splitlen-1);
-         case 'omit'
-            parts{end+1} = str(1 : k(1)-1);
-         otherwise
-            error(['Invalid option string -- ', option]);
-      end
+% Handle multiple delimiters.
+aDelim = strjoin(aDelim, '|');
 
+% Handle CollapseDelimiters.
+if collapseDelimiters
+    aDelim = ['(?:', aDelim, ')+'];
+end
 
-      str = str(k(1)+splitlen : end);
+% Split.
+[c, matches] = regexp(str, aDelim, 'split', 'match');
 
-   end
+end
+%--------------------------------------------------------------------------
+function tf = verifyScalarLogical(tf, funcName, parameterName)
+
+if isscalar(tf) && isnumeric(tf) && any(tf == [0, 1])
+    tf = logical(tf);
+else
+    validateattributes(tf, {'logical'}, {'scalar'}, funcName, parameterName);
+end
+
+end

@@ -129,7 +129,7 @@ colormap(hot)
 
 if 1
     %%
-    parts=strsplit('/',data_folder);
+    parts=strsplit(data_folder,filesep);
     saveName=fullfile(data_folder,'data_analysis','RF_maps',sprintf([parts{end} '_%03d.eps'],dataset_selector));
     savec(saveName)
     print(gcf,saveName,'-depsc')

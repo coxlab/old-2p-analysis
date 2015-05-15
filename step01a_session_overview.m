@@ -80,7 +80,7 @@ for iFile=1:nFiles
     
     %% Get SCIM headers
     scim_info=info(1).ImageDescription;
-    scinfo=strsplit(char(13),scim_info);
+    scinfo=strsplit(scim_info,char(13));
     scim_info=strjoin(scinfo,[';' char(13)]);
     eval([scim_info  ';']); % revive scan image variables
     frame_rate=state.acq.frameRate;

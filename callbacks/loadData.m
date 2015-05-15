@@ -40,7 +40,7 @@ else
     else
         % if not found, search for same file relative to current data_root        
         [f,fn,ext]=fileparts(session_file_name);
-        parts=strsplit(filesep,f);
+        parts=strsplit(f,filesep);
         folder=parts{end};
         session_file_name=fullfile(handles.data_root,folder,[fn ext]);
     end
