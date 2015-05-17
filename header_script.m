@@ -32,9 +32,9 @@ switch 0
         %exp_name='2015-03-04_AF11';
         %exp_name='2015-03-05_AF03';
         %exp_name='2015-03-05_AF11';
-        %exp_name='2015-04-07_AF11';
+        exp_name='2015-04-07_AF11';
         %exp_name='2015-04-10_AF11_exp';
-        exp_name='2015-04-15_AF11';
+        %exp_name='2015-04-15_AF11';
         %exp_name='2015-04-16_AF11';
         
         
@@ -56,8 +56,8 @@ switch 0
         curr_dir=pwd;
         cd(data_root)
         data_folder=uigetdir(data_root);
-        cd(curr_dir)
 end
+cd(root_folder)
 
 % suppress output so we can run in -nojvm mode
 plot_it=0;
