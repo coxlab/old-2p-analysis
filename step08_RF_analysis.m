@@ -3,7 +3,8 @@ clc
 
 header_script
 
-dataset_selector=1;
+save_it=0;
+dataset_selector=3;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
@@ -127,7 +128,7 @@ subplot(122)
 imshow(MIP,[])
 colormap(hot)
 
-if 1
+if save_it==1
     %%
     parts=strsplit(data_folder,filesep);
     saveName=fullfile(data_folder,'data_analysis','RF_maps',sprintf([parts{end} '_%03d.eps'],dataset_selector));

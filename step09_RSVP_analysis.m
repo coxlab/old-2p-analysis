@@ -1,9 +1,15 @@
 clear all
 clc
 
-header_script
+%%% for the most responsive position, do selectivity analysis over each
+%%% cell or each population. Try also to see how generalization works over
+%%% all other positions
 
-dataset_selector=1;
+%%% BV20150518: unbiased method of 
+
+header_script
+save_it=0;
+dataset_selector=3;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
@@ -99,7 +105,7 @@ for iROI=1:nROI
     RF_zscore_disp=double(RF_zscore)/5*double(intmax('uint16'))/2+double(intmax('uint16'))/2;
     %%% Place RF map in FOV
     center=round(dataset.ROI_definitions(iROI).center_coords);
-    RF_disp=imresize(RF_zscore_disp,3,'bicubic');
+    RF_disp=imresize(RF_zscore_disp,4,'bicubic');
     MIP(center(2)-size(RF_disp,1)/2+1:center(2)+size(RF_disp,1)/2,center(1)-size(RF_disp,2)/2+1:center(1)+size(RF_disp,2)/2)=RF_disp;
     
     if plot_it==1
@@ -127,7 +133,7 @@ subplot(122)
 imshow(MIP,[])
 colormap(hot)
 
-if 1
+if save_it==1
     %%
     parts=strsplit(data_folder,filesep);
     saveName=fullfile(data_folder,'data_analysis','RSVP_maps',sprintf([parts{end} '_%03d.eps'],dataset_selector));
