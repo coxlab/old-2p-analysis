@@ -30,6 +30,8 @@ function step03_ROI_GUI(varargin)
 
 % BV20150409: save gamma val for MIP if it is set and reload
 % BV20150413: allow switching between MIPs
+% BV20150518: allow ROI definitions made by different people, specific
+% ROI_definitions struct based on username
 
 
 %%% Add subfolders
@@ -38,6 +40,15 @@ addpath(genpath(path_dir))
 
 %%% Set data_root
 header_script
+
+switch user_name
+    case 'benvermaercke'
+        handles.ROI_definition_nr=1;
+    case 'julianarhee'
+        handles.ROI_definition_nr=2;
+    otherwise
+        handles.ROI_definition_nr=3;
+end
 
 handles.data_root=data_root;
 handles.green=green;
