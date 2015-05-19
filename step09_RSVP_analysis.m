@@ -5,11 +5,12 @@ clc
 %%% cell or each population. Try also to see how generalization works over
 %%% all other positions
 
-%%% BV20150518: unbiased method of 
-
+%%% BV20150518: unbiased method: every 
+% find number of presentations per unique combination of shape and position
+% i.e. 1/384 and concat all the responses per FOV 
 header_script
 save_it=0;
-dataset_selector=3;
+dataset_selector=1;
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
@@ -20,6 +21,24 @@ nROI=dataset.nROI;
 stim_matrix=dataset.stim_matrix;
 resp_matrix=dataset.resp_matrix;
 resp_matrix_NND=dataset.resp_matrix_NND;
+
+
+%%
+M=[pivotTable(stim_matrix,9,'mean',9) pivotTable(stim_matrix,9,'length',9)/6];
+M(M==0,:)=[];
+
+M
+size(M)
+
+%% Collect average responses for all ROIs
+
+
+
+%%
+
+die
+
+
 
 %%% Get unique condition numbers
 col_nr=5;
