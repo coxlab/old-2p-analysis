@@ -43,11 +43,11 @@ header_script
 
 switch user_name
     case 'benvermaercke'
-        handles.ROI_definition_nr=1;
-    case 'julianarhee'
         handles.ROI_definition_nr=2;
-    otherwise
+    case 'julianarhee'
         handles.ROI_definition_nr=3;
+    otherwise
+        handles.ROI_definition_nr=1;
 end
 
 handles.data_root=data_root;
@@ -57,7 +57,7 @@ handles.window_size=[40 40];
 %%% Set up GUI
 handles.figure1=figure(999);
 clf
-set(handles.figure1,'units','normalized','position',[0.60 0.25 0.35 0.5],'resize','on','menubar','none','NumberTitle','Off','Name','ROI_GUI: ROI extraction from 2p data')
+set(handles.figure1,'units','normalized','position',[0.60 0.25 0.35 0.5],'resize','on','menubar','none','NumberTitle','Off','Name','ROI-King: ROI extraction from 2p data')
 mainPanel=uipanel(handles.figure1,'units','normalized','position',[.01 .01 .98 .98]);
 
 graphPanel=uipanel(mainPanel,'units','normalized','position',[.01 .52 .98 .47]);
