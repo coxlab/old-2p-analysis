@@ -17,7 +17,7 @@ clc
 %%%     consider also adding stim averaged data
 
 header_script
-%save_it=1;
+save_it=1;
 
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
 load(loadName,'data_sessions','FOV_matching')
