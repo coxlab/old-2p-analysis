@@ -2,6 +2,10 @@ function varargout=analyse_RF(varargin)
 Y=varargin{1};
 X=varargin{2};
 
+if length(X)~=length(Y)
+    error('Both vector should be equal length...')
+end
+
 %%% use the fact that blanks occur much more frequently to exclude these
 %%% from analysis
 condition_vector=unique(X);
@@ -17,6 +21,7 @@ stim_length_frames=24;
 frame_selector=[2 7];
 
 %%% Loop over conditions
+result=struct;
 for iCond=1:nConditions
     condition_nr=condition_vector(iCond);
     
@@ -35,11 +40,9 @@ for iCond=1:nConditions
         %stim_matrix(repeat_start-2:repeat_start+6,:); % sanity check
     end
     
-    result.nRepeats=nRepeats;
-    result.mean_resp=mean(repeat_vector);
-    result.std_resp=std(repeat_vector);
-    
-    
+    result(iCond).nRepeats=nRepeats;
+    result(iCond).mean_resp=mean(repeat_vector);
+    result(iCond).std_resp=std(repeat_vector);
 end
 
 varargout{1}=result;
