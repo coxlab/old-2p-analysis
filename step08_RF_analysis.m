@@ -4,6 +4,8 @@ clc
 
 header_script
 
+
+%%
 save_it=0;
 dataset_selector=3;
 
@@ -77,7 +79,7 @@ for iROI=1:nROI
     end
 end
 
-%%
+%%%
 clf
 nCols=ceil(sqrt(nROI));
 nRows=ceil(nROI/nCols);
@@ -122,10 +124,10 @@ for iROI=1:nROI
 end
 
 figure(dataset_selector)
-subplot(121)
+subplot(211)
 imshow(dataset.MIP.data,[])
 colormap(green)
-subplot(122)
+subplot(212)
 imshow(MIP,[])
 colormap(hot)
 
