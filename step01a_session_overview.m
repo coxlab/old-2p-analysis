@@ -614,14 +614,14 @@ for iSess=1:nSessions
                             disp('Not all positions were presented, conversion will be done using static reference position matrix')
                             positions_ref=[-45.5000000000000,-19.5000000000000;-45.5000000000000,-6.50000000000000;-45.5000000000000,6.50000000000000;-45.5000000000000,19.5000000000000;-32.5000000000000,-19.5000000000000;-32.5000000000000,-6.50000000000000;-32.5000000000000,6.50000000000000;-32.5000000000000,19.5000000000000;-19.5000000000000,-19.5000000000000;-19.5000000000000,-6.50000000000000;-19.5000000000000,6.50000000000000;-19.5000000000000,19.5000000000000;-6.50000000000000,-19.5000000000000;-6.50000000000000,-6.50000000000000;-6.50000000000000,6.50000000000000;-6.50000000000000,19.5000000000000;6.50000000000000,-19.5000000000000;6.50000000000000,-6.50000000000000;6.50000000000000,6.50000000000000;6.50000000000000,19.5000000000000;19.5000000000000,-19.5000000000000;19.5000000000000,-6.50000000000000;19.5000000000000,6.50000000000000;19.5000000000000,19.5000000000000;32.5000000000000,-19.5000000000000;32.5000000000000,-6.50000000000000;32.5000000000000,6.50000000000000;32.5000000000000,19.5000000000000;45.5000000000000,-19.5000000000000;45.5000000000000,-6.50000000000000;45.5000000000000,6.50000000000000;45.5000000000000,19.5000000000000];
                             nPositions=size(positions_ref,1);
-                            position_vector=zeros(nFrames,1);
+                            position_vector=zeros(nFrames,1)-1;
                             for iPos=1:nPositions
                                 pos=positions_ref(iPos,:);
                                 indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
                                 position_vector(indices,1)=iPos;
                             end
                         else
-                            position_vector=zeros(nFrames,1);
+                            position_vector=zeros(nFrames,1)-1;
                             for iPos=1:nPositions
                                 pos=positions(iPos,:);
                                 indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
@@ -642,7 +642,7 @@ for iSess=1:nSessions
                             cond_matrix_full=cat(1,cond_matrix_full,[repmat(shape_nr,size(positions,1),1) positions]);
                         end
                         
-                        condition_vector=zeros(nFrames,1);
+                        condition_vector=zeros(nFrames,1)-1;
                         for iCond=1:size(cond_matrix_full,1)
                             condition=cond_matrix_full(iCond,:);
                             indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,6)==condition(2)&stimulus_matrix_ext(:,7)==condition(3));
