@@ -499,7 +499,7 @@ end
 nSessions=size(matching_matrix,1);
 data_sessions=struct('file_name',[],'expType',[],'expType_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
 good_sessions=0;
-for iSess=1:nSessions
+for iSess=3%1:nSessions
     F=file_info(matching_matrix(iSess,1));
     data_type=F.data(end);
     
@@ -712,16 +712,22 @@ for iSess=1:nSessions
                 %%% bitCode a given number of frames based on time between MWorks
                 %%% display update events and frame rate of SI
                 number_of_frames_per_bitCode=round((stimulus_matrix(:,2)/1e6)*frame_rate);
+                
                 stimulus_matrix_ext=zeros(1,7)-1;
                 for iBitCode=1:length(number_of_frames_per_bitCode)
                     new=repmat([0 0 stimulus_matrix(iBitCode,3:end)],number_of_frames_per_bitCode(iBitCode),1);
+                    new
                     stimulus_matrix_ext=cat(1,stimulus_matrix_ext,new);
-                end
-                if size(stimulus_matrix_ext,1)>nFrames
+                end    
+                
+                %%% check whether matrix we just created matches number of
+                %%% recorded frames
+                d_rows=size(stimulus_matrix_ext,1)-nFrames;
+                if d_rows>0%size(stimulus_matrix_ext,1)>nFrames
                     stimulus_matrix_ext=stimulus_matrix_ext(1:nFrames,:);
-                elseif size(stimulus_matrix_ext,1)<nFrames
-                    %
-                end
+                elseif d_rows<0                    
+                    stimulus_matrix_ext=cat(1,stimulus_matrix_ext,zeros(abs(d_rows),7)-1);
+                end                
                 nFrames=size(stimulus_matrix_ext,1);
                 stimulus_matrix_ext(:,1)=1:nFrames;
                 
