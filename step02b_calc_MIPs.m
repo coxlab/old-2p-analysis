@@ -42,7 +42,7 @@ for iSess=1:nSessions
     info=imfinfo(tifName);
     nFrames=session_data.data(2);
     rows=session_data.data(4);
-    cols=session_data.data(3);    
+    cols=session_data.data(3);
     if isfield(session_data,'motion_correction')
         motion_correction=session_data.motion_correction;
         MIP_options.apply_motion_correction=1;

@@ -1,3 +1,4 @@
+%%% Export the result of this step so we can build on it in the next step
 clear all
 clc
 

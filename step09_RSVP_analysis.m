@@ -8,6 +8,7 @@ clc
 %%% BV20150518: unbiased method: every 
 % find number of presentations per unique combination of shape and position
 % i.e. 1/384 and concat all the responses per FOV 
+
 header_script
 save_it=0;
 dataset_selector=1;
@@ -24,8 +25,10 @@ resp_matrix_NND=dataset.resp_matrix_NND;
 
 
 %%
-M=[pivotTable(stim_matrix,9,'mean',9) pivotTable(stim_matrix,9,'length',9)/6];
-M(M==0,:)=[];
+stim_matrix_crop=stim_matrix;
+stim_matrix_crop(stim_matrix_crop(:,4)==-1,:)=[];
+M=[pivotTable(stim_matrix_crop,8,'mean',8) pivotTable(stim_matrix_crop,8,'mean',5) pivotTable(stim_matrix_crop,8,'length',8)];
+
 
 M
 size(M)
