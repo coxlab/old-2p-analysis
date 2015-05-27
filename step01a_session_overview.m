@@ -246,7 +246,7 @@ for iFile=1:nFiles
     %%% collect data per file
     file_info(iFile).file_name=file_name;
     file_info(iFile).expType=[];
-    file_info(iFile).expType_name=[];    
+    file_info(iFile).expType_name=[];
     %file_info(iFile).info=info; % do not save, this is huge and can be
     % rapidly read out from the datafile at any point
     file_info(iFile).state=state;
@@ -669,7 +669,7 @@ for iSess=1:nSessions
                 catch
                     A=lasterror;
                     disp(A.message)
-                    %disp('Skipped session because of mismatch in bit codes')                    
+                    %disp('Skipped session because of mismatch in bit codes')
                     iSess
                 end
                 %size(stimulus_matrix_ext)
@@ -766,7 +766,7 @@ for iSess=1:nSessions
             % - have motion direction update every time so it is in
             % stimupdate event struct, so we don't have to query other
             % event codes.
-                        
+            
             %% MW: collect stimulus information
             sess_events=MW_events(MW_session_times_matched(iSess,8):MW_session_times_matched(iSess,9));
             T=double(cat(1,sess_events.time_us));
@@ -790,7 +790,7 @@ for iSess=1:nSessions
                     % crude way to get information about trialtype
                     dX=D{2}.pos_x-last_pos_x;
                     dY=D{2}.pos_y-last_pos_y;
-                                        
+                    
                     if D{2}.size_x<D{2}.size_y % vertical
                         if dX>0 % moving periphery to center
                             condition_nr=1;
@@ -813,7 +813,7 @@ for iSess=1:nSessions
                     %%% ideally we want orientation and direction info in
                     %%% the stim update event struct
                     %%% Rotation could be used directly to change bar and
-                    %%% signal the vertical/horizontal condition. 
+                    %%% signal the vertical/horizontal condition.
                     %%% Direction would then signal dX/dY
                     %%% Use isfield(D{2},'rotation') to check if variable
                     %%% is defined to distinguish between old and new format
@@ -850,19 +850,19 @@ for iSess=1:nSessions
                 frame_time=T_SC(iFrame);
                 
                 % find row in MW event matrix that is the first after the start of the SCIM frame
-                row_index=find(T_MW>frame_time,1,'first');                
+                row_index=find(T_MW>frame_time,1,'first');
                 
                 % check time difference
                 time_diff=T_MW(row_index)-frame_time;
                 if time_diff>(1/frame_rate)*0.5 % blank
                     stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:4) -1 0 0];
-                else 
+                else
                     stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:end)];
                 end
                 
                 %stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:end)];
             end
-             
+            
             if 0
                 %%
                 clf
@@ -885,9 +885,9 @@ end
 % 2015-04-07_AF11, 2 : 20150407_AF11_002 % some bitCodes were missed during these frames, rest of the trial, bitcodes match. Did manual correction for these
 
 %%
-if 1
+if save_it
     %%
-        
+    
     %%% Add the frame information only for the sessions we selected and we know are good.
     nGoodSessions=length(data_sessions);
     
@@ -895,7 +895,7 @@ if 1
     
     saveName=fullfile(save_folder,'data_analysis','session_overview.mat');
     savec(saveName)
-    save(saveName,'data_sessions')
+    %save(saveName,'data_sessions')
     
     
     %% Save individual sessions: will destroy existing files e.g. motion correction, ROI_definitions
@@ -904,7 +904,11 @@ if 1
         session_data=data_sessions(iSess);
         [save_folder, save_name]=fileparts(session_data.file_name);
         saveName=fullfile(save_folder,'data_analysis',[save_name '.mat']);
-        save(saveName,'session_data')
+        if exist(saveName,'file')
+            die
+        else
+            save(saveName,'session_data')
+        end
         progress(iSess,nGoodSessions,t0)
     end
     disp('All Done!!!')
