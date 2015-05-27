@@ -78,8 +78,17 @@ for iClust=1:nClusters
         cell_selection=ismember(cell_numbers,unique_cell_numbers);
         time_selection=1:size(session_data_all(iSess).stimulus_matrix_ext,1);
         
+        %%% clip off last trial if not ending in blank
+        STIM=session_data.stimulus_matrix_ext(time_selection,:);
+        trial_vector=STIM(:,4);
+        clipped_frames=false(nFrames,1);
+        if trial_vector(end)>-1
+            last_blank_frame=find(trial_vector==-1,1,'last');
+            clipped_frames(last_blank_frame+1:end)=true;
+        end
+        
         % skip blank and motion-frenzy frames
-        time_selection(session_data.blank_frames==1|session_data.motion_correction.ignore_frames==1)=[];
+        time_selection(session_data.blank_frames==1|session_data.motion_correction.ignore_frames==1|clipped_frames==1)=[];
         
         % skip unreliable motion frames
         %time_selection()=[];
@@ -91,7 +100,6 @@ for iClust=1:nClusters
         cur_time=cur_time+max(timescale);
         
         % concat stim and resp matrices
-        STIM=session_data.stimulus_matrix_ext(time_selection,:);
         RESP=session_data.activity_matrix(time_selection,cell_selection);
         RESP_oopsi=session_data.spike_matrix(time_selection,cell_selection);
         
