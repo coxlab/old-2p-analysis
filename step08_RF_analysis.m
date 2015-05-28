@@ -6,7 +6,7 @@ header_script
 
 %%
 save_it=1;
-rehash=0;
+rehash=1;
 
 col_nr=8;
 map_size=[4 8];
@@ -20,8 +20,8 @@ z_scale=[-1 1]*4;
 z_scale_AVG=[-1 1]*.75;
 
 
-for dataset_selector=1:3
-    for data_type=1                        
+for dataset_selector=1:10
+    for data_type=1:2                       
         %%% Load requested merged dataset
         loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
         load(loadName,'dataset')
@@ -88,8 +88,12 @@ for dataset_selector=1:3
                     
                     % Do calculations and return result
                     result=analyse_RF(Y,groups_shuffled);
-                    MU_vector(iPerm)=mean(cat(1,result.mean_resp));
-                    SIGMA_vector(iPerm)=mean(cat(1,result.std_resp));
+                    mu=meanNN(cat(1,result.mean_resp));
+                    if isnan(mu)
+                        die
+                    end
+                    MU_vector(iPerm)=mu;
+                    SIGMA_vector(iPerm)=meanNN(cat(1,result.std_resp));
                     
                     if plot_it==1
                         %%% check intermediate results
@@ -152,13 +156,19 @@ for dataset_selector=1:3
         MIP_RGB=calc_gamma(MIP_RGB,.5);
         MIP_RGB=MIP_RGB/max(MIP_RGB(:));
         
+        clf
         imshow(MIP_RGB,[])
-        axis([0 512 0 399])
+        %axis([0 512 0 399])
         
         if save_it
             %%
             parts=strsplit(data_folder,filesep);
-            saveName=fullfile(data_folder,'data_analysis','RF_maps',sprintf([parts{end} '_%03d_MIP.tif'],dataset_selector));
+            switch data_type
+                case 1
+                    saveName=fullfile(data_folder,'data_analysis','RF_maps','NoDeconv',sprintf([parts{end} '_%03d_MIP.tif'],dataset_selector));
+                case 2
+                    saveName=fullfile(data_folder,'data_analysis','RF_maps','Deconv',sprintf([parts{end} '_%03d_MIP.tif'],dataset_selector));
+            end
             savec(saveName)
             imwrite(MIP_RGB,saveName)
         end
@@ -184,7 +194,12 @@ for dataset_selector=1:3
         if save_it
             %%
             parts=strsplit(data_folder,filesep);
-            saveName=fullfile(data_folder,'data_analysis','RF_maps',sprintf([parts{end} '_%03d_MEAN.tif'],dataset_selector));
+            switch data_type
+                case 1
+                    saveName=fullfile(data_folder,'data_analysis','RF_maps','NoDeconv',sprintf([parts{end} '_%03d_MEAN.tif'],dataset_selector));
+                case 2
+                    saveName=fullfile(data_folder,'data_analysis','RF_maps','Deconv',sprintf([parts{end} '_%03d_MEAN.tif'],dataset_selector));
+            end
             imwrite(uint8(MEAN_RGB*256),saveName)
         end
         
@@ -207,11 +222,15 @@ for dataset_selector=1:3
         if save_it
             %%
             parts=strsplit(data_folder,filesep);
-            saveName=fullfile(data_folder,'data_analysis','RF_maps',sprintf([parts{end} '_%03d_MAP.tif'],dataset_selector));
+            switch data_type
+                case 1
+                    saveName=fullfile(data_folder,'data_analysis','RF_maps','NoDeconv',sprintf([parts{end} '_%03d_MAP.tif'],dataset_selector));
+                case 2
+                    saveName=fullfile(data_folder,'data_analysis','RF_maps','Deconv',sprintf([parts{end} '_%03d_MAP.tif'],dataset_selector));
+            end
             imwrite(MIP_RGB,saveName)
         end
-        
-        
+                
     end
 end
 % %%
