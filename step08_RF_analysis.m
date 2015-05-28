@@ -20,7 +20,7 @@ z_scale=[-1 1]*4;
 z_scale_AVG=[-1 1]*.75;
 
 
-for dataset_selector=1:10
+for dataset_selector=1:3
     for data_type=1:2                       
         %%% Load requested merged dataset
         loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
