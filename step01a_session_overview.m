@@ -35,6 +35,8 @@ clc
 % BV20150420: need to make -nojvm version where we supply a folder to the
 % script as a function so we can run on the server, if not on linux use uigetdir
 
+% BV20150527: chop this script up into different steps
+
 header_script
 
 %%
@@ -499,7 +501,7 @@ end
 nSessions=size(matching_matrix,1);
 data_sessions=struct('file_name',[],'expType',[],'expType_name',[],'state',struct,'field_names',[],'data',[],'dataMatrix',[],'FOV_info',struct,'ROI_definitions',struct,'stimulus_matrix_ext',[]);
 good_sessions=0;
-for iSess=3%1:nSessions
+for iSess=1:nSessions
     F=file_info(matching_matrix(iSess,1));
     data_type=F.data(end);
     
@@ -716,27 +718,30 @@ for iSess=3%1:nSessions
                 stimulus_matrix_ext=zeros(1,7)-1;
                 for iBitCode=1:length(number_of_frames_per_bitCode)
                     new=repmat([0 0 stimulus_matrix(iBitCode,3:end)],number_of_frames_per_bitCode(iBitCode),1);
-                    new
                     stimulus_matrix_ext=cat(1,stimulus_matrix_ext,new);
                 end    
                 
                 %%% check whether matrix we just created matches number of
                 %%% recorded frames
                 d_rows=size(stimulus_matrix_ext,1)-nFrames;
-                if d_rows>0%size(stimulus_matrix_ext,1)>nFrames
+                if d_rows>0 % clip it
                     stimulus_matrix_ext=stimulus_matrix_ext(1:nFrames,:);
-                elseif d_rows<0                    
+                elseif d_rows<0 % pad it
                     stimulus_matrix_ext=cat(1,stimulus_matrix_ext,zeros(abs(d_rows),7)-1);
                 end                
-                nFrames=size(stimulus_matrix_ext,1);
-                stimulus_matrix_ext(:,1)=1:nFrames;
+                if nFrames~=size(stimulus_matrix_ext,1)
+                    die
+                end
+                %nFrames=size(stimulus_matrix_ext,1); % should be redundant                
                 
+                %%% Fill first column with frame indices
+                stimulus_matrix_ext(:,1)=1:nFrames;                
                 
                 %%% convert stim position into single number 1-32
                 posMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,6:7);
                 positions=unique(posMatrix,'rows');
                 nPositions=size(positions,1);
-                position_vector=zeros(nFrames,1);
+                position_vector=zeros(nFrames,1)-1;
                 for iPos=1:nPositions
                     pos=positions(iPos,:);
                     indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
@@ -748,7 +753,7 @@ for iSess=3%1:nSessions
                 condMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,[5 8]);
                 conditions=unique(condMatrix,'rows');
                 nConditions=length(conditions);
-                condition_vector=zeros(nFrames,1);
+                condition_vector=zeros(nFrames,1)-1;
                 for iCond=1:nConditions
                     condition=conditions(iCond,:);
                     indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,8)==condition(2));
@@ -895,13 +900,11 @@ if save_it
     %%
     
     %%% Add the frame information only for the sessions we selected and we know are good.
-    nGoodSessions=length(data_sessions);
-    
-    save_folder=fileparts(data_sessions(1).file_name);
-    
+    nGoodSessions=length(data_sessions);    
+    save_folder=fileparts(data_sessions(1).file_name);    
     saveName=fullfile(save_folder,'data_analysis','session_overview.mat');
     savec(saveName)
-    %save(saveName,'data_sessions')
+    save(saveName,'data_sessions')
     
     
     %% Save individual sessions: will destroy existing files e.g. motion correction, ROI_definitions
@@ -911,7 +914,14 @@ if save_it
         [save_folder, save_name]=fileparts(session_data.file_name);
         saveName=fullfile(save_folder,'data_analysis',[save_name '.mat']);
         if exist(saveName,'file')
-            die
+            % copy new session_data
+            session_data_update=session_data;
+            
+            %%% Update existing matrix stimulus_matrix_ext
+            load(saveName,'session_data')
+            session_data.data=session_data_update.data;
+            session_data.stimulus_matrix_ext=session_data_update.stimulus_matrix_ext;
+            save(saveName,'session_data')
         else
             save(saveName,'session_data')
         end
