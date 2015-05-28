@@ -11,17 +11,30 @@ clc
 
 header_script
 save_it=0;
-dataset_selector=2; % 6(13,23) or 7(11,37) IARPA
+dataset_selector=7;
+% 0305: 6(11,12,13,14,23) or 7(11,37) IARPA
+% 0407: 3(4,46,51,53,61,63,65)
 data_type=1;
 
 nConditions=12;
 frame_selector=[2 7];
+
+sample_interval=[-20 60];
+nSamples=range(sample_interval)+1;
+x_range=sample_interval;
+switch data_type
+    case 1
+        y_range=[-5 20];
+    case 2
+        y_range=[-1 2];
+end
 
 %%% Load requested merged dataset
 loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
 load(loadName,'dataset')
 
 dataset.session_vector'
+sample_rate=1/mean(diff(dataset.timescale));
 
 nFrames=dataset.nFrames;
 nROI=dataset.nROI;
@@ -34,7 +47,7 @@ nCols=ceil(sqrt(nROI));
 nRows=ceil(nROI/nCols);
 TH=0.8;
 most_active_positions=NaN(nROI,1);
-for iROI=1%1:nROI
+for iROI=37%1:nROI
     RF=flipud(dataset.MAPs(iROI).MAP_zscored);
     vector=RF(:);
     sel=vector>TH;
@@ -44,7 +57,7 @@ for iROI=1%1:nROI
             Y=resp_matrix(:,iROI);
         case 2
             Y=resp_matrix_NND(:,iROI);
-    end    
+    end
     
     if sum(sel)==0
         figure(1)
@@ -77,11 +90,6 @@ for iROI=1%1:nROI
         V(most_active_position)=1;
         reshape(V,4,8)
         
-        sample_interval=[-20 60];
-        nSamples=range(sample_interval)+1;
-        x_range=sample_interval;
-        y_range=[-5 20];
-        
         %%% Get stimulus conditions presented at selected positions
         A=parse_conditions(stim_matrix(:,8)); % position
         B=parse_conditions(stim_matrix(:,5)); % shape
@@ -97,14 +105,16 @@ for iROI=1%1:nROI
             repeat_starts=start_rows(stimulus_vector==stim_nr);
             nRepeats=counts(iCond);
             if nRepeats>0
-                % get average response for each repeat                
+                % get average response for each repeat
                 repeat_vector=zeros(nRepeats,1);
                 trace_matrix=zeros(nRepeats,nSamples);
                 for iRepeat=1:nRepeats
                     repeat_start=repeat_starts(iRepeat);
                     if repeat_start<abs(sample_interval(1))
                         raw_trace=[zeros(abs(sample_interval(1)),1) ; Y(repeat_start:repeat_start+sample_interval(2))];
-                    else 
+                    elseif repeat_start>nFrames-sample_interval(2)
+                        raw_trace=[Y(repeat_start+sample_interval(1):repeat_start);zeros(sample_interval(2),1)];
+                    else
                         raw_trace=Y(repeat_start+sample_interval(1):repeat_start+sample_interval(2));
                     end
                     trace_matrix(iRepeat,:)=raw_trace;
@@ -113,14 +123,14 @@ for iROI=1%1:nROI
                 end
                 
                 figure(1)
-                subplot(4,3,iCond)                
+                subplot(4,3,iCond)
                 switch 1
                     case 1
                         T=sample_interval(1):sample_interval(2);
                         plot(T,mean(trace_matrix,1))
                         hold on
                         plot([0 0],y_range,'r-')
-                        plot([0 0]+24,y_range,'k-')
+                        plot([0 0]+2*sample_rate,y_range,'k-')
                         hold off
                         axis([x_range y_range])
                     case 2
@@ -140,21 +150,30 @@ for iROI=1%1:nROI
         end
         
         %%
+        [sorted,order]=sort(response_per_stimulus,'descend');
         figure(2)
         subplot(311)
         plot(Y)
         hold on
         plot(start_rows,ones(size(start_rows)),'m*')
         hold off
+        box off
+        set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+        
         subplot(312)
-        bar(counts)
+        bar(counts(order))
+        axis([0 13 0 4])
+        box off
+        set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+        
         subplot(313)
-        [sorted,order]=sort(response_per_stimulus,'descend');
         bar(response_per_stimulus(order))
         hold on
         errorbar(response_per_stimulus(order),response_per_stimulus_std(order),'r.')
         hold off
-        
+        axis([0 13 -2 15])
+        box off
+        set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
     end
     
     if plot_it==1
@@ -163,26 +182,11 @@ for iROI=1%1:nROI
         title(iROI)
     end
     
+    if 0
+        %%
+        print(gcf,'example_trace.eps','-depsc') 
+    end
     
 end
-
-
-%
-% %%
-% stim_matrix_crop=stim_matrix;
-% stim_matrix_crop(stim_matrix_crop(:,4)==-1,:)=[];
-% M=[pivotTable(stim_matrix_crop,8,'mean',8) pivotTable(stim_matrix_crop,8,'mean',5) pivotTable(stim_matrix_crop,8,'length',8)];
-%
-%
-% M
-% size(M)
-%
-% %% Collect average responses for all ROIs
-%
-%
-%
-% %%
-%
-
 
 
