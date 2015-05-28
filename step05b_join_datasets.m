@@ -74,6 +74,7 @@ for iClust=1:nClusters
         frame_rate=session_data.data(5);
         T=((1:nFrames)-1)/frame_rate;
         
+        %%% Get data
         cell_numbers=cat(1,session_data.ROI_definitions.ROI_nr);
         cell_selection=ismember(cell_numbers,unique_cell_numbers);
         time_selection=1:size(session_data_all(iSess).stimulus_matrix_ext,1);
@@ -100,6 +101,7 @@ for iClust=1:nClusters
         cur_time=cur_time+max(timescale);
         
         % concat stim and resp matrices
+        STIM=session_data.stimulus_matrix_ext(time_selection,:);
         RESP=session_data.activity_matrix(time_selection,cell_selection);
         RESP_oopsi=session_data.spike_matrix(time_selection,cell_selection);
         
