@@ -126,6 +126,8 @@ for iClust=1:nClusters
     
     %%% Construct dataset
     dataset.cluster_nr=iClust;
+    dataset.session_vector=selected_sessions;
+    
     dataset.nFrames=size(RESP_ALL,1);
     dataset.timescale=timescale_all;
     
@@ -143,6 +145,14 @@ for iClust=1:nClusters
     if save_it==1
         %%
         saveName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',iClust));
-        save(saveName,'dataset')
+        if exist(saveName,'file')
+            dataset_update=dataset;
+            load(saveName,'dataset')
+            % add what is new/changed
+            %dataset.session_vector=dataset_update.session_vector;
+            save(saveName,'dataset')
+        else
+            save(saveName,'dataset')
+        end
     end
 end
