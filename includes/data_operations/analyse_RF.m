@@ -3,7 +3,7 @@ Y=varargin{1};
 X=varargin{2};
 
 if length(X)~=length(Y)
-    error('Both vector should be equal length...')
+    error('Both vectors should be equal length...')
 end
 
 %%% use the fact that blanks occur much more frequently to exclude these
@@ -14,9 +14,8 @@ condition_vector=condition_vector(between(zscore(counts),[-1 1]));
 nConditions=length(condition_vector);
 if nConditions<32
     nConditions=32;
-    fprintf('Not all conditions were presented: %d/%d\n',[length(condition_vector) nConditions])
-    condition_vector=1:32;
-    
+    %fprintf('Not all conditions were presented: %d/%d\n',[length(condition_vector) nConditions])
+    condition_vector=1:32;    
 end
 nFrames=size(X,1);
 
