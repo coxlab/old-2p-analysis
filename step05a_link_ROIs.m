@@ -8,7 +8,7 @@ clc
 
 header_script
 
-folder_selector=0;
+folder_selector=1;
 cluster_nr=1;
 
 %%% Select datafiles
@@ -18,15 +18,15 @@ switch folder_selector
         %data_folder=uigetdir(data_root);
         cd(data_root)
         switch 2
-            case 1 % handpick session recorded at same FOV and using same stimulation protocol                
+            case 1 % handpick session recorded at same FOV and using same stimulation protocol
                 [filenames, data_folder]=uigetfile('.mat','Pick data file','MultiSelect', 'on');
                 use_gui=1;
-            case 2 % select folder and use FOV_matching variable in session_overview to select session that belong together                
+            case 2 % select folder and use FOV_matching variable in session_overview to select session that belong together
                 % this is cool, but we need another matrix that specifies
                 % experiment type so we can focus on same FOV and same exp
                 %data_folder=uigetdir(data_root);
                 
-                loadName=fullfile(data_folder,'data_analysis','session_overview.mat');                
+                loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
                 load(loadName,'data_sessions','FOV_matching')
                 
                 nClusters=max(FOV_matching.clusters(:));
@@ -50,13 +50,13 @@ switch folder_selector
         %loadName_format='20150407_jrat3_%03d.mat';
         
     case 1
-        data_folder='/Users/julianarhee/Dropbox (coxlab)/2p-data/2015-03-05_AF11/data_analysis/';
+        data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-03-05_AF11/data_analysis/';
         
         loadName_format='20150305_AF11_%03d.mat';
         cluster_nr=3;
         switch cluster_nr
             case 1
-                session_nr_vector=[1 15 17]; 
+                session_nr_vector=[1 15 17];
             case 2
                 session_nr_vector=[2 3 4]; % 18
             case 3
@@ -149,7 +149,7 @@ for iSess=1:nSessions
     
     STIM=ROI_all(iSess).stimulus_matrix_ext(time_selection,:);
     RESP=ROI_all(iSess).activity_matrix(time_selection,cell_selection);
-    %RESP=ROI_all(iSess).spike_matrix(time_selection,cell_selection);    
+    %RESP=ROI_all(iSess).spike_matrix(time_selection,cell_selection);
     RESP_oopsi=ROI_all(iSess).spike_matrix(time_selection,cell_selection);
     %[size(STIM) size(RESP)]
     STIM_ALL=cat(1,STIM_ALL,STIM);
@@ -197,7 +197,7 @@ for iSess=1:nSessions
         trial_data=RESP_oopsi(sel,:); % all frames collected during a given trial
         trial_data_base=RESP_oopsi(sel_base,:); % all frames collected during a given trial
         data_matrix_oopsi(iTrial-1,:)=[iSess iTrial stim_properties mean(trial_data,1)];
-        data_matrix_base_oopsi(iTrial-1,:)=[iSess iTrial stim_properties mean(trial_data_base,1)];        
+        data_matrix_base_oopsi(iTrial-1,:)=[iSess iTrial stim_properties mean(trial_data_base,1)];
     end
     
     data_matrix_all=cat(1,data_matrix_all,data_matrix);
@@ -243,8 +243,9 @@ cell_numbers_ranked=unique_cell_numbers(order);
 
 %folder_selector=2
 % cluster 1: c2shape? c16shape? c19?pos c21pos c23pos? 32?pos
-ROI_sel=1
-use_NND=1;
+plot_it=1;
+ROI_sel=9
+use_NND=0;
 
 ROI_nr=cell_numbers_ranked(ROI_sel);
 if ismember(ROI_nr,unique_cell_numbers)
@@ -324,12 +325,14 @@ frame_rate=session_data.data(5);
 T=((1:nFrames)-1)/frame_rate;
 total_duration=max(T);
 
+
+[sorted,order]=sort(resp_data(:,iROI,1),'descend');
+nBest=2;
+best_conditions=ismember(STIM_ALL(:,8),order(1:nBest));
+best_condition=ismember(STIM_ALL(:,8),order(1));
+sorted_positions=order;
 if plot_it==1
-    [sorted,order]=sort(resp_data(:,iROI,1),'descend');
-    nBest=2;
-    best_conditions=ismember(STIM_ALL(:,8),order(1:nBest));
-    best_condition=ismember(STIM_ALL(:,8),order(1));
-    sorted_positions=order;
+    
     
     
     subplot(2,2,[3 4])
@@ -506,7 +509,7 @@ cla
 
 
 %%
-die
+
 
 %% Effect of Shape Stimulus
 
@@ -546,7 +549,7 @@ resp_vector=RESP_ALL(:,iROI);
 nFrames=size(stim_vector,1);
 
 [sorted,order]=sort(resp_data(:,iROI,1),'descend');
-nBest=2;
+nBest=1;
 best_conditions=ismember(STIM_ALL(:,5),order(1:nBest)-1);
 best_condition=ismember(STIM_ALL(:,5),order(1)-1);
 order(1:nBest)
@@ -590,7 +593,7 @@ end
 
 
 %if p_pos>.05
-nBest=2;
+nBest=1;
 % next best thing: check stimulus response on the best positions,
 % cutting out the trials where stim is outside 'RF'
 resp_data=zeros(nShapes,nROI,2);
@@ -612,6 +615,7 @@ hold off
 
 %% now, pick to shapes and plot average dF/F for both, using 12Hz data
 if cluster_nr==3
+    iROI=13
     figure(5)
     switch iROI
         case 11
@@ -621,7 +625,8 @@ if cluster_nr==3
         case 13
             shape_pair=[7 9 10]; % for 3-13
             nPositions=2;
-            max_val=6;
+            max_val=20;
+            nROI
         case 24
             shape_pair=[6 10]; % for 3-13
             nPositions=3;
@@ -632,6 +637,7 @@ if cluster_nr==3
     nFrames=81;
     pre_frames=20;
     selected_positions=sorted_positions(1:nPositions);
+    selected_positions
     
     
     % preferred shape
@@ -667,7 +673,7 @@ if cluster_nr==3
     M=[];
     M(:,1)=mean(P,1);
     M(:,2)=mean(N,1);
-    M(:,3)=mean(NP,1);    
+    M(:,3)=mean(NP,1);
     switch 2
         case 1
             for i=1:3
@@ -679,7 +685,7 @@ if cluster_nr==3
             M=convn(M,G);
             M=M(size(G,1)/2:end-size(G,1)/2,:);
         case 3
-            %%            
+            %%
             F=M(:,1);
             G=bellCurve(1,0,length(F)/2,length(F))';
             %G=G-mean(G);
