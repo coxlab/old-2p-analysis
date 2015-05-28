@@ -11,6 +11,8 @@ clc
 
 header_script
 
+%save_it=0;
+
 session_vector=[];
 switch 2
     case 1 % load single file recorded at same FOV, same stimuli
@@ -36,16 +38,21 @@ switch 2
         valid_sessions=[];
         for iSess=1:nSessions
             [folder,file_name]=fileparts(data_sessions(iSess).file_name);
-            
             try
                 loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
-                tifName=session_data.file_name;
                 load(loadName,'session_data');
+                tifName=session_data.file_name;                
             catch % add catch in case we started on a local system and then moved to the server
+                A=lasterror;
+                disp(A.message)
                 disp('Reading from alternate location...')
                 loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
                 tifName=fullfile(data_folder,[file_name '.tif']);
                 load(loadName,'session_data');
+            end
+            if size(session_data.blank_frames)~=size(session_data.stimulus_matrix_ext,1)
+                loadName
+                [size(session_data.blank_frames,1) size(session_data.stimulus_matrix_ext,1)]
             end
             
             if length(session_data.ROI_definitions)>1
@@ -90,7 +97,7 @@ extraction_options.calc_delta_f.method                 =  6; % default 6
 
 extraction_options.do_FastNegDeconv                    =  1; % use Vogelstein's oopsi
 
-extraction_options.save_data                           =  1;
+extraction_options.save_data                           =  save_it;
 extraction_options.plot_traces                         =  plot_it;
 
 
