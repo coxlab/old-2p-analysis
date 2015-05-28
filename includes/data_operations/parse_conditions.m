@@ -14,7 +14,7 @@ N1=length(T_start);
 N2=length(T_end);
 
 if N1==N2
-    M=[(1:N1)' T_start T_end T_end-T_start+1 X(T_start) X(T_end)];
+    M=[(1:N1)' T_start T_end T_end-T_start+1 X(T_start) X(T_end) X(T_start)-X(T_end)];
     sel=diff(M(:,5:6),[],2)==0;
     M(sel==0,:)=[];
     if all(diff(M(:,5:6),[],2)==0)
