@@ -146,8 +146,8 @@ for iClust=1:nClusters
         %%
         saveName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',iClust));
         if exist(saveName,'file')
-            dataset_update=dataset;
-            load(saveName,'dataset')
+            %dataset_update=dataset;
+            %load(saveName,'dataset')
             % add what is new/changed
             %dataset.session_vector=dataset_update.session_vector;
             save(saveName,'dataset')
