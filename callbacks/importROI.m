@@ -53,7 +53,11 @@ end
 
 % move all coordinates with the offset found
 % 2DO: check if coords are valid after move!
-ROI=session_data.ROI_definitions;
+if isfield(session_data.ROI_definitions,'ROI')
+    ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
+else % make backward compatible
+    ROI=session_data.ROI_definitions;
+end
 nROI=length(ROI);
 for iROI=1:nROI
     ROI(iROI).base_coord=ROI(iROI).base_coord-offset;
@@ -88,10 +92,10 @@ if nRemoved>0
 end
 
 %%% Copy edited ROI struct back to main data
-session_data.ROI_definitions=ROI;
+%session_data.ROI_definitions=ROI; % why?
 
 %%% Import ROIs from other file
-handles.ROI=session_data.ROI_definitions;
+handles.ROI=ROI;
 handles.ROI_selector=1;
 handles.nROI=length(handles.ROI);
 handles.ROI_temp=handles.ROI_empty;
