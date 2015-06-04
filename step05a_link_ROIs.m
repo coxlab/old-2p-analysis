@@ -8,7 +8,7 @@ clc
 
 header_script
 
-folder_selector=0;
+folder_selector=1;
 cluster_nr=1;
 
 %%% Select datafiles
@@ -18,15 +18,15 @@ switch folder_selector
         %data_folder=uigetdir(data_root);
         cd(data_root)
         switch 2
-            case 1 % handpick session recorded at same FOV and using same stimulation protocol                
+            case 1 % handpick session recorded at same FOV and using same stimulation protocol
                 [filenames, data_folder]=uigetfile('.mat','Pick data file','MultiSelect', 'on');
                 use_gui=1;
-            case 2 % select folder and use FOV_matching variable in session_overview to select session that belong together                
+            case 2 % select folder and use FOV_matching variable in session_overview to select session that belong together
                 % this is cool, but we need another matrix that specifies
                 % experiment type so we can focus on same FOV and same exp
-                data_folder=uigetdir(data_root);
+                %data_folder=uigetdir(data_root);
                 
-                loadName=fullfile(data_folder,'data_analysis','session_overview.mat');                
+                loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
                 load(loadName,'data_sessions','FOV_matching')
                 
                 nClusters=max(FOV_matching.clusters(:));
@@ -50,13 +50,13 @@ switch folder_selector
         %loadName_format='20150407_jrat3_%03d.mat';
         
     case 1
-        data_folder='/Users/julianarhee/Dropbox (coxlab)/2p-data/2015-03-05_AF11/data_analysis/';
+        data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-03-05_AF11/data_analysis/';
         
         loadName_format='20150305_AF11_%03d.mat';
         cluster_nr=3;
         switch cluster_nr
             case 1
-                session_nr_vector=[1 15 17]; 
+                session_nr_vector=[1 15 17];
             case 2
                 session_nr_vector=[2 3 4]; % 18
             case 3
@@ -93,6 +93,10 @@ if use_gui==1
         loadName=fullfile(data_folder,filenames{iSess});
         if exist(loadName,'file')
             load(loadName,'session_data')
+            if isfield(session_data,'options')
+                % remove old options field
+                session_data=rmfield(session_data,'options');
+            end
             ROI_all(iSess)=session_data;
         end
     end
@@ -115,7 +119,7 @@ end
 %%% same cells. Deleting ROI and creating new ones results in new unique
 %%% numbers.
 
-% get all unique numbers
+% get all unique numbers, find in all repetitions of the experiment
 unique_cell_numbers=[];
 for iSess=1:nSessions
     cell_numbers=cat(1,ROI_all(iSess).ROI_definitions.ROI_nr);
@@ -132,7 +136,12 @@ nROI=length(unique_cell_numbers);
 %%% Glue session together
 STIM_ALL=[];
 RESP_ALL=[];
+RESP_ALL_oopsi=[];
 data_matrix_all=[];
+data_matrix_base_all=[];
+data_matrix_all_oopsi=[];
+data_matrix_base_all_oopsi=[];
+
 for iSess=1:nSessions
     cell_numbers=cat(1,ROI_all(iSess).ROI_definitions.ROI_nr);
     cell_selection=ismember(cell_numbers,unique_cell_numbers);
@@ -140,9 +149,12 @@ for iSess=1:nSessions
     
     STIM=ROI_all(iSess).stimulus_matrix_ext(time_selection,:);
     RESP=ROI_all(iSess).activity_matrix(time_selection,cell_selection);
+    %RESP=ROI_all(iSess).spike_matrix(time_selection,cell_selection);
+    RESP_oopsi=ROI_all(iSess).spike_matrix(time_selection,cell_selection);
     %[size(STIM) size(RESP)]
     STIM_ALL=cat(1,STIM_ALL,STIM);
     RESP_ALL=cat(1,RESP_ALL,RESP);
+    RESP_ALL_oopsi=cat(1,RESP_ALL_oopsi,RESP_oopsi);
     
     % chop up RESP into trial responses using STIM
     trial_matrix=STIM(STIM(:,4)>0,[1 4]);
@@ -154,6 +166,8 @@ for iSess=1:nSessions
     
     data_matrix=zeros(nTrials-2,10+nROI);
     data_matrix_base=data_matrix;
+    data_matrix_oopsi=data_matrix;
+    data_matrix_base_oopsi=data_matrix;
     for iTrial=2:nTrials-1  % ignore first trial, might be infected with laser not being on, ignore last trial, because it could cut off
         switch 4
             case 1 % only stim frames
@@ -172,24 +186,55 @@ for iSess=1:nSessions
         end
         
         stim_properties=STIM(STIM(:,1)==new_trial_frames(iTrial),[1 3:end]);
+        
+        %%% Regular signal
         trial_data=RESP(sel,:); % all frames collected during a given trial
         trial_data_base=RESP(sel_base,:); % all frames collected during a given trial
         data_matrix(iTrial-1,:)=[iSess iTrial stim_properties mean(trial_data,1)];
         data_matrix_base(iTrial-1,:)=[iSess iTrial stim_properties mean(trial_data_base,1)];
+        
+        %%% Non negative deconvoluted signal
+        trial_data=RESP_oopsi(sel,:); % all frames collected during a given trial
+        trial_data_base=RESP_oopsi(sel_base,:); % all frames collected during a given trial
+        data_matrix_oopsi(iTrial-1,:)=[iSess iTrial stim_properties mean(trial_data,1)];
+        data_matrix_base_oopsi(iTrial-1,:)=[iSess iTrial stim_properties mean(trial_data_base,1)];
     end
     
     data_matrix_all=cat(1,data_matrix_all,data_matrix);
-    data_matrix_base_all=cat(1,data_matrix_all,data_matrix_base);
+    data_matrix_base_all=cat(1,data_matrix_base_all,data_matrix_base);
+    data_matrix_all_oopsi=cat(1,data_matrix_all_oopsi,data_matrix_oopsi);
+    data_matrix_base_all_oopsi=cat(1,data_matrix_base_all_oopsi,data_matrix_base_oopsi);
 end
 
 %size(STIM_ALL)
 %size(RESP_ALL)
 
 
+
 %%
-% do spike detection on traces and sort ROIs by descending number of spikes
+% 20150505: do spike detection on traces and sort ROIs by descending number of spikes. Did we ever implement this function?
+TH=5;
+for iROI=1:nROI
+    sel=RESP_ALL(:,iROI)>TH;
+    start_points=find(diff(sel)==1);
+    nSpikes_vector(iROI)=length(start_points);
+end
+[sorted,order]=sort(nSpikes_vector,'descend')
+cell_numbers_ranked=unique_cell_numbers(order);
 
 
+
+
+
+
+
+
+
+
+
+
+
+%%
 %folder_selector=1
 % cluster 1: 12? 26shape 35shape? 43?
 % cluster 2: 1? 11pos 16shape
@@ -198,15 +243,17 @@ end
 
 %folder_selector=2
 % cluster 1: c2shape? c16shape? c19?pos c21pos c23pos? 32?pos
-ROI_nr=4
+plot_it=1;
+ROI_sel=9
+use_NND=0;
 
-%ROI_nr_vector=cat(1,session_data.ROI_definitions.ROI_nr);
-
+ROI_nr=cell_numbers_ranked(ROI_sel);
 if ismember(ROI_nr,unique_cell_numbers)
-    iROI=find(unique_cell_numbers==ROI_nr); % Cluster3 11 13 24   
+    iROI=find(unique_cell_numbers==ROI_nr); % Cluster3 11 13 24
 else
     error('no such ROI nr')
 end
+
 %ROI_nr=session_data.ROI_definitions(iROI).ROI_nr
 
 %%% look at response per stimulus condition
@@ -218,10 +265,14 @@ base_data=resp_data;
 Y=[];groups=[];
 for iPos=1:nPositions
     sel=data_matrix_all(:,9)==iPos;
-    resp_matrix=data_matrix_all(sel,11:end);
-    
-    sel=data_matrix_base_all(:,9)==iPos;
-    base_matrix=data_matrix_base_all(sel,11:end);
+    switch use_NND
+        case 0
+            resp_matrix=data_matrix_all(sel,11:end);
+            base_matrix=data_matrix_base_all(sel,11:end);
+        case 1
+            resp_matrix=data_matrix_all_oopsi(sel,11:end);
+            base_matrix=data_matrix_base_all_oopsi(sel,11:end);
+    end
     
     %nTrials=size(resp_matrix,1);
     resp_data(iPos,:,:)=cat(3,mean(resp_matrix,1),std(resp_matrix,[],1),ste(resp_matrix,1));
@@ -234,33 +285,39 @@ for iPos=1:nPositions
 end
 [p_pos,t,stats]=anovan(Y(:,iROI),groups,'display','off');
 
-figure(2)
-subplot(221)
-bar(resp_data(:,iROI,1))
-hold on
-%errorbar(resp_data(:,iROI,1),resp_data(:,iROI,2),'r.')
-errorbar(resp_data(:,iROI,1),resp_data(:,iROI,3),'r.')
-hold off
-set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
-title('Screen Position')
-xlabel(sprintf('Anova p=%3.4f',p_pos))
-axis([1 nPositions -0.5 max(resp_data(:,iROI,1))*2])
-
-subplot(222)
-RF=flipud(reshape(resp_data(:,iROI,1),4,8));
-max_val=max(abs([min(RF(:)) max(RF(:))]));
-imagesc(RF)
-axis equal
-axis tight
-
-set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
-title('''RF''')
-set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
-colormap(parula)
+if plot_it==1
+    figure(2)
+    subplot(221)
+    bar(resp_data(:,iROI,1))
+    hold on
+    %errorbar(resp_data(:,iROI,1),resp_data(:,iROI,2),'r.')
+    errorbar(resp_data(:,iROI,1),resp_data(:,iROI,2),'r.')
+    hold off
+    set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+    title('Screen Position')
+    xlabel(sprintf('Anova p=%3.4f',p_pos))
+    axis([1 nPositions -0.5 max(resp_data(:,iROI,1))*2])
+    
+    subplot(222)
+    RF=flipud(reshape(resp_data(:,iROI,1),4,8));
+    max_val=max(abs([min(RF(:)) max(RF(:))]));
+    imagesc(RF)
+    axis equal
+    axis tight
+    
+    %set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
+    set(gca,'CLim',[-.5 .5],'xTickLabel',[],'yTickLabel',[])
+    title('''RF''')
+    set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+    colormap(parula)
+    colorbar
+end
 
 % Examine responses
 stim_vector=STIM_ALL(:,4)>0;
 resp_vector=RESP_ALL(:,iROI);
+resp_vector_oopsi=RESP_ALL_oopsi(:,iROI);
+
 nFrames=size(stim_vector,1);
 
 %%% Construct time scale
@@ -274,20 +331,25 @@ nBest=2;
 best_conditions=ismember(STIM_ALL(:,8),order(1:nBest));
 best_condition=ismember(STIM_ALL(:,8),order(1));
 sorted_positions=order;
-
-subplot(2,2,[3 4])
-max_val=max([30 max(resp_vector)*1.2]);
-bar(T,spherify(stim_vector,2)*max_val,'barWidth',1,'FaceColor',[1 1 1]*.9,'EdgeColor',[1 1 1]*.9)
-hold on
-bar(T,spherify(best_conditions,2)*-1,'barWidth',1,'FaceColor',[1 0 0]*.5,'EdgeColor',[1 0 0]*.5)
-bar(T,spherify(best_condition,2)*-1,'barWidth',1,'FaceColor',[1 0 0]*.9,'EdgeColor',[1 0 0]*.9)
-plot(T,resp_vector,'color','k')
-hold off
-axis([0 total_duration -max_val*.25 max_val])
-set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
-title(sprintf('Cell #%d',ROI_nr))
-xlabel('Time (seconds)')
-ylabel('\DeltaF/F')
+if plot_it==1
+    
+    
+    
+    subplot(2,2,[3 4])
+    max_val=max([30 max(resp_vector)*1.2]);
+    bar(T,spherify(stim_vector,2)*max_val,'barWidth',1,'FaceColor',[1 1 1]*.9,'EdgeColor',[1 1 1]*.9)
+    hold on
+    bar(T,spherify(best_conditions,2)*-1,'barWidth',1,'FaceColor',[1 0 0]*.5,'EdgeColor',[1 0 0]*.5)
+    bar(T,spherify(best_condition,2)*-1,'barWidth',1,'FaceColor',[1 0 0]*.9,'EdgeColor',[1 0 0]*.9)
+    plot(T,resp_vector,'color','k')
+    plot(T,resp_vector_oopsi,'color','g')
+    hold off
+    axis([0 total_duration -max_val*.25 max_val])
+    set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+    title(sprintf('Cell #%d - #spikes: %d',[ROI_nr nSpikes_vector(iROI)]))
+    xlabel('Time (seconds)')
+    ylabel('\DeltaF/F')
+end
 
 %%% double check
 % sel=data_matrix_all(:,8)==order(2);
@@ -297,12 +359,157 @@ ylabel('\DeltaF/F')
 % new=cat(3,mean(resp_matrix,1)-1,std(resp_matrix,[],1),ste(resp_matrix,1));
 
 
-
-
+%%
+timepoint_vector=1:9;
+nTimepoints=length(timepoint_vector);
+condition_vector=STIM_ALL(:,8);
+switch 1
+    case 1
+        %% find kernel estimate using different timepoints of all conditions
+        % find all condition start frames
+        start_vector=find(diff(condition_vector)>0); % general case
+        sel=(start_vector+max(timepoint_vector))>nFrames|(start_vector+min(timepoint_vector))<0;
+        start_vector(sel)=[];
+        
+        design_matrix=ones(size(resp_vector));
+        for iTimepoint=1:nTimepoints
+            P=zeros(size(resp_vector));
+            P(start_vector+timepoint_vector(iTimepoint))=1;
+            design_matrix=cat(2,design_matrix,P);
+        end
+        beta=mvregress(design_matrix,resp_vector);
+        kernel_est=beta(2:end);
+        %kernel_est(kernel_est<0)=0;
+        
+    case 2
+        %% find kernel estimate using different timepoints of all conditions
+        % find all condition start frames
+        start_vector=find(diff(condition_vector)>0); % general case
+        sel=(start_vector+max(timepoint_vector))>nFrames|(start_vector+min(timepoint_vector))<0;
+        start_vector(sel)=[];
+        
+        design_matrix=ones(size(resp_vector));
+        for iTimepoint=1:nTimepoints
+            P=zeros(size(resp_vector));
+            P(start_vector+timepoint_vector(iTimepoint))=1;
+            design_matrix=cat(2,design_matrix,P);
+        end
+        beta=mvregress(design_matrix,resp_vector);
+        kernel_est=beta(2:end);
+        %kernel_est(kernel_est<0)=0;
+        
+    case 3
+        %% find kernel estimate using different timepoints, for each condition
+        %condition_vector=STIM_ALL(:,8);
+        kernel_est_all=zeros(nTimepoints,nPositions);
+        for iStim=1:nPositions
+            P=condition_vector==iStim;
+            
+            %%% estimate kernel for each condition
+            start_vector=find(diff(condition_vector)==iStim);
+            sel=(start_vector+max(timepoint_vector))>nFrames|(start_vector+min(timepoint_vector))<0;
+            start_vector(sel)=[];
+            
+            design_matrix_stim=ones(size(resp_vector));
+            for iTimepoint=1:nTimepoints
+                P=zeros(size(resp_vector));
+                P(start_vector+timepoint_vector(iTimepoint))=1;
+                design_matrix_stim=cat(2,design_matrix_stim,P);
+            end
+            beta=mvregress(design_matrix_stim,resp_vector);
+            kernel_est_all(:,iStim)=beta(2:end);
+        end
+        
+        [m,w]=max(max(kernel_est_all));
+        kernel_est=kernel_est_all(:,w);
+end
+figure(4)
+bar(kernel_est)
 
 
 %%
-die
+
+%%% try out multiple regression
+%kernel_est=resp_vector(365:390);
+%kernel_est=[34.7974745645518;29.1844181233045;24.5764182663738;22.8407164563818;18.1783359501114;16.4113462293559;13.4066753860348;14.1086533821770;10.1052434699760;10.0838630155124;8.25588908292035;6.43065557040027;6.04692099511076;5.16536561771791;4.76037094647263;6.56684814422224;3.81085714655538;2.92912801412736;3.03125673618300;1.93144429292142;2.00843847510978;2.23100586840692;0.639220487381043;0.459113580149153;1.01104602349656;0.234196624416639];
+design_matrix=ones(size(resp_vector));
+%condition_vector=STIM_ALL(:,8);
+for iStim=1:32
+    P=condition_vector==iStim;
+    
+    %%% use average kernel
+    P_conv=convn(P,kernel_est);
+    P_conv(end-nTimepoints+2:end)=[]; % trim convoluted vector
+    
+    %%% Do multiple regression
+    design_matrix=cat(2,design_matrix,P_conv);
+end
+% plot(P)
+% hold on
+% plot(P_conv,'r')
+% hold off
+
+beta=mvregress(design_matrix,resp_vector);
+
+RF_regr=flipud(reshape(beta(2:end),4,8));
+
+
+CC=corr(resp_vector,design_matrix);
+RF_corr=flipud(reshape(CC(2:end),4,8));
+%RF_max_kernel=flipud(reshape(max(kernel_est_all),4,8));
+
+[m,w]=max(CC(:));
+
+%%
+figure(3)
+subplot(2,3,[1 3])
+plot(T,resp_vector)
+hold on
+plot(T,design_matrix(:,w)/max(design_matrix(:,w))*max(resp_vector),'r')
+plot(T,resp_vector_oopsi,'g')
+hold off
+title(corr(resp_vector,design_matrix(:,w)))
+max_val=max([1 max(resp_vector)*1.2]);
+%axis([0 total_duration -1 1])
+axis([0 total_duration -max_val/4 max_val])
+set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+
+subplot(234)
+max_val=max(abs([min(RF_regr(:)) max(RF_regr(:))]));
+imagesc(RF_regr)
+axis equal
+axis tight
+
+set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
+title('''RF multiple regression''')
+colormap parula
+colorbar
+
+subplot(235)
+max_val=max(abs([min(RF_corr(:)) max(RF_corr(:))]));
+imagesc(RF_corr)
+axis equal
+axis tight
+
+set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
+title('RF correlation')
+colormap parula
+colorbar
+
+subplot(236)
+cla
+% max_val=max(abs([min(RF_max_kernel(:)) max(RF_max_kernel(:))]));
+% imagesc(RF_max_kernel)
+% axis equal
+% axis tight
+% set(gca,'CLim',[-max_val max_val],'xTickLabel',[],'yTickLabel',[])
+% title('RF max kernel')
+% colormap parula
+% colorbar
+
+
+%%
+
 
 %% Effect of Shape Stimulus
 
@@ -342,7 +549,7 @@ resp_vector=RESP_ALL(:,iROI);
 nFrames=size(stim_vector,1);
 
 [sorted,order]=sort(resp_data(:,iROI,1),'descend');
-nBest=2;
+nBest=1;
 best_conditions=ismember(STIM_ALL(:,5),order(1:nBest)-1);
 best_condition=ismember(STIM_ALL(:,5),order(1)-1);
 order(1:nBest)
@@ -386,7 +593,7 @@ end
 
 
 %if p_pos>.05
-nBest=2;
+nBest=1;
 % next best thing: check stimulus response on the best positions,
 % cutting out the trials where stim is outside 'RF'
 resp_data=zeros(nShapes,nROI,2);
@@ -408,6 +615,7 @@ hold off
 
 %% now, pick to shapes and plot average dF/F for both, using 12Hz data
 if cluster_nr==3
+    iROI=13
     figure(5)
     switch iROI
         case 11
@@ -417,7 +625,8 @@ if cluster_nr==3
         case 13
             shape_pair=[7 9 10]; % for 3-13
             nPositions=2;
-            max_val=6;
+            max_val=20;
+            nROI
         case 24
             shape_pair=[6 10]; % for 3-13
             nPositions=3;
@@ -428,6 +637,7 @@ if cluster_nr==3
     nFrames=81;
     pre_frames=20;
     selected_positions=sorted_positions(1:nPositions);
+    selected_positions
     
     
     % preferred shape
@@ -463,7 +673,7 @@ if cluster_nr==3
     M=[];
     M(:,1)=mean(P,1);
     M(:,2)=mean(N,1);
-    M(:,3)=mean(NP,1);    
+    M(:,3)=mean(NP,1);
     switch 2
         case 1
             for i=1:3
@@ -475,7 +685,7 @@ if cluster_nr==3
             M=convn(M,G);
             M=M(size(G,1)/2:end-size(G,1)/2,:);
         case 3
-            %%            
+            %%
             F=M(:,1);
             G=bellCurve(1,0,length(F)/2,length(F))';
             %G=G-mean(G);

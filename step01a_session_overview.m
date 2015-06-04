@@ -35,12 +35,14 @@ clc
 % BV20150420: need to make -nojvm version where we supply a folder to the
 % script as a function so we can run on the server, if not on linux use uigetdir
 
+% BV20150527: chop this script up into different steps
+
 header_script
 
 %%
 %%% Use uigetdir for general use
-cd(data_root)
-data_folder=uigetdir(data_root);
+%cd(data_root)
+%data_folder=uigetdir(data_root);
 
 %%% Gather all movies
 files=scandir(data_folder,'tif');
@@ -80,7 +82,7 @@ for iFile=1:nFiles
     
     %% Get SCIM headers
     scim_info=info(1).ImageDescription;
-    scinfo=strsplit(char(13),scim_info);
+    scinfo=strsplit(scim_info,char(13));
     scim_info=strjoin(scinfo,[';' char(13)]);
     eval([scim_info  ';']); % revive scan image variables
     frame_rate=state.acq.frameRate;
@@ -246,7 +248,7 @@ for iFile=1:nFiles
     %%% collect data per file
     file_info(iFile).file_name=file_name;
     file_info(iFile).expType=[];
-    file_info(iFile).expType_name=[];    
+    file_info(iFile).expType_name=[];
     %file_info(iFile).info=info; % do not save, this is huge and can be
     % rapidly read out from the datafile at any point
     file_info(iFile).state=state;
@@ -350,32 +352,34 @@ exp_tag='ExpType';
 %exp_tag='stop_it';
 tag_nr=find(ismember(tag_names,exp_tag),1);
 expType=0;
-expType_name='';
+%expType_name='';
+expType_name_vector={'RSVP','Retinomapping'};
 if ~isempty(tag_nr) % if expType tag is present, just read it out
     code_selection=code_names(tag_nr);
-    MW_events=getEvents(mwk_file_name, code_selection);
-    nEvents=length(MW_events);
-    type_vector=cat(1,MW_events.data);
+    MW_events_expType=getEvents(mwk_file_name, code_selection);
+    nEvents=length(MW_events_expType);
+    type_vector=cat(1,MW_events_expType.data);
     expType=mode(type_vector);
 else % for older files, find work-around
     %%% Find tags specific to a certain experiment =risky
     tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
     if ~isempty(tag_nr)
         expType=1; % RSVP
-        expType_name='RSVP';
+        %expType_name='RSVP';
     end
     
     %%% Find tags specific to a certain experiment =risky
     tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
     if ~isempty(tag_nr)
         expType=2; % Retinomapping
-        expType_name='Retinomapping';
+        %expType_name='Retinomapping';
     end
     
     if expType==0
         disp('Unable to determine experiment type, how do you wish to proceed?')
     end
 end
+expType_name=expType_name_vector{expType};
 
 for iFile=1:nFiles
     file_info(iFile).expType=expType;
@@ -454,7 +458,7 @@ try
     MW_session_times_matched=MW_session_times(match_vector,:);
     
     % compare session durations as a sanity check
-    TH_duration_mismatch=0.100; % in seconds
+    TH_duration_mismatch=0.500; % in seconds
     if any(abs(diff([SI_session_allocation(:,4) MW_session_times_matched(:,4)],[],2))>TH_duration_mismatch)
         error('Difference between session duration detected, go manual')
     end
@@ -612,14 +616,14 @@ for iSess=1:nSessions
                             disp('Not all positions were presented, conversion will be done using static reference position matrix')
                             positions_ref=[-45.5000000000000,-19.5000000000000;-45.5000000000000,-6.50000000000000;-45.5000000000000,6.50000000000000;-45.5000000000000,19.5000000000000;-32.5000000000000,-19.5000000000000;-32.5000000000000,-6.50000000000000;-32.5000000000000,6.50000000000000;-32.5000000000000,19.5000000000000;-19.5000000000000,-19.5000000000000;-19.5000000000000,-6.50000000000000;-19.5000000000000,6.50000000000000;-19.5000000000000,19.5000000000000;-6.50000000000000,-19.5000000000000;-6.50000000000000,-6.50000000000000;-6.50000000000000,6.50000000000000;-6.50000000000000,19.5000000000000;6.50000000000000,-19.5000000000000;6.50000000000000,-6.50000000000000;6.50000000000000,6.50000000000000;6.50000000000000,19.5000000000000;19.5000000000000,-19.5000000000000;19.5000000000000,-6.50000000000000;19.5000000000000,6.50000000000000;19.5000000000000,19.5000000000000;32.5000000000000,-19.5000000000000;32.5000000000000,-6.50000000000000;32.5000000000000,6.50000000000000;32.5000000000000,19.5000000000000;45.5000000000000,-19.5000000000000;45.5000000000000,-6.50000000000000;45.5000000000000,6.50000000000000;45.5000000000000,19.5000000000000];
                             nPositions=size(positions_ref,1);
-                            position_vector=zeros(nFrames,1);
+                            position_vector=zeros(nFrames,1)-1;
                             for iPos=1:nPositions
                                 pos=positions_ref(iPos,:);
                                 indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
                                 position_vector(indices,1)=iPos;
                             end
                         else
-                            position_vector=zeros(nFrames,1);
+                            position_vector=zeros(nFrames,1)-1;
                             for iPos=1:nPositions
                                 pos=positions(iPos,:);
                                 indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
@@ -640,7 +644,7 @@ for iSess=1:nSessions
                             cond_matrix_full=cat(1,cond_matrix_full,[repmat(shape_nr,size(positions,1),1) positions]);
                         end
                         
-                        condition_vector=zeros(nFrames,1);
+                        condition_vector=zeros(nFrames,1)-1;
                         for iCond=1:size(cond_matrix_full,1)
                             condition=cond_matrix_full(iCond,:);
                             indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,6)==condition(2)&stimulus_matrix_ext(:,7)==condition(3));
@@ -667,7 +671,7 @@ for iSess=1:nSessions
                 catch
                     A=lasterror;
                     disp(A.message)
-                    %disp('Skipped session because of mismatch in bit codes')                    
+                    %disp('Skipped session because of mismatch in bit codes')
                     iSess
                 end
                 %size(stimulus_matrix_ext)
@@ -710,25 +714,34 @@ for iSess=1:nSessions
                 %%% bitCode a given number of frames based on time between MWorks
                 %%% display update events and frame rate of SI
                 number_of_frames_per_bitCode=round((stimulus_matrix(:,2)/1e6)*frame_rate);
+                
                 stimulus_matrix_ext=zeros(1,7)-1;
                 for iBitCode=1:length(number_of_frames_per_bitCode)
                     new=repmat([0 0 stimulus_matrix(iBitCode,3:end)],number_of_frames_per_bitCode(iBitCode),1);
                     stimulus_matrix_ext=cat(1,stimulus_matrix_ext,new);
-                end
-                if size(stimulus_matrix_ext,1)>nFrames
-                    stimulus_matrix_ext=stimulus_matrix_ext(1:nFrames,:);
-                elseif size(stimulus_matrix_ext,1)<nFrames
-                    %
-                end
-                nFrames=size(stimulus_matrix_ext,1);
-                stimulus_matrix_ext(:,1)=1:nFrames;
+                end    
                 
+                %%% check whether matrix we just created matches number of
+                %%% recorded frames
+                d_rows=size(stimulus_matrix_ext,1)-nFrames;
+                if d_rows>0 % clip it
+                    stimulus_matrix_ext=stimulus_matrix_ext(1:nFrames,:);
+                elseif d_rows<0 % pad it
+                    stimulus_matrix_ext=cat(1,stimulus_matrix_ext,zeros(abs(d_rows),7)-1);
+                end                
+                if nFrames~=size(stimulus_matrix_ext,1)
+                    die
+                end
+                %nFrames=size(stimulus_matrix_ext,1); % should be redundant                
+                
+                %%% Fill first column with frame indices
+                stimulus_matrix_ext(:,1)=1:nFrames;                
                 
                 %%% convert stim position into single number 1-32
                 posMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,6:7);
                 positions=unique(posMatrix,'rows');
                 nPositions=size(positions,1);
-                position_vector=zeros(nFrames,1);
+                position_vector=zeros(nFrames,1)-1;
                 for iPos=1:nPositions
                     pos=positions(iPos,:);
                     indices=find(stimulus_matrix_ext(:,6)==pos(1)&stimulus_matrix_ext(:,7)==pos(2));
@@ -740,7 +753,7 @@ for iSess=1:nSessions
                 condMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,[5 8]);
                 conditions=unique(condMatrix,'rows');
                 nConditions=length(conditions);
-                condition_vector=zeros(nFrames,1);
+                condition_vector=zeros(nFrames,1)-1;
                 for iCond=1:nConditions
                     condition=conditions(iCond,:);
                     indices=find(stimulus_matrix_ext(:,5)==condition(1)&stimulus_matrix_ext(:,8)==condition(2));
@@ -764,7 +777,7 @@ for iSess=1:nSessions
             % - have motion direction update every time so it is in
             % stimupdate event struct, so we don't have to query other
             % event codes.
-                        
+            
             %% MW: collect stimulus information
             sess_events=MW_events(MW_session_times_matched(iSess,8):MW_session_times_matched(iSess,9));
             T=double(cat(1,sess_events.time_us));
@@ -788,7 +801,7 @@ for iSess=1:nSessions
                     % crude way to get information about trialtype
                     dX=D{2}.pos_x-last_pos_x;
                     dY=D{2}.pos_y-last_pos_y;
-                                        
+                    
                     if D{2}.size_x<D{2}.size_y % vertical
                         if dX>0 % moving periphery to center
                             condition_nr=1;
@@ -811,7 +824,7 @@ for iSess=1:nSessions
                     %%% ideally we want orientation and direction info in
                     %%% the stim update event struct
                     %%% Rotation could be used directly to change bar and
-                    %%% signal the vertical/horizontal condition. 
+                    %%% signal the vertical/horizontal condition.
                     %%% Direction would then signal dX/dY
                     %%% Use isfield(D{2},'rotation') to check if variable
                     %%% is defined to distinguish between old and new format
@@ -848,19 +861,19 @@ for iSess=1:nSessions
                 frame_time=T_SC(iFrame);
                 
                 % find row in MW event matrix that is the first after the start of the SCIM frame
-                row_index=find(T_MW>frame_time,1,'first');                
+                row_index=find(T_MW>frame_time,1,'first');
                 
                 % check time difference
                 time_diff=T_MW(row_index)-frame_time;
                 if time_diff>(1/frame_rate)*0.5 % blank
                     stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:4) -1 0 0];
-                else 
+                else
                     stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:end)];
                 end
                 
                 %stimulus_matrix_ext(iFrame,:)=[frame_time time_diff stimulus_matrix(row_index,3:end)];
             end
-             
+            
             if 0
                 %%
                 clf
@@ -883,14 +896,12 @@ end
 % 2015-04-07_AF11, 2 : 20150407_AF11_002 % some bitCodes were missed during these frames, rest of the trial, bitcodes match. Did manual correction for these
 
 %%
-if 1
+if save_it
     %%
-        
+    
     %%% Add the frame information only for the sessions we selected and we know are good.
-    nGoodSessions=length(data_sessions);
-    
-    save_folder=fileparts(data_sessions(1).file_name);
-    
+    nGoodSessions=length(data_sessions);    
+    save_folder=fileparts(data_sessions(1).file_name);    
     saveName=fullfile(save_folder,'data_analysis','session_overview.mat');
     savec(saveName)
     save(saveName,'data_sessions')
@@ -902,7 +913,18 @@ if 1
         session_data=data_sessions(iSess);
         [save_folder, save_name]=fileparts(session_data.file_name);
         saveName=fullfile(save_folder,'data_analysis',[save_name '.mat']);
-        save(saveName,'session_data')
+        if exist(saveName,'file')
+            % copy new session_data
+            session_data_update=session_data;
+            
+            %%% Update existing matrix stimulus_matrix_ext
+            load(saveName,'session_data')
+            session_data.data=session_data_update.data;
+            session_data.stimulus_matrix_ext=session_data_update.stimulus_matrix_ext;
+            save(saveName,'session_data')
+        else
+            save(saveName,'session_data')
+        end
         progress(iSess,nGoodSessions,t0)
     end
     disp('All Done!!!')

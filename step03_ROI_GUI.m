@@ -30,6 +30,8 @@ function step03_ROI_GUI(varargin)
 
 % BV20150409: save gamma val for MIP if it is set and reload
 % BV20150413: allow switching between MIPs
+% BV20150518: allow ROI definitions made by different people, specific
+% ROI_definitions struct based on username
 
 
 %%% Add subfolders
@@ -39,6 +41,24 @@ addpath(genpath(path_dir))
 %%% Set data_root
 header_script
 
+if use_custom_ROI_defs==1
+    switch user_name
+        case 'benvermaercke'
+            handles.ROI_definition_nr=2;
+        case 'julianarhee'
+            handles.ROI_definition_nr=3;
+            %case '' % template for other named users
+            %    handles.ROI_definition_nr=4;
+        otherwise
+            handles.ROI_definition_nr=1;
+            
+    end
+else % store in 
+    handles.ROI_definition_nr=1;
+end
+
+fprintf('Using ROI definition layer %d.\n',handles.ROI_definition_nr)
+
 handles.data_root=data_root;
 handles.green=green;
 handles.window_size=[40 40];
@@ -46,7 +66,7 @@ handles.window_size=[40 40];
 %%% Set up GUI
 handles.figure1=figure(999);
 clf
-set(handles.figure1,'units','normalized','position',[0.60 0.25 0.35 0.5],'resize','on','menubar','none','NumberTitle','Off','Name','ROI_GUI: ROI extraction from 2p data')
+set(handles.figure1,'units','normalized','position',[0.60 0.25 0.35 0.5],'resize','on','menubar','none','NumberTitle','Off','Name','ROI-King: ROI extraction from 2p data')
 mainPanel=uipanel(handles.figure1,'units','normalized','position',[.01 .01 .98 .98]);
 
 graphPanel=uipanel(mainPanel,'units','normalized','position',[.01 .52 .98 .47]);

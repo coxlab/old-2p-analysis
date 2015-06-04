@@ -17,8 +17,8 @@ MIP_options.medfilt_values=[1 1 3]; % default 1-1-3, could try 1-1-5
 MIP_options.apply_motion_correction=1; % try only if shift_values are present
 
 %%% Use uigetdir to get data folder
-cd(data_root)
-data_folder=uigetdir(data_root);
+%cd(data_root)
+%data_folder=uigetdir(data_root);
 
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
 load(loadName,'data_sessions')
@@ -26,26 +26,35 @@ nSessions=length(data_sessions);
 
 %%
 t0=clock;
-for iSess=1:nSessions
+for iSess=3%1:nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
-    loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
-    load(loadName,'session_data');
+    try
+        loadName=fullfile(folder,'data_analysis',[file_name '.mat']);        
+        load(loadName,'session_data');
+        tifName=session_data.file_name;
+    catch % add catch in case we started on a local system and then moved to the server
+        disp('Reading from alternate location...')
+        loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
+        tifName=fullfile(data_folder,[file_name '.tif']);
+        load(loadName,'session_data');
+    end
     
-    info=imfinfo(session_data.file_name);
+    info=imfinfo(tifName);
     nFrames=session_data.data(2);
     rows=session_data.data(4);
     cols=session_data.data(3);
-    
-    frames=zeros(rows-1,cols,nFrames);
     if isfield(session_data,'motion_correction')
         motion_correction=session_data.motion_correction;
         MIP_options.apply_motion_correction=1;
     else
         MIP_options.apply_motion_correction=0;
     end
+    
+    fprintf('Loading frames...')
     tic
+    frames=zeros(rows-1,cols,nFrames);
     for iFrame=1:nFrames
-        frame=double(imread(session_data.file_name,iFrame,'info',info));
+        frame=double(imread(tifName,iFrame,'info',info));
         frame=double(frame(1:end-1,:)); % no flyback line
         
         if MIP_options.apply_motion_correction==1
@@ -54,16 +63,19 @@ for iSess=1:nSessions
             offset=-motion_correction.shift_matrix(iFrame,4:5);
             if any(offset~=0)
                 %frame=offsetIm(frame,offset(1),offset(2),0);
-                frame=offsetIm(frame,offset(1),offset(2),mean(frame(:)));
-                die
+                frame=offsetIm(frame,offset(2),offset(1),mean(frame(:)));
             else
                 % as long as offsets are both zero, use uncorrected version
             end
         end
         frames(:,:,iFrame)=frame;
     end
-    fprintf('Loading frames took %3.2f seconds.\n',toc)
-    if MIP_options.do_medfilt3==1
+    fprintf('took %3.2f seconds.\n',toc)
+    
+    %%% BV20150511: delete ignored frames
+    frames(:,:,motion_correction.ignore_frames==1)=[];
+    
+    if MIP_options.do_medfilt3==1&&debugging==0
         %% BV20150420: added 3D median filt, will make images look prettier, especially max
         tic
         frames=medfilt3(frames,MIP_options.medfilt_values);
@@ -72,18 +84,18 @@ for iSess=1:nSessions
     
     %% calc projection images
     tic
-    disp('Computing MIPs...')
+    fprintf('Computing MIPs...')
     session_data.MIP_avg.data=mean(frames,3);
-    session_data.MIP_avg.gamma_val=.6;
+    session_data.MIP_avg.gamma_val=1;
     session_data.MIP_max.data=max(frames,[],3);
-    session_data.MIP_max.gamma_val=1;
+    session_data.MIP_max.gamma_val=.6;
     session_data.MIP_std.data=std(frames,[],3);
-    session_data.MIP_std.gamma_val=.3;
+    session_data.MIP_std.gamma_val=.8;
     if debugging==0 % only if we are not debugging, takes a long time to run
         session_data.MIP_cc_local.data=CrossCorrImage(frames);
-        session_data.MIP_cc_local.gamma_val=1;
+        session_data.MIP_cc_local.gamma_val=.6;
     end
-    fprintf('Computing MIPs took %3.2f seconds.\n',toc)
+    fprintf('took %3.2f seconds.\n',toc)
     
     if 0
         %% cross-correlation of most active pixels : under construction
@@ -101,8 +113,6 @@ for iSess=1:nSessions
         imshow(calc_gamma(session_data.MIP_max.data,session_data.MIP_max.gamma_val),[])
         subplot(223)
         imshow(calc_gamma(session_data.MIP_std.data,session_data.MIP_std.gamma_val),[])
-        %subplot(224)
-        %imshow(calc_gamma(session_data.MIP_cc_local.data,session_data.MIP_cc_local.gamma_val),[])
         colormap(green)
     end
     %session_data.frames=frames;
@@ -110,9 +120,18 @@ for iSess=1:nSessions
     if debugging==0
         %%
         session_data.MIP_options=MIP_options;
-        [save_folder, save_name]=fileparts(session_data.file_name);
-        saveName=fullfile(save_folder,'data_analysis',[save_name '.mat'])
-        save(saveName,'session_data')
+        try
+            [save_folder, save_name]=fileparts(session_data.file_name);
+            saveName=fullfile(save_folder,'data_analysis',[save_name '.mat']);
+            save(saveName,'session_data')
+        catch    
+            saveName=loadName;
+            save(saveName,'session_data')
+        end
+        fprintf('Saving MIPs to file: %s\n',saveName)
+        
         progress(iSess,nSessions,t0)
     end
 end
+
+

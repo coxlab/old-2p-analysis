@@ -8,8 +8,10 @@ clc
 header_script
 
 %%% Manually select a folder
-cd(data_root)
-data_folder=uigetdir(data_root);
+%cd(data_root)
+%data_folder=uigetdir(data_root);
+plot_it=1;
+%save_it=0;
 
 %%
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
@@ -66,14 +68,16 @@ FOV_matching.clusters=clusters;
 
 
 %%
-switch 1
+switch plot_it
+    case 0
+        % not plotting 
     case 1
+        %%
         figure(1)
         clf
         subplot(121)
-        hold on
-        axis([-3 3 -3 3]*1000)
-        axis equal
+        hold on        
+        
         circle([0 0],2.5e3,100,'k-',1);
         for iSess=1:nSessions
             row=FOV_matrix(iSess,:);
@@ -81,11 +85,18 @@ switch 1
             plotRect([row(2)-row(5)/2 row(3)-row(6)/2 row(2)+row(6)/2 row(3)+row(5)/2],'r');
             text(row(2)+row(6)/2+rand*20,row(3)+row(5)/2+rand*10,num2str(iSess));
         end
-        
+        axis equal
+        axis tight
+        axis([-3 3 -3 3]*1000)        
+        set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+                
         subplot(122)
         %dendrogram(Z)
         imagesc(FOV_matching.dist_matrix)
         colorbar
+        axis square
+        set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+        
     case 2 % will be moved to a separate script
         %% Align background image
         loadName=fullfile(data_folder,'bg_im.jpg');
@@ -171,9 +182,10 @@ end
 
 
 %%
-if 1
-    %%
+if save_it==1
+    %%    
     save(loadName,'FOV_matching','-append')
+    disp('Saved FOV data to overview file')
 end
 
 %% this could then lead to pooling of the data and/or application of the same ROI definition over different sessions

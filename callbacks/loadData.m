@@ -40,7 +40,7 @@ else
     else
         % if not found, search for same file relative to current data_root        
         [f,fn,ext]=fileparts(session_file_name);
-        parts=strsplit(filesep,f);
+        parts=strsplit(f,filesep);
         folder=parts{end};
         session_file_name=fullfile(handles.data_root,folder,[fn ext]);
     end
@@ -89,18 +89,26 @@ handles.session_data=session_data;
 handles.ROI_empty=struct('ROI_nr',[],'base_coord',[],'nCoords',0,'coords',[],'ellipse_properties',struct,'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],'ROI_rect',[],'mask_soma',[],'mask_neuropil',[]);
 handles.usePoly=0;
 
-if isfield(session_data,'ROI_definitions') && isfield(session_data.ROI_definitions,'ROI_nr')
-    %%% Get ROI definitions if present    
-    handles.ROI=session_data.ROI_definitions;
-    handles.ROI_selector=1;
-    handles.nROI=length(handles.ROI);
-    fprintf('Reloading %d ROIs\n',handles.nROI)
-else
-    %%% if not, set up an empty structure
-    disp('Creating new ROI structure')
-    handles.nROI=0;
-    handles.ROI_selector=1;    
-    handles.ROI=handles.ROI_empty;
+session_data.ROI_definitions
+if isfield(session_data,'ROI_definitions') % should exist from previous step
+    if isfield(session_data.ROI_definitions(handles.ROI_definition_nr),'ROI') && isfield(session_data.ROI_definitions(handles.ROI_definition_nr).ROI,'ROI_nr') % new
+        %%% Get ROI definitions if present
+        handles.ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
+        handles.ROI_selector=1;
+        handles.nROI=length(handles.ROI);
+        fprintf('Reloading %d ROIs\n',handles.nROI)
+    elseif isfield(session_data.ROI_definitions,'ROI_nr') % old, here for backward compatibility
+        handles.ROI=session_data.ROI_definitions;
+        handles.ROI_selector=1;
+        handles.nROI=length(handles.ROI);
+        fprintf('Reloading %d ROIs (Legacy data...)\n',handles.nROI)
+    else
+        %%% if not, set up an empty structure
+        disp('Creating new ROI structure')
+        handles.nROI=0;
+        handles.ROI_selector=1;
+        handles.ROI=handles.ROI_empty;
+    end
 end
 handles.ROI_temp=handles.ROI_empty;
 set(handles.global_properties_table,'value',handles.ROI_selector)
