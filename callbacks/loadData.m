@@ -89,9 +89,9 @@ handles.session_data=session_data;
 handles.ROI_empty=struct('ROI_nr',[],'base_coord',[],'nCoords',0,'coords',[],'ellipse_properties',struct,'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],'ROI_rect',[],'mask_soma',[],'mask_neuropil',[]);
 handles.usePoly=0;
 
-session_data.ROI_definitions
+%session_data.ROI_definitions
 if isfield(session_data,'ROI_definitions') % should exist from previous step
-    if isfield(session_data.ROI_definitions(handles.ROI_definition_nr),'ROI') && isfield(session_data.ROI_definitions(handles.ROI_definition_nr).ROI,'ROI_nr') % new
+    if isfield(session_data.ROI_definitions,'ROI') && isfield(session_data.ROI_definitions(handles.ROI_definition_nr).ROI,'ROI_nr') % new
         %%% Get ROI definitions if present
         handles.ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
         handles.ROI_selector=1;
