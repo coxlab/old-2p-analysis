@@ -26,7 +26,7 @@ nSessions=length(data_sessions);
 
 %%
 t0=clock;
-for iSess=3%1:nSessions
+for iSess=1:nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
     try
         loadName=fullfile(folder,'data_analysis',[file_name '.mat']);        
