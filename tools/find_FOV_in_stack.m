@@ -64,10 +64,17 @@ gamma_val=.5;
 green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
 
 CC=dataMatrix(:,3);
-Z_axis=frame_data(:,8);
 
-true_depth=mode(session_data.dataMatrix(:,5))-Z_axis(1)
+
+FOV_depth=mode(session_data.dataMatrix(:,5));
+
+
+%true_depth=FOV_depth-Z_axis(1);
+true_depth=find(frame_data(:,8)==FOV_depth)
+time_axis=frame_data(:,1);
+Z_axis=frame_data(:,8);
 Z_axis=Z_axis-Z_axis(1)+Z_offset;
+laser_power=frame_data(:,10);
 [m,loc]=max(CC);
 
 
@@ -104,14 +111,17 @@ else
     colormap(green)
         
     subplot(616)
-    plot(Z_axis,CC)
+    plot(time_axis,CC)
     hold on
-    plot(Z_axis([loc loc]),[0 max(CC)*1.2],'r-')
+    plot(time_axis([loc loc]),[0 max(CC)*1.2],'r-')
+    plot(time_axis,laser_power/max(laser_power),'r')
+    plot(time_axis,Z_axis/max(Z_axis),'g')
     plot([true_depth true_depth],[0 max(CC)*1.2],'c')
     %text(Z_axis(loc),max(CC)*.2,sprintf('%3.1f',Z_axis(loc)))
-    indicator=plot(Z_axis([loc loc]),[0 max(CC)*1.2],'k-');
+    indicator=plot(time_axis([loc loc]),[0 max(CC)*1.2],'k-');
     hold off
     box off
+    axis([0 nFrames 0 1])
     
     set(gcf,'WindowButtonMotionFcn',{@moveFcn_stack,indicator,h,frames_show,frame_data})
 end
