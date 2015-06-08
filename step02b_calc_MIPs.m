@@ -26,7 +26,7 @@ nSessions=length(data_sessions);
 
 %%
 t0=clock;
-for iSess=3%1:nSessions
+for iSess=1:nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
     try
         loadName=fullfile(folder,'data_analysis',[file_name '.mat']);        
@@ -99,6 +99,8 @@ for iSess=3%1:nSessions
     
     if 0
         %% cross-correlation of most active pixels : under construction
+        % BV20150604: use cc_lobal image and cluster based on correlation
+        % between regions
         tic
         session_data.MIP_cc_global.data=CrossCorrImage_global(HandleObject(frames),session_data.MIP_std.data);
         session_data.MIP_cc_global.gamma_val=1;

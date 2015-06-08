@@ -13,6 +13,20 @@ loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
 handles.loadName=loadName;
 if exist(loadName,'file')
     load(loadName,'session_data')
+else
+    % if not found, search for same file relative to current data_root
+    fprintf('Looking in location relative to current data root: %s',handles.data_root)
+    [f,fn,ext]=fileparts(loadName);
+    parts1=strsplit(f,filesep);
+    parts2=strsplit(handles.data_root,filesep);
+    parts=parts1(length(parts2)+1:end-1);
+    folder=strjoin(parts,filesep);
+    loadName=fullfile(handles.data_root,folder,[fn ext]);
+    if exist(loadName,'file')
+        load(loadName,'session_data')
+    else
+        error('File not found...')
+    end
 end
 
 nFrames=session_data.data(2);
@@ -40,8 +54,10 @@ else
     else
         % if not found, search for same file relative to current data_root        
         [f,fn,ext]=fileparts(session_file_name);
-        parts=strsplit(f,filesep);
-        folder=parts{end};
+        parts1=strsplit(f,filesep);
+        parts2=strsplit(handles.data_root,filesep);
+        parts=parts1(length(parts2)+1:end-1);
+        folder=strjoin(parts,filesep);
         session_file_name=fullfile(handles.data_root,folder,[fn ext]);
     end
     info=imfinfo(session_file_name);
@@ -89,14 +105,32 @@ handles.session_data=session_data;
 handles.ROI_empty=struct('ROI_nr',[],'base_coord',[],'nCoords',0,'coords',[],'ellipse_properties',struct,'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],'ROI_rect',[],'mask_soma',[],'mask_neuropil',[]);
 handles.usePoly=0;
 
+
+%%%% Load existing ROI definitions
 session_data.ROI_definitions
 if isfield(session_data,'ROI_definitions') % should exist from previous step
-    if isfield(session_data.ROI_definitions(handles.ROI_definition_nr),'ROI') && isfield(session_data.ROI_definitions(handles.ROI_definition_nr).ROI,'ROI_nr') % new
-        %%% Get ROI definitions if present
-        handles.ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
-        handles.ROI_selector=1;
-        handles.nROI=length(handles.ROI);
-        fprintf('Reloading %d ROIs\n',handles.nROI)
+    if isfield(session_data.ROI_definitions,'ROI') % new
+        if handles.ROI_definition_nr<=length(session_data.ROI_definitions)
+            if isfield(session_data.ROI_definitions(handles.ROI_definition_nr).ROI,'ROI_nr')
+                %%% Get ROI definitions if present
+                handles.ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
+                handles.ROI_selector=1;
+                handles.nROI=length(handles.ROI);
+                fprintf('Reloading %d ROIs\n',handles.nROI)
+            else
+                %%% if not, set up an empty structure
+                disp('Creating new ROI structure (new)')
+                handles.nROI=0;
+                handles.ROI_selector=1;
+                handles.ROI=handles.ROI_empty;
+            end
+        else
+            %%% if not, set up an empty structure
+            disp('Creating new ROI structure (new user)')
+            handles.nROI=0;
+            handles.ROI_selector=1;
+            handles.ROI=handles.ROI_empty;
+        end
     elseif isfield(session_data.ROI_definitions,'ROI_nr') % old, here for backward compatibility
         handles.ROI=session_data.ROI_definitions;
         handles.ROI_selector=1;
