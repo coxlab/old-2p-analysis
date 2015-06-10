@@ -53,11 +53,12 @@ end
 
 % move all coordinates with the offset found
 % 2DO: check if coords are valid after move!
-if isfield(session_data.ROI_definitions,'ROI')
-    ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
-else % make backward compatible
-    ROI=session_data.ROI_definitions;
-end
+ROI=get_ROI_definitions(session_data,handles.ROI_defintion_nr);
+% if isfield(session_data.ROI_definitions,'ROI')
+%     ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
+% else % make backward compatible
+%     ROI=session_data.ROI_definitions;
+% end
 nROI=length(ROI);
 for iROI=1:nROI
     ROI(iROI).base_coord=ROI(iROI).base_coord-offset;

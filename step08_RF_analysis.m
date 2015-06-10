@@ -206,8 +206,9 @@ for dataset_selector=1:3
         %% Put RFs in a spatial arrangement
         %MIP=NaN(size(dataset.MIP.data));
         MIP=zeros(size(dataset.MIP.data))-z_scale(2);
-        for iROI=1:dataset.nROI
-            center=round(dataset.ROI_definitions(iROI).center_coords);
+        ROIs=get_ROI_definitions(dataset,ROI_definition_nr);
+        for iROI=1:length(ROIs)
+            center=round(ROIs(iROI).center_coords);
             RF=MAPs(iROI).MAP_zscored;
             RF_disp=imresize(RF,blow_fields,'bicubic');
             

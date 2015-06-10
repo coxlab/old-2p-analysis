@@ -35,13 +35,13 @@ switch 0
         %exp_name='2015-03-05_AF11';
         %exp_name='2015-04-07_AF11';
         
-        exp_name='2015-04-10_AF11_exp';
-        %exp_name='2015-04-15_AF11';
+        %exp_name='2015-04-10_AF11_exp';
+        %exp_name='2015-04-15_AF11'; % retinomapping
         %exp_name='2015-04-16_AF11';
         
         
         % Julia data
-        %exp_name='20150502_jrat3/Session02';
+        exp_name='20150502_jrat3/Session02';
         %exp_name='20150502_jrat3/Session03-05';
         %exp_name='20150502_jrat3/Session06-10';
         %exp_name='20150502_jrat3/Session11-16';
@@ -69,3 +69,21 @@ use_custom_ROI_defs=1; % Relevant for step 3 (GUI)
 
 % display current working folder
 fprintf('Current working folder is : %s\n',data_folder)
+
+
+%%% Define users
+if use_custom_ROI_defs==1
+    switch user_name
+        case 'benvermaercke'
+            ROI_definition_nr=2;
+        case 'juliana'
+            ROI_definition_nr=3;
+            %case '' % template for other named users
+            %    handles.ROI_definition_nr=4;
+        otherwise
+            ROI_definition_nr=1;
+            
+    end
+else % store in
+    ROI_definition_nr=1;
+end

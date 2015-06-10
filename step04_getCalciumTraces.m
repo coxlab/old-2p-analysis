@@ -41,21 +41,32 @@ switch 2
             try
                 loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
                 load(loadName,'session_data');
-                tifName=session_data.file_name;                
+                
             catch % add catch in case we started on a local system and then moved to the server
                 A=lasterror;
                 disp(A.message)
                 disp('Reading from alternate location...')
-                loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
-                tifName=fullfile(data_folder,[file_name '.tif']);
+                loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);                
                 load(loadName,'session_data');
             end
+                        
+            tifName=session_data.file_name;
+            if exist(tifName,'file')==0                
+                tifName=fullfile(data_folder,[file_name '.tif']);
+                if exist(tifName,'file')
+                    disp('Reading tif from alternate location...')
+                else
+                    error('Raw tif-file not found...')
+                end
+            end
+            
             if size(session_data.blank_frames)~=size(session_data.stimulus_matrix_ext,1)
                 loadName
                 [size(session_data.blank_frames,1) size(session_data.stimulus_matrix_ext,1)]
             end
             
-            if length(session_data.ROI_definitions)>1
+            ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
+            if length(ROIs)>1
                 valid_sessions(count)=data_sessions(iSess).data(1);
                 valid_session_names{count}=loadName;
                 valid_session_names_short{count}=file_name;
@@ -134,8 +145,14 @@ for iSess=1:nSessions
         apply_motion_correction=1;
     else
         apply_motion_correction=0;
-    end
-    ROIs=session_data.ROI_definitions;
+    end        
+
+    ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
+%     if isfield(session_data.ROI_definitions,'ROI_nr') % old
+%         ROIs=session_data.ROI_definitions;
+%     else % new
+%         ROIs=session_data.ROI_definitions(ROI_definition_nr).ROI;
+%     end
     nROI=length(ROIs);
     ROI_vector=cat(1,ROIs.ROI_nr);
     
@@ -456,7 +473,7 @@ for iSess=1:nSessions
             
             F=activity_matrix(iROI,:);
             max_val=max([fixed_y_scale max(F)]);
-            prop=session_data.ROI_definitions(iROI).ellipse_properties;
+            prop=ROIs(iROI).ellipse_properties;
             info=sprintf('Radius: %3.2f',prop.long_axis);
             
             bar(spherify(stim_vector,2)*max_val,'barWidth',1,'FaceColor',[1 1 1]*.9,'EdgeColor',[1 1 1]*.9)
