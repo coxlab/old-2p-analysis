@@ -107,7 +107,7 @@ handles.usePoly=0;
 
 
 %%%% Load existing ROI definitions
-session_data.ROI_definitions
+%session_data.ROI_definitions
 if isfield(session_data,'ROI_definitions') % should exist from previous step
     if isfield(session_data.ROI_definitions,'ROI') % new
         if handles.ROI_definition_nr<=length(session_data.ROI_definitions)
