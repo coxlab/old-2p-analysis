@@ -112,6 +112,7 @@ set(handles.ROI_properties_table,'ColumnName',{'Parameter' 'Value'},'ColumnWidth
 
 %%% Import ROIs from other file
 uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.30 .9 .1 .1],'string','Import ROIs','callback',@importROI)
+handles.auto_align=uicontrol(propPanel,'Style','checkbox','units','normalized','position',[.41 .9 .05 .1],'string','Align');
 
 % All ROI move buttons
 uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.325 .8 .05 .1],'string','^','callback',{@shiftROI,'all','up'})
