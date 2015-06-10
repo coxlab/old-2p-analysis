@@ -45,24 +45,30 @@ end
 
 
 %% Get all coords in a matrix and find overlapping FOVs
-FOV_matching.dist_matrix=squareform(pdist(FOV_matrix(:,2:4)));
-FOV_matching.min_dist=20;
-
-switch 2
-    case 1 % assume sessions at same field were recorded back to back
-        same=FOV_matching.dist_matrix<FOV_matching.min_dist;
-        clusters=bwlabel(same==1,4);
-    case 2 % detect same FOV across all session, preferred method
-        %%
-        Z=linkage(FOV_matching.dist_matrix,'average');
-        C=cluster(Z,'cutoff',FOV_matching.min_dist,'Criterion','distance');
-        % renumber clusters
-        cluster_vector=unique(C,'stable');
-        clusters=zeros(size(C));
-        for iC=1:length(cluster_vector)
-            sel=C==cluster_vector(iC);
-            clusters(sel)=iC;
-        end
+if size(FOV_matrix,1)==1
+    %%% Trivial case
+    clusters=1;
+    FOV_matching.dist_matrix=0;
+else
+    FOV_matching.dist_matrix=squareform(pdist(FOV_matrix(:,2:4)));
+    FOV_matching.min_dist=20;
+    
+    switch 2
+        case 1 % assume sessions at same field were recorded back to back
+            same=FOV_matching.dist_matrix<FOV_matching.min_dist;
+            clusters=bwlabel(same==1,4);
+        case 2 % detect same FOV across all session, preferred method
+            %%
+            Z=linkage(FOV_matching.dist_matrix,'average');
+            C=cluster(Z,'cutoff',FOV_matching.min_dist,'Criterion','distance');
+            % renumber clusters
+            cluster_vector=unique(C,'stable');
+            clusters=zeros(size(C));
+            for iC=1:length(cluster_vector)
+                sel=C==cluster_vector(iC);
+                clusters(sel)=iC;
+            end
+    end
 end
 FOV_matching.clusters=clusters;
 
