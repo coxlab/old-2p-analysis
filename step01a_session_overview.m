@@ -771,7 +771,7 @@ for iSess=1:nSessions
             
             %%% Optimizations in MW protocol:
             % - include expType variable
-            % - rotate bar to mark condition
+            % - rotate bar to indicate condition
             % - have frame trigger before each repeat of the sweep
             % - have more repeats
             % - have motion direction update every time so it is in
@@ -789,9 +789,13 @@ for iSess=1:nSessions
             count=1;
             stim_counter=1;
             stimulus_matrix=[];
+            
+            %%% BV20150609 fix error in logic, first sample is off because
+            %%% we compare last blank with first frame. fix this!!!!
             last_pos_x=sess_events(1).data{2}.pos_x;
             last_pos_y=sess_events(1).data{2}.pos_y;
-            for iEvent=1:nSess_events
+            
+            for iEvent=1:nSess_events-1
                 D=sess_events(iEvent).data; % # of session events
                 timestamp=sess_events(iEvent).time_us;
                 
@@ -799,8 +803,14 @@ for iSess=1:nSessions
                     %D{2}.stim_nr=str2double(D{2}.name);
                     
                     % crude way to get information about trialtype
-                    dX=D{2}.pos_x-last_pos_x;
-                    dY=D{2}.pos_y-last_pos_y;
+                    %dX=D{2}.pos_x-last_pos_x;
+                    %dY=D{2}.pos_y-last_pos_y;                    
+                    
+                    next_pos_x=sess_events(iEvent+1).data{2}.pos_x;
+                    next_pos_y=sess_events(iEvent+1).data{2}.pos_y;
+            
+                    dX=D{2}.pos_x-next_pos_x;
+                    dY=D{2}.pos_y-next_pos_y;
                     
                     if D{2}.size_x<D{2}.size_y % vertical
                         if dX>0 % moving periphery to center
@@ -818,8 +828,8 @@ for iSess=1:nSessions
                     if dX==0&&dY==0
                         condition_nr=-1;
                     end
-                    last_pos_x=D{2}.pos_x;
-                    last_pos_y=D{2}.pos_y;
+                    %last_pos_x=D{2}.pos_x;
+                    %last_pos_y=D{2}.pos_y;
                     
                     %%% ideally we want orientation and direction info in
                     %%% the stim update event struct
@@ -840,6 +850,11 @@ for iSess=1:nSessions
                 end
             end
             
+            
+            %% Reprocess stimulus_matrix to have correct condition_nrs
+            %stimulus_matrix
+            
+            %%
             if 0
                 %%
                 clf
@@ -921,7 +936,7 @@ if save_it
             load(saveName,'session_data')
             session_data.data=session_data_update.data;
             session_data.stimulus_matrix_ext=session_data_update.stimulus_matrix_ext;
-            save(saveName,'session_data')
+            save(saveName,'session_data','-append')
         else
             save(saveName,'session_data')
         end
