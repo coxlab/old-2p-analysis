@@ -40,22 +40,7 @@ addpath(genpath(path_dir))
 
 %%% Set data_root
 header_script
-
-if use_custom_ROI_defs==1
-    switch user_name
-        case 'benvermaercke'
-            handles.ROI_definition_nr=2;
-        case 'julianarhee'
-            handles.ROI_definition_nr=3;
-            %case '' % template for other named users
-            %    handles.ROI_definition_nr=4;
-        otherwise
-            handles.ROI_definition_nr=1;
-            
-    end
-else % store in 
-    handles.ROI_definition_nr=1;
-end
+handles.ROI_definition_nr=ROI_definition_nr;
 
 fprintf('Using ROI definition layer %d.\n',handles.ROI_definition_nr)
 
