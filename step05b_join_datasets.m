@@ -17,7 +17,7 @@ clc
 %%%     consider also adding stim averaged data
 
 header_script
-save_it=1;
+%save_it=1;
 
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
 load(loadName,'data_sessions','FOV_matching')
@@ -29,6 +29,7 @@ for iClust=1:nClusters
     
     %%% Load data for selected sessions
     nSessions=length(selected_sessions);
+    session_data_all=cell(nSessions,1);
     count=1;
     for iSess=1:nSessions
         [f,fn,ext]=fileparts(data_sessions(selected_sessions(iSess)).file_name);
@@ -41,7 +42,8 @@ for iClust=1:nClusters
                 session_data=rmfield(session_data,'options');
             end
             if isfield(session_data,'activity_matrix')
-                session_data_all(count)=session_data;
+                %session_data_all(count)=session_data;
+                session_data_all{count}=session_data;
                 count=count+1;
             end
         end
@@ -50,7 +52,10 @@ for iClust=1:nClusters
     %%% Get all unique numbers for this FOV
     unique_cell_numbers=[];
     for iSess=1:nSessions
-        cell_numbers=cat(1,session_data_all(iSess).ROI_definitions.ROI_nr);
+        session_data=session_data_all{iSess};
+        ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
+        %R=session_data_all{iSess}.ROI_definitions;
+        cell_numbers=cat(1,ROIs.ROI_nr);
         if isempty(unique_cell_numbers)
             unique_cell_numbers=cell_numbers;
         else
@@ -67,7 +72,7 @@ for iClust=1:nClusters
     timescale_all=[];
     cur_time=0;
     for iSess=1:nSessions
-        session_data=session_data_all(iSess);
+        session_data=session_data_all{iSess};
         
         %%% Construct timescale
         nFrames=session_data.data(2);
@@ -75,13 +80,20 @@ for iClust=1:nClusters
         T=((1:nFrames)-1)/frame_rate;
         
         %%% Get data
-        cell_numbers=cat(1,session_data.ROI_definitions.ROI_nr);
+        ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
+        cell_numbers=cat(1,ROIs.ROI_nr);
         cell_selection=ismember(cell_numbers,unique_cell_numbers);
-        time_selection=1:size(session_data_all(iSess).stimulus_matrix_ext,1);
+        time_selection=1:size(session_data_all{iSess}.stimulus_matrix_ext,1);
         
         %%% clip off last trial if not ending in blank
         STIM=session_data.stimulus_matrix_ext(time_selection,:);
-        trial_vector=STIM(:,4);
+        switch session_data.expType
+            case 1
+                trial_vector=STIM(:,4);
+            case 2
+                trial_vector=STIM(:,5);
+        end
+        
         clipped_frames=false(nFrames,1);
         if trial_vector(end)>-1
             last_blank_frame=find(trial_vector==-1,1,'last');
@@ -150,9 +162,10 @@ for iClust=1:nClusters
             %load(saveName,'dataset')
             % add what is new/changed
             %dataset.session_vector=dataset_update.session_vector;
-            save(saveName,'dataset')
+            save(saveName,'dataset')            
         else
             save(saveName,'dataset')
         end
+        fprintf('Saved dataset to %s.\n',saveName)
     end
 end

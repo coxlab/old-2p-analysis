@@ -108,41 +108,58 @@ handles.usePoly=0;
 
 %%%% Load existing ROI definitions
 %session_data.ROI_definitions
-if isfield(session_data,'ROI_definitions') % should exist from previous step
-    if isfield(session_data.ROI_definitions,'ROI') % new
-        if handles.ROI_definition_nr<=length(session_data.ROI_definitions)
-            if isfield(session_data.ROI_definitions(handles.ROI_definition_nr).ROI,'ROI_nr')
-                %%% Get ROI definitions if present
-                handles.ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
-                handles.ROI_selector=1;
-                handles.nROI=length(handles.ROI);
-                fprintf('Reloading %d ROIs\n',handles.nROI)
-            else
-                %%% if not, set up an empty structure
-                disp('Creating new ROI structure (new)')
-                handles.nROI=0;
-                handles.ROI_selector=1;
-                handles.ROI=handles.ROI_empty;
-            end
-        else
+switch 1
+    case 1
+        try
+            ROIs=get_ROI_definitions(session_data,handles.ROI_definition_nr);
+            handles.ROI=ROIs;
+            handles.ROI_selector=1;
+            handles.nROI=length(handles.ROI);
+            fprintf('Reloading %d ROIs\n',handles.nROI)
+        catch
             %%% if not, set up an empty structure
-            disp('Creating new ROI structure (new user)')
+            disp('Creating new ROI structure')
             handles.nROI=0;
             handles.ROI_selector=1;
             handles.ROI=handles.ROI_empty;
         end
-    elseif isfield(session_data.ROI_definitions,'ROI_nr') % old, here for backward compatibility
-        handles.ROI=session_data.ROI_definitions;
-        handles.ROI_selector=1;
-        handles.nROI=length(handles.ROI);
-        fprintf('Reloading %d ROIs (Legacy data...)\n',handles.nROI)
-    else
-        %%% if not, set up an empty structure
-        disp('Creating new ROI structure')
-        handles.nROI=0;
-        handles.ROI_selector=1;
-        handles.ROI=handles.ROI_empty;
-    end
+    case 2
+        if isfield(session_data,'ROI_definitions') % should exist from previous step
+            if isfield(session_data.ROI_definitions,'ROI') % new
+                if handles.ROI_definition_nr<=length(session_data.ROI_definitions)
+                    if isfield(session_data.ROI_definitions(handles.ROI_definition_nr).ROI,'ROI_nr')
+                        %%% Get ROI definitions if present
+                        handles.ROI=session_data.ROI_definitions(handles.ROI_definition_nr).ROI;
+                        handles.ROI_selector=1;
+                        handles.nROI=length(handles.ROI);
+                        fprintf('Reloading %d ROIs\n',handles.nROI)
+                    else
+                        %%% if not, set up an empty structure
+                        disp('Creating new ROI structure (new)')
+                        handles.nROI=0;
+                        handles.ROI_selector=1;
+                        handles.ROI=handles.ROI_empty;
+                    end
+                else
+                    %%% if not, set up an empty structure
+                    disp('Creating new ROI structure (new user)')
+                    handles.nROI=0;
+                    handles.ROI_selector=1;
+                    handles.ROI=handles.ROI_empty;
+                end
+            elseif isfield(session_data.ROI_definitions,'ROI_nr') % old, here for backward compatibility
+                handles.ROI=session_data.ROI_definitions;
+                handles.ROI_selector=1;
+                handles.nROI=length(handles.ROI);
+                fprintf('Reloading %d ROIs (Legacy data...)\n',handles.nROI)
+            else
+                %%% if not, set up an empty structure
+                disp('Creating new ROI structure')
+                handles.nROI=0;
+                handles.ROI_selector=1;
+                handles.ROI=handles.ROI_empty;
+            end
+        end
 end
 handles.ROI_temp=handles.ROI_empty;
 set(handles.global_properties_table,'value',handles.ROI_selector)
