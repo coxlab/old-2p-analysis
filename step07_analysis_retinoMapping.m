@@ -3,13 +3,13 @@ clc
 
 header_script
 
-switch 1
+switch 2
     case 1
         data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-15_AF11'];
         %session_name='20150415_AF11_RM_006.mat'; % has cool cell
-        session_name='20150415_AF11_RM_002.mat'; 
+        session_name='20150415_AF11_RM_001.mat'; 
     case 2
-        session_name='dataset_001.mat';
+        session_name='dataset_003.mat';
 end
 loadName=fullfile(data_folder,'data_analysis',session_name);
 
@@ -254,6 +254,13 @@ if exist(loadName,'file')
             for iRepeat=1:nRepeats
                 idx=cond_matrix(iRepeat,2):cond_matrix(iRepeat,3);
                 trace=activity_matrix(idx,iROI);
+                stim_prop=stimulus_matrix_ext(idx,6:7);
+                
+                %%% Find max in trace and record what stimulus properties
+                %%% where at that time.
+                [m,loc]=max(trace);
+                %stim_prop(loc,:)
+                
                 traces=cat(2,traces,trace);
             end
             ROI_data(iROI).conditions(iCond).traces=traces;
@@ -277,5 +284,8 @@ if exist(loadName,'file')
             set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
         end
     end
+    
+    %%% Now turn these into maps!
+    
     
 end
