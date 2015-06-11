@@ -3,7 +3,7 @@ clc
 
 header_script
 
-%data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-15_AF11'];
+data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-15_AF11'];
 %session_name='20150415_AF11_RM_006.mat';
 session_name='dataset_001.mat';
 loadName=fullfile(data_folder,'data_analysis',session_name);
@@ -20,8 +20,21 @@ remove_threshold=10;
 session_name=strrep(session_name,'_',' ');
 
 if exist(loadName,'file')
+    
     load(loadName,'dataset')
     
+    if exist('dataset','var')
+        disp('Using dataset')
+    else
+        load(loadName,'session_data')
+        disp('Using session_data')
+        dataset.stim_matrix=session_data.stimulus_matrix_ext;
+        dataset.resp_matrix=session_data.activity_matrix;
+        dataset.timescale=(1:session_data.data(2))/session_data.data(5)';
+        dataset.ROI_definitions=session_data.ROI_definitions;        
+    end
+        
+        
     %%
     ROIs=get_ROI_definitions(dataset,ROI_definition_nr);
     %ROIs=dataset.ROI_definitions(ROI_definition_nr).ROI;
