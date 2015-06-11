@@ -810,7 +810,7 @@ for iSess=1:nSessions
                     next_pos_y=sess_events(iEvent+1).data{2}.pos_y;
                     
                     %%% does not work, since error here is smaller
-                    if D{2}.pos_x>-5000
+                    if D{2}.pos_x<-5000
                         die
                         offset=26;
                         D{2}.pos_x=D{2}.pos_x+offset;
