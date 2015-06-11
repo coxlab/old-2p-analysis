@@ -57,9 +57,6 @@ mainPanel=uipanel(handles.figure1,'units','normalized','position',[.01 .01 .98 .
 graphPanel=uipanel(mainPanel,'units','normalized','position',[.01 .52 .98 .47]);
 propPanel=uipanel(mainPanel,'units','normalized','position',[.01 .10 .98 .40]);
 controlPanel=uipanel(mainPanel,'units','normalized','position',[.01 .01 .98 .08]);
-currROIPanel=uipanel(propPanel,'units','normalized','position',[.264 .01 .242 .49]);
-allROIPanel=uipanel(propPanel,'units','normalized','position',[.264 .51 .242 .48]);
-
 
 %%% Enable global keyboard modifiers/shortcuts
 set(handles.figure1,'WindowKeyPressFcn',@keyDownFcn)
@@ -114,26 +111,25 @@ handles.ROI_properties_table_name='ROI_properties';
 set(handles.ROI_properties_table,'ColumnName',{'Parameter' 'Value'},'ColumnWidth',{150 200},'ColumnEditable',[false true],'ColumnFormat',{'char' ''},'RowName',[],'CellEditCallback',{@readTable,handles.ROI_properties_table_name})
 
 %%% Import ROIs from other file
-uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.1 .3 .3 .2],'string','Import ROIs','callback',@importROI)
-handles.auto_align=uicontrol(allROIPanel,'Style','checkbox','units','normalized','position',[.1 .55 .15 .2],'string','Align');
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.30 .9 .1 .1],'string','Import ROIs','callback',@importROI)
+handles.auto_align=uicontrol(propPanel,'Style','checkbox','units','normalized','position',[.41 .9 .05 .1],'string','Align');
 
 % All ROI move buttons
-uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.62 .575 .12 .16],'string','^','callback',{@shiftROI,'all','up'})
-uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.515 .405 .12 .16],'string','<','callback',{@shiftROI,'all','left'})
-uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.725 .405 .12 .16],'string','>','callback',{@shiftROI,'all','right'})
-uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.62 .227 .12 .16],'string','v','callback',{@shiftROI,'all','down'})
-uicontrol(allROIPanel,'Style','text','units','normalized','position',[.01 .75 .15 .2],'string','All ROIs')
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.325 .8 .05 .1],'string','^','callback',{@shiftROI,'all','up'})
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.295 .7 .05 .1],'string','<','callback',{@shiftROI,'all','left'})
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.355 .7 .05 .1],'string','>','callback',{@shiftROI,'all','right'})
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.325 .6 .05 .1],'string','v','callback',{@shiftROI,'all','down'})
 
 % Edit delete
-uicontrol(currROIPanel,'Style','pushbutton','units','normalized','position',[.1 .53 .3 .2],'string','Edit ROI','callback',@editROI)
-uicontrol(currROIPanel,'Style','pushbutton','units','normalized','position',[.1 .28 .3 .2],'string','Delete ROI','callback',@delROI)
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.30 .5 .1 .1],'string','Edit ROI','callback',@editROI)
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.30 .4 .1 .1],'string','Delete ROI','callback',@delROI)
 
 % Current ROI move buttons
-uicontrol(currROIPanel,'Style','pushbutton','units','normalized','position',[.62 .575 .12 .16],'string','^','callback',{@shiftROI,'single','up'})
-uicontrol(currROIPanel,'Style','pushbutton','units','normalized','position',[.515 .405 .12 .16],'string','<','callback',{@shiftROI,'single','left'})
-uicontrol(currROIPanel,'Style','pushbutton','units','normalized','position',[.725 .405 .12 .16],'string','>','callback',{@shiftROI,'single','right'})
-uicontrol(currROIPanel,'Style','pushbutton','units','normalized','position',[.62 .227 .12 .16],'string','v','callback',{@shiftROI,'single','down'})
-uicontrol(currROIPanel,'Style','text','units','normalized','position',[.01 .75 .2 .2],'string','Current ROI')
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.325 .3 .05 .1],'string','^','callback',{@shiftROI,'single','up'})
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.295 .2 .05 .1],'string','<','callback',{@shiftROI,'single','left'})
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.355 .2 .05 .1],'string','>','callback',{@shiftROI,'single','right'})
+uicontrol(propPanel,'Style','pushbutton','units','normalized','position',[.325 .1 .05 .1],'string','v','callback',{@shiftROI,'single','down'})
+
 
 
 %%% Create buttons
