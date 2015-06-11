@@ -6,7 +6,8 @@ header_script
 switch 1
     case 1
         data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-15_AF11'];
-        session_name='20150415_AF11_RM_006.mat';
+        %session_name='20150415_AF11_RM_006.mat'; % has cool cell
+        session_name='20150415_AF11_RM_002.mat'; 
     case 2
         session_name='dataset_001.mat';
 end
@@ -104,9 +105,9 @@ if exist(loadName,'file')
     [sorted,order]=sort(std(activity_matrix),'descend');
     top_five=order(1:5);
     
-    ROI_choice=[];
+    ROI_choice=6;
     if isempty(ROI_choice)
-        ROI_choice=top_five(8);
+        ROI_choice=top_five(1);
     else
         ROI_choice=find(ROI_vector==ROI_choice);
     end
@@ -236,4 +237,45 @@ if exist(loadName,'file')
         xlabel(ROI_nr)
         set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
     end
+    
+    
+    %% Analyse all ROIs
+    ROI_data=struct;
+    for iROI=1:nROI
+        data_matrix=zeros(nConditions,4);
+        for iCond=1:nConditions
+            % select all trials for this condition            
+            condition_nr=conditions(iCond);
+            sel=condition_matrix_complete(:,5)==condition_nr;
+            cond_matrix=condition_matrix_complete(sel,:);
+            nRepeats=size(cond_matrix,1);
+            
+            traces=[];
+            for iRepeat=1:nRepeats
+                idx=cond_matrix(iRepeat,2):cond_matrix(iRepeat,3);
+                trace=activity_matrix(idx,iROI);
+                traces=cat(2,traces,trace);
+            end
+            ROI_data(iROI).conditions(iCond).traces=traces;
+            ROI_data(iROI).conditions(iCond).avg_trace=mean(traces,2);
+            ROI_data(iROI).conditions(iCond).avg_trace_smooth=mean(traces,2);
+            ROI_data(iROI).conditions(iCond).std_trace=std(traces,[],2);
+            ROI_data(iROI).conditions(iCond).ste_trace=ste(traces,2);
+            % add stuff like, where is max? and FFT analysis            
+            
+            
+        end
+        plot_it=1;
+        if plot_it==1
+            nCols=ceil(sqrt(nROI));
+            nRows=ceil(nROI/nCols);
+            trace_all=cat(2,ROI_data(iROI).conditions.avg_trace);
+            subplot(nRows,nCols,iROI)
+            plot(trace_all)
+            axis([0 60 -5 30])
+            title(ROIs(iROI).ROI_nr)
+            set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+        end
+    end
+    
 end
