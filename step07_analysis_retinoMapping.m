@@ -3,9 +3,13 @@ clc
 
 header_script
 
-data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-15_AF11'];
-%session_name='20150415_AF11_RM_006.mat';
-session_name='dataset_001.mat';
+switch 1
+    case 1
+        data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/2015-04-15_AF11'];
+        session_name='20150415_AF11_RM_006.mat';
+    case 2
+        session_name='dataset_001.mat';
+end
 loadName=fullfile(data_folder,'data_analysis',session_name);
 
 
@@ -30,18 +34,25 @@ if exist(loadName,'file')
         disp('Using session_data')
         dataset.stim_matrix=session_data.stimulus_matrix_ext;
         dataset.resp_matrix=session_data.activity_matrix;
+        dataset.resp_matrix_NND=session_data.spike_matrix;
+        
         dataset.timescale=(1:session_data.data(2))/session_data.data(5)';
-        dataset.ROI_definitions=session_data.ROI_definitions;        
+        dataset.ROI_definitions=session_data.ROI_definitions;
     end
-        
-        
+    
+    
     %%
     ROIs=get_ROI_definitions(dataset,ROI_definition_nr);
-    %ROIs=dataset.ROI_definitions(ROI_definition_nr).ROI;
     nROI=length(ROIs);
     ROI_vector=cat(1,ROIs.ROI_nr);
     stimulus_matrix_ext=dataset.stim_matrix;
-    activity_matrix=dataset.resp_matrix;
+    switch 1
+        case 1 % regular delta_f/f data
+            activity_matrix=dataset.resp_matrix;
+        case 2 % use deconvolved data
+            activity_matrix=dataset.resp_matrix_NND;
+    end
+    
     
     nFrames=size(activity_matrix,1);
     %frameRate=session_data.data(5);
@@ -61,79 +72,32 @@ if exist(loadName,'file')
     set(gca,'Clim',[-1 1])
     
     %% Check number of repeats per condition
-    switch 1
-        case 1
-            %%
-            condition_vector=stimulus_matrix_ext(:,5);
-            condition_matrix_complete=parse_conditions(condition_vector);
-                                                
-            condition_vector=stimulus_matrix_ext(:,5);
-            conditions=unique(condition_vector(condition_vector>0));
-            nConditions=length(conditions);
-            
-            %%% Get number of frames for each condition and delete trials
-            %%% that have less frames
-            %nSamples_per_repeat=mean(condition_matrix_complete(:,4))-1;
-            nSamples_per_repeat=mode(condition_matrix_complete(:,4));
-            del_incomplete_trials=1;
-            if del_incomplete_trials==1
-                sel=condition_matrix_complete(:,4)<nSamples_per_repeat;
-                condition_matrix_complete(sel,:)=[];
-            end
-            
-            %%% Make nSamples_per_repeat even, since we want to fold the
-            %%% two sweeps later.
-            if mod(nSamples_per_repeat,2)==1
-                nSamples_per_repeat=nSamples_per_repeat-1;
-            end
-            
-            counts=hist(condition_matrix_complete(:,5),1:4)
-            nBlocks_complete=min(counts);
-            
-           
-        case 2
-            
-            condition_vector=stimulus_matrix_ext(:,5);
-            conditions=unique(condition_vector(condition_vector>0));
-            nConditions=length(conditions);
-            
-            transition_points_start=[1; find(diff(condition_vector)>0)+1];
-            transition_points_end=[find(diff(condition_vector)<0) ; length(condition_vector)];
-            
-            %%% clean up
-            %[length(transition_points_start) length(transition_points_end)]
-            
-            %diff(transition_points_start)
-            del=find(diff(transition_points_start)<=remove_threshold)+1;
-            transition_points_start(del)=[];
-            
-            %diff(transition_points_end)
-            del=find(diff(transition_points_end)<=remove_threshold)+1;
-            transition_points_end(del)=[];
-            
-            %%
-            if length(transition_points_start)~=length(transition_points_end)
-                [length(transition_points_start) length(transition_points_end)]
-                error('Problem parsing out condition start and stop times')
-            end
-            condition_matrix=[transition_points_start transition_points_end condition_vector(transition_points_start+5) transition_points_end-transition_points_start+1];
-            condition_matrix(condition_matrix(:,4)<60,:)=[]; % remove incomplete trials
-            nRepeats_per_condition=hist(condition_matrix(:,3),4);
-            
-            nBlocks_complete=(size(condition_matrix,1)-mod(size(condition_matrix,1),nConditions))/nConditions;
-            order_matrix=reshape(condition_matrix(1:nBlocks_complete*nConditions,3),nConditions,[]);
-            if any(std(sort(order_matrix),[],2))
-                sort(order_matrix)
-                error('Condition labels were not read out correctly, go back to step 1a')
-            end
-            
-            condition_matrix_complete=condition_matrix(1:nBlocks_complete*nConditions,:);
-            if std(condition_matrix_complete(:,4))~=0
-                error('Different number of samples per condition')
-            end
-            nSamples_per_repeat=mean(condition_matrix_complete(:,4));
-            fprintf('Number of repeats per condition: %d\n',nBlocks_complete)
+    
+    condition_vector=stimulus_matrix_ext(:,5);
+    condition_matrix_complete=parse_conditions(condition_vector);
+    
+    condition_vector=stimulus_matrix_ext(:,5);
+    conditions=unique(condition_vector(condition_vector>0));
+    nConditions=length(conditions);
+    
+    %%% Get number of frames for each condition and delete trials
+    %%% that have less frames
+    %nSamples_per_repeat=mean(condition_matrix_complete(:,4))-1;
+    nSamples_per_repeat=mode(condition_matrix_complete(:,4));
+    del_incomplete_trials=1;
+    if del_incomplete_trials==1
+        sel=condition_matrix_complete(:,4)<nSamples_per_repeat;
+        condition_matrix_complete(sel,:)=[];
     end
+    
+    %%% Make nSamples_per_repeat even, since we want to fold the
+    %%% two sweeps later.
+    if mod(nSamples_per_repeat,2)==1
+        nSamples_per_repeat=nSamples_per_repeat-1;
+    end
+    
+    counts=hist(condition_matrix_complete(:,5),1:4)
+    nBlocks_complete=min(counts);
     
     %%
     % potential cool cells 3#2 3#6 5#29 6#30(cell)
@@ -142,7 +106,7 @@ if exist(loadName,'file')
     
     ROI_choice=[];
     if isempty(ROI_choice)
-        ROI_choice=top_five(1);
+        ROI_choice=top_five(8);
     else
         ROI_choice=find(ROI_vector==ROI_choice);
     end
@@ -242,7 +206,7 @@ if exist(loadName,'file')
                             shadedErrorBar(T(:),M(:),E(:),colors{iCond},1);
                             hold off
                             set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
-                            axis([T([1 end])' -5 30])
+                            %axis([T([1 end])' -5 30])
                         else
                             M=mean(cond_matrix_folded);
                             E=ste(cond_matrix_folded);
@@ -254,7 +218,7 @@ if exist(loadName,'file')
                             shadedErrorBar(T(1:end/nSweeps),M,E,colors{iCond},1);
                             hold off
                             set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
-                            axis([T([1 end/nSweeps])' -5 30])
+                            %axis([T([1 end/nSweeps])' -5 30])
                         end
                     end
             end
