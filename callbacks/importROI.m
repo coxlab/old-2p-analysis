@@ -53,7 +53,7 @@ if get(handles.auto_align,'value')==1
         offset=[peakX-size(template,2)/2 peakY-size(template,1)/2]-[1 0];
     end
     
-    % move all coordinates with the offset found
+    % move all coordinates with the offset found    
     for iROI=1:nROI
         ROI(iROI).base_coord=ROI(iROI).base_coord-offset;
         ROI(iROI).coords=ROI(iROI).coords-repmat(offset,size(ROI(iROI).coords,1),1);

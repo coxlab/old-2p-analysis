@@ -719,7 +719,7 @@ for iSess=1:nSessions
                 for iBitCode=1:length(number_of_frames_per_bitCode)
                     new=repmat([0 0 stimulus_matrix(iBitCode,3:end)],number_of_frames_per_bitCode(iBitCode),1);
                     stimulus_matrix_ext=cat(1,stimulus_matrix_ext,new);
-                end    
+                end
                 
                 %%% check whether matrix we just created matches number of
                 %%% recorded frames
@@ -728,14 +728,14 @@ for iSess=1:nSessions
                     stimulus_matrix_ext=stimulus_matrix_ext(1:nFrames,:);
                 elseif d_rows<0 % pad it
                     stimulus_matrix_ext=cat(1,stimulus_matrix_ext,zeros(abs(d_rows),7)-1);
-                end                
+                end
                 if nFrames~=size(stimulus_matrix_ext,1)
                     die
                 end
-                %nFrames=size(stimulus_matrix_ext,1); % should be redundant                
+                %nFrames=size(stimulus_matrix_ext,1); % should be redundant
                 
                 %%% Fill first column with frame indices
-                stimulus_matrix_ext(:,1)=1:nFrames;                
+                stimulus_matrix_ext(:,1)=1:nFrames;
                 
                 %%% convert stim position into single number 1-32
                 posMatrix=stimulus_matrix_ext(stimulus_matrix_ext(:,5)>-1,6:7);
@@ -804,11 +804,22 @@ for iSess=1:nSessions
                     
                     % crude way to get information about trialtype
                     %dX=D{2}.pos_x-last_pos_x;
-                    %dY=D{2}.pos_y-last_pos_y;                    
+                    %dY=D{2}.pos_y-last_pos_y;
                     
                     next_pos_x=sess_events(iEvent+1).data{2}.pos_x;
                     next_pos_y=sess_events(iEvent+1).data{2}.pos_y;
-            
+                    
+                    %%% does not work, since error here is smaller
+                    if D{2}.pos_x<-5000
+                        die
+                        offset=26;
+                        D{2}.pos_x=D{2}.pos_x+offset;
+                    end
+                    if D{2}.pos_y<-5000
+                        offset=6090;
+                        D{2}.pos_y=D{2}.pos_y+offset;
+                    end
+                                        
                     dX=D{2}.pos_x-next_pos_x;
                     dY=D{2}.pos_y-next_pos_y;
                     
@@ -848,6 +859,23 @@ for iSess=1:nSessions
                 else
                     % empty event, can occurs at begin and end of MW session file
                 end
+            end
+            
+            
+            
+            if 0
+                %% Fixing d_y offset issue
+                %^offset=6090;
+                %A=[stimulus_matrix(1,7);stimulus_matrix(2:600,7)+offset];
+                %B=stimulus_matrix(601:1200,7);
+                offset=26;
+                A=[stimulus_matrix(1,6);stimulus_matrix(2:600,6)+offset];
+                B=stimulus_matrix(601:1200,6);
+                plot(A)
+                hold on
+                plot(B)
+                hold off
+                mean(A-B)
             end
             
             
@@ -915,8 +943,8 @@ if save_it
     %%
     
     %%% Add the frame information only for the sessions we selected and we know are good.
-    nGoodSessions=length(data_sessions);    
-    save_folder=fileparts(data_sessions(1).file_name);    
+    nGoodSessions=length(data_sessions);
+    save_folder=fileparts(data_sessions(1).file_name);
     saveName=fullfile(save_folder,'data_analysis','session_overview.mat');
     savec(saveName)
     save(saveName,'data_sessions')
