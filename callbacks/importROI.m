@@ -12,6 +12,7 @@ load(loadName,'session_data')
 
 %%% Load ROI definitions from selected session_data
 ROI=get_ROI_definitions(session_data,handles.ROI_definition_nr);
+nROI=length(ROI);
 
 %%% implement shift to coords, based on offset between MIP images
 im1=handles.MIP; % MIP from current file
@@ -52,8 +53,7 @@ if get(handles.auto_align,'value')==1
         offset=[peakX-size(template,2)/2 peakY-size(template,1)/2]-[1 0];
     end
     
-    % move all coordinates with the offset found
-    nROI=length(ROI);
+    % move all coordinates with the offset found    
     for iROI=1:nROI
         ROI(iROI).base_coord=ROI(iROI).base_coord-offset;
         ROI(iROI).coords=ROI(iROI).coords-repmat(offset,size(ROI(iROI).coords,1),1);

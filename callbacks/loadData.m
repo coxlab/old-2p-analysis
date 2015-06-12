@@ -21,7 +21,7 @@ else
     parts2=strsplit(handles.data_root,filesep);
     parts=parts1(length(parts2)+1:end-1);
     folder=strjoin(parts,filesep);
-    loadName=fullfile(handles.data_root,folder,[fn ext]);
+    loadName=fullfile(handles.data_root,folder,'data_analysis',[fn ext]);
     if exist(loadName,'file')
         load(loadName,'session_data')
     else
