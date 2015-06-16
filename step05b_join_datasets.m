@@ -10,7 +10,7 @@ clc
 %%% kinds of deconvolution/mvregression.
 %%% Use clusters defined in step 1b to join datafiles.
 %%% The resulting database file will contain:
-%%%     the join stim and resp matrices
+%%%     the joined stim and resp matrices
 %%%     timescale
 %%%     as well as MIPs and ROI locations for plotting
 %%%     properties per traces such as #transients,

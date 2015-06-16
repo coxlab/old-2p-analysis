@@ -311,17 +311,41 @@ disp('Reading MWK file...')
 A=getCodecs(mwk_file_name);
 event_codec=A.codec;
 
-code_selection=8; % collect stim_display_update events
-MW_events=getEvents(mwk_file_name, code_selection);
-nEvents=length(MW_events);
+%%% Get stim update events
+tag_name='#stimDisplayUpdate';
+[MW_events,nEvents,event_code]=get_events_by_name(mwk_file_name,tag_name,event_codec);
 
+%%% Get exptype
+tag_name='ExpType';   
+[expType_events,nExpTypeEvents,event_code]=get_events_by_name(mwk_file_name,tag_name,event_codec);
+ExpType=mode(cat(1,expType_events.data));
+
+
+if ExpType==2
+    %%% Read condition events
+    tag_name='condition';
+    [condition_events,nCondEvents,event_code]=get_events_by_name(mwk_file_name,tag_name,event_codec);
+end
 fprintf('Loading MWorks events took %3.2f seconds.\n',toc)
 
+
 if 0 % testing codes
-    %%
+    %% Show all codec numbers plus name
     for iCodec=1:length(event_codec)
         disp([num2str(event_codec(iCodec).code) ': ' event_codec(iCodec).tagname])
     end
+    
+    %% find specific variable name in codec
+    %tag_find='ExpType';
+    %tag_find='#stimDisplayUpdate';
+    tag_find='condition';
+    
+    [events,nEvents,event_code]=get_events_by_name(mwk_file_name,tag_find,event_codec);
+    T=cat(1,events.time_us);
+    D=cat(1,events.data);
+    plot(T,D)
+    
+    %%
     
     code_selection=66; % collect stim_display_update events
     MW_events=getEvents(mwk_file_name, code_selection);
