@@ -16,12 +16,20 @@ end
 %%% build tag list and find code needed for selection
 tag_list={event_codec.tagname}';
 code_list=cat(1,event_codec.code);
-code_selection=code_list(ismember(tag_list,tag_find));
+found=ismember(tag_list,tag_find);
+if any(found)
+    code_selection=code_list(found);
+    %%% Read events with given event_code from file
+    events=getEvents(mwk_file_name, code_selection);
+    
+    %%% Construct outputs
+    varargout{1}=events;
+    varargout{2}=length(events);
+    varargout{3}=code_selection;
+else % No such tag
+    %%% Construct outputs
+    varargout{1}=[];
+    varargout{2}=0;
+    varargout{3}=-1;
+end
 
-%%% Read events with given event_code from file
-events=getEvents(mwk_file_name, code_selection);
-
-%%% Construct outputs
-varargout{1}=events;
-varargout{2}=length(events);
-varargout{3}=code_selection;
