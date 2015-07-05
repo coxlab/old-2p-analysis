@@ -1,4 +1,4 @@
-function im=drawCircle2(varargin)
+function im=drawCircle3(varargin)
 % function im=drawCircle(varargin)
 % radius - center - imSize
 
