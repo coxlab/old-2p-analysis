@@ -41,7 +41,11 @@ else
                     T=convn(T,G);
                     T=T(G_size(1)-1:end-1,G_size(2)-1:end-1);
                 case 2
-                    FFT_mask=drawCircle2(size(T,1)/4,[0 0],size(T));
+                    %FFT_mask=drawCircle2(size(T,1)/4,[0 0],size(T));                    
+                    filters=[.02 .3];
+                    FFT_mask_low=drawCircle3(size(T,1)*filters(1),size(T)/2,size(T));
+                    FFT_mask_high=drawCircle3(size(T,1)*filters(2),size(T)/2,size(T));
+                    FFT_mask=FFT_mask_high-FFT_mask_low;
                     DC=mean(T(:));
                     F=fft2(T-DC);
                     T=real(ifft2(fftshift(fftshift(F).*FFT_mask)))+DC;
@@ -59,6 +63,7 @@ else
             
             set(handles.subplots(2).h(1),'cData',RGB);
             set(handles.subplots(2).fig,'cLim',[min(RGB(:)) max(RGB(:))]);
+            %set(handles.subplots(2).fig,'cLim',prctile(RGB(:),[0 99.999]));
         end
         
         %%% Show all ROIs
