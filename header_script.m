@@ -32,8 +32,9 @@ switch 0
         %exp_name='2015-03-04_AF11';
         %exp_name='2015-03-05_AF03';
         
-        %exp_name='2015-03-05_AF11';
-        %exp_name='2015-04-07_AF11';
+        %exp_name='2015-03-05_AF11'; % example session 12Hz
+        exp_name='2015-04-07_AF11'; % example session 3Hz
+        %exp_name='2015-04-10_AF11';
         
         %exp_name='2015-04-10_AF11_exp';
         %exp_name='2015-04-15_AF11'; % retinomapping
@@ -41,7 +42,7 @@ switch 0
         
         
         % Julie's data
-        exp_name='20150502_jrat3/Session02';
+        %exp_name='20150502_jrat3/Session02';
         %exp_name='20150502_jrat3/Session03-05';
         %exp_name='20150502_jrat3/Session06-10';
         %exp_name='20150502_jrat3/Session11-16';
