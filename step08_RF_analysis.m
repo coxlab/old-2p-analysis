@@ -6,7 +6,7 @@ header_script
 
 %%
 save_it=1;
-rehash=1;
+rehash=0;
 
 col_nr=8;
 map_size=[4 8];
@@ -26,7 +26,7 @@ for dataset_selector=1:3
         loadName=fullfile(data_folder,'data_analysis',sprintf('dataset_%03d.mat',dataset_selector));
         load(loadName,'dataset')
         
-        if isfield(dataset,'MAPs')&&rehash==0
+        if isfield(dataset,'MAPs')&&isfield(dataset,'MAPs_NND')&&rehash==0
             disp('reloading data')
         else
             nFrames=dataset.nFrames;
