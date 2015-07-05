@@ -22,7 +22,9 @@ clc
 % Based on FOV size in microns, move a certain percentage in all directions
 % and capture new image, naming can be manual.
 
-animal_ID='AF17';
+animal_selector=2;
+animal_list={'AF11','AF17','AG01','AG02'};
+animal_ID=animal_list{animal_selector};
 folder_name='2015-06-18_AF17_init';
 
 im_root_folder=sprintf('/Users/benvermaercke/Dropbox (coxlab)/2p-data/surgery_rig_images/%s',animal_ID);
@@ -58,13 +60,24 @@ switch animal_ID
     case 'AF17'
         craniotomy_center=[-8.49 4.5]; % AP ML in mm, recorded during implant. Final center may be off by exact placement of headplate and location of drilling.
         
-        surgery_im_name='IMG_6275.jpg'; % will be converted into a micron sized grid
         real_diameter=4; % mm, approximate coverslip diameter
-        surgery_im_scaling_factor=418.322; % how many pixels for 1 mm
-        surgery_im_center=[1598 1291]; % in pixels
-        orientation=2;
+        switch 2
+            case 1
+                surgery_im_name='IMG_6275.jpg'; % will be converted into a micron sized grid
+                orientation=2;
+                surgery_im_scaling_factor=418.322; % how many pixels for 1 mm
+                surgery_im_center=[1598 1291]; % in pixels
+                injection_coords_offset=[-.95 -.8]; % in mm, how we have to shift to coregister injections with surgery image
+            case 2
+                surgery_im_name='IMG_6479.JPG'; % will be converted into a micron sized grid
+                orientation=1;
+                surgery_im_scaling_factor=355.347;
+                surgery_im_center=[1791 1392];
+                injection_coords_offset=[-.95 -.8]; % in mm, how we have to shift to coregister injections with surgery image
+        end
         
-        injection_coords_offset=[-.95 -.8]; % in mm, how we have to shift to coregister injections with surgery image
+        
+        
         injection_coords=[0 0 ; .02 .40 ; .42 .48 ; -.29 .91 ; -.25 1.56 ; -.12 2.42 ; 1.36 2.51 ; .74 .71 ]; % AP ML in mm, recorded during window surgery
         injection_speed=50; % nl/min
         injection_volumes=[150 150 150 150 150 150 150 150]; % nl
@@ -79,8 +92,64 @@ switch animal_ID
         epi_coordinates=[0 0 .56 ; -0.2621 -0.6227 0.8216]; % in mm
         epi_offset=[.2 -.2]; % mm
         epi_coordinates_px=epi_coordinates(:,1:2)*surgery_im_scaling_factor+repmat(surgery_im_center+epi_offset*surgery_im_scaling_factor,size(epi_coordinates,1),1);
-    otherwise
         
+    case 'AG01'
+        craniotomy_center=[-7.89 5]; % AP ML in mm, recorded during implant. Final center may be off by exact placement of headplate and location of drilling.
+        
+        surgery_im_name='IMG_6491.JPG'; % will be converted into a micron sized grid
+        real_diameter=4; % mm, approximate coverslip diameter
+        
+        surgery_im_scaling_factor=348.376; % how many pixels for 1 mm
+        surgery_im_center=[1546 1377]; % in pixels
+        
+        orientation=1;
+        
+        injection_coords_offset=[-.9 -.1]; % in mm, how we have to shift to coregister injections with surgery image
+        injection_coords=[0 0 ; -.71 -.01 ; -.57 .87 ; -.87 1.20 ; -.84 1.78 ; -.44 2.08 ; .12 2.31 ; .81 1.36 ;]; % AP ML in mm, recorded during window surgery
+        injection_speed=50; % nl/min
+        injection_volumes=[150 150 150 150 150 150 150 150]; % nl
+        
+        injection_depths=[-.60 -.60 -.60 -.60 -.60 -.60 -.60 -.60]; % mm, from pial surface
+        injection_qualities=[1 1 3 1 1 1 1 1]; % scale of 1 to 5
+        injection_names={'IMG_6180.jpg','IMG_6184.jpg','IMG_6187.jpg','IMG_6192.jpg','IMG_6196.jpg','IMG_6200.jpg','IMG_6205.jpg','IMG_6209.jpg'};
+        
+        epi_names={''};
+        epi_FOV_size_micron=[945.9854 709.4891]/1000; % in mm
+        epi_FOV_size_px=[640 486]; % px
+        epi_scaling_factor=epi_FOV_size_px/epi_FOV_size_micron;
+        epi_coordinates=[ 0 0 ]; % in mm
+        epi_offset=[0 0]; % mm
+        epi_coordinates_px=epi_coordinates(:,1:2)*surgery_im_scaling_factor+repmat(surgery_im_center+epi_offset*surgery_im_scaling_factor,size(epi_coordinates,1),1);
+    case 'AG02'
+        craniotomy_center=[-7.99 5]; % AP ML in mm, recorded during implant. Final center may be off by exact placement of headplate and location of drilling.
+        
+        surgery_im_name='IMG_6497.JPG'; % will be converted into a micron sized grid
+        real_diameter=4; % mm, approximate coverslip diameter
+        
+        surgery_im_scaling_factor=378.649; % how many pixels for 1 mm
+        surgery_im_center=[1455 1334]; % in pixels
+        
+        orientation=1;
+        
+        injection_coords_offset=[-1.5 -0]; % in mm, how we have to shift to coregister injections with surgery image
+        injection_coords=[0 0 ; .43 .82 ; 1.16 1.18 ; -1.21 1.43 ; -1.04 2.26 ; -1.02 2.74 ; -.15 2.56 ; -.52 3.17 ; .41 2.39]; % AP ML in mm, recorded during window surgery
+        injection_speed=50; % nl/min
+        injection_volumes=[150 150 150 150 150 150 150 150 150]; % nl
+        
+        injection_depths=[-.60 -.60 -.85 -.60 -.60 -.60 -.60 -.60 -.60]; % mm, from pial surface
+        injection_qualities=[1 1 1 1 3 1 2 1 3]; % scale of 1 to 5
+        injection_names={'IMG_6226.jpg','IMG_6229.jpg','IMG_6231.jpg','IMG_6235.jpg','IMG_6237.jpg','IMG_6245.jpg','IMG_6255.jpg','IMG_6259.JPG',''};
+        
+        epi_names={''};
+        epi_FOV_size_micron=[945.9854 709.4891]/1000; % in mm
+        epi_FOV_size_px=[640 486]; % px
+        epi_scaling_factor=epi_FOV_size_px/epi_FOV_size_micron;
+        epi_coordinates=[ 0 0 ]; % in mm
+        epi_offset=[0 0]; % mm
+        epi_coordinates_px=epi_coordinates(:,1:2)*surgery_im_scaling_factor+repmat(surgery_im_center+epi_offset*surgery_im_scaling_factor,size(epi_coordinates,1),1);
+        
+    otherwise
+        disp('No data for this rat')
 end
 
 % resize image so 1 pixel is 1 micron
@@ -136,8 +205,8 @@ end
 nInjections=size(injection_coords,1);
 injections=struct;
 for iInject=1:nInjections
-    injections(iInject).coords=fliplr(injection_coords(iInject,:));
-    injections(iInject).coords_px=injections(iInject).coords*surgery_im_scaling_factor+surgery_im_center+injection_coords_offset*surgery_im_scaling_factor;
+    injections(iInject).coords_mm=fliplr(injection_coords(iInject,:));
+    injections(iInject).coords_px=injections(iInject).coords_mm*surgery_im_scaling_factor+surgery_im_center+injection_coords_offset*surgery_im_scaling_factor;
     injections(iInject).speed=injection_speed;
     injections(iInject).volume=injection_volumes(iInject);
     injections(iInject).depth=injection_depths(iInject);
@@ -145,6 +214,9 @@ for iInject=1:nInjections
     injections(iInject).image_name=injection_names{iInject};
 end
 injection_sites=cat(1,injections.coords_px);
+injection_sites_mm=cat(1,injections.coords_mm);
+injection_spacing=calc_dist([injection_sites_mm(1:end-1,:) injection_sites_mm(2:end,:)])*1e3;
+
 
 % concat epi fields
 nEpi=length(epi_names);
@@ -170,18 +242,23 @@ else
     BG=flipud(imread(loadName));
 end
 
-figure(orientation)
+figure(animal_selector)
 imshow(BG,[])
 axis xy
 
 hold on
 plotCircle([surgery_im_center 0],real_diameter/2*surgery_im_scaling_factor,100,'r-');
-plot(surgery_im_center(1),surgery_im_center(2),'k+')
+plot(surgery_im_center(1),surgery_im_center(2),'w+')
 plot(injection_sites(:,1),injection_sites(:,2),'rv')
 
+for iInj=1:nInjections-1
+    plot([injection_sites(iInj,1) injection_sites(iInj+1,1)],[injection_sites(iInj,2) injection_sites(iInj+1,2)],'r')
+    t=text(mean([injection_sites(iInj,1) injection_sites(iInj+1,1)]),mean([injection_sites(iInj,2) injection_sites(iInj+1,2)]),sprintf('%3d',round(injection_spacing(iInj))));
+    set(t,'color','w')
+end
 %plot(epi_coordinates_px(:,1),epi_coordinates_px(:,2),'ws')
 
-plot(epi_locations(:,1),epi_locations(:,2),'ks')
+%plot(epi_locations(:,1),epi_locations(:,2),'ks')
 hold off
 axis equal
 
