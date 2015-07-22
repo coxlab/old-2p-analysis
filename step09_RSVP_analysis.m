@@ -10,8 +10,8 @@ clc
 % i.e. 1/384 and concat all the responses per FOV
 
 header_script
-save_it=1;
-dataset_selector=7;
+%save_it=0;
+dataset_selector=3;
 
 nConditions=12;
 frame_selector=[2 7];
@@ -20,7 +20,7 @@ for data_type=1:2
     sample_interval_seconds=[-2 4];
     switch data_type
         case 1
-            y_range=[-5 20];
+            y_range=[-5 25];
         case 2
             y_range=[-1 4];
     end
@@ -54,17 +54,21 @@ for data_type=1:2
     switch exp_name
         case '2015-03-05_AF11'
             switch dataset_selector
+                case 1
+                    ROI_vector=22;            
                 case 6
-                    ROI_vector=[11 12 13 14 23];
+                    ROI_vector=13;%[11 12 13 14 23];
                 case 7
                     ROI_vector=[3 11 24 37];
             end
         case '2015-04-07_AF11'
             switch dataset_selector
+                case 1
+                    ROI_vector=[34];
                 case 2
-                    ROI_vector=[];
+                    ROI_vector=[27 32 44 46 54];
                 case 3
-                    ROI_vector=[4 46 51 53 61 63 65];
+                    ROI_vector=4;%[4 46 51 53 61 63 65];
             end
         otherwise
             ROI_vector=1:nROI;
@@ -124,6 +128,9 @@ for data_type=1:2
             
             response_per_stimulus=zeros(nConditions,1);
             response_per_stimulus_std=response_per_stimulus;
+            
+            figure(1)
+            clf
             for iCond=1:nConditions
                 stim_nr=iCond-1;
                 repeat_starts=start_rows(stimulus_vector==stim_nr);
@@ -151,8 +158,16 @@ for data_type=1:2
                     switch 1
                         case 1
                             T=sample_interval(1):sample_interval(2);
-                            plot(T,mean(trace_matrix,1))
+                            %
                             hold on
+                            %plot(T,trace_matrix)
+                            if nRepeats>1
+                                shadedErrorBar(T,mean(trace_matrix,1),ste(trace_matrix,1));
+                                CC=corr(trace_matrix');
+                                title(sprintf('r=%3.2f (N=%d)',[CC(1,2) nRepeats]))
+                            else
+                                plot(T,mean(trace_matrix,1))
+                            end
                             plot([0 0],y_range,'r-')
                             plot([0 0]+2*sample_rate,y_range,'k-')
                             hold off
@@ -176,7 +191,8 @@ for data_type=1:2
             
             %%% Make figures
             figure(2)
-            ROI_prop=dataset.ROI_definitions(iROI);
+            ROI_definitions=get_ROI_definitions(dataset,ROI_definition_nr);
+            ROI_prop=ROI_definitions(iROI);
             coords=cat(1,ROI_prop.center_coords);
             nPix=sum(ROI_prop.mask_soma(:));
             %ROI_prop.ellipse_properties
