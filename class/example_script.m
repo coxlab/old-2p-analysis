@@ -10,7 +10,7 @@ files=scandir(data_folder,'tif');
 nFiles=length(files);
 
 
-for iFile=7%:nFiles
+for iFile=1:nFiles
     file_name=fullfile(data_folder,files(iFile).name);
     if exist(file_name,'file')==2
         fprintf('Pre-processing file %s...\n',file_name)
@@ -84,10 +84,11 @@ end
 %%
 %%% After all preprocessing, compile session overview file so we can run
 %%% manual ROI definition
+die
 
 % Run step 03
 % Rest of pipeline is sort of same
-for iFile=6%:nFiles
+for iFile=1:nFiles
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name);
     save_name=strrep(save_name,'tif','mat');
     load(save_name,'session_data') % reload after step03, probably needs to be separate script
