@@ -90,7 +90,7 @@ end
 
 % Run step 03
 % Rest of pipeline is sort of same
-for iFile=1:nFiles
+for iFile=1%:nFiles
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name);
     save_name=strrep(save_name,'tif','mat');
     load(save_name,'session_data') % reload after step03, probably needs to be separate script
@@ -112,7 +112,7 @@ for iFile=1:nFiles
         %session_data.Experiment_info.stim_matrix
         
         %%
-        session_data.combine_act_stim(4,6)
+        session_data.combine_act_stim(1,5)
         
     else
         step03_ROI_GUI()
