@@ -261,6 +261,7 @@ end
 %plot(epi_locations(:,1),epi_locations(:,2),'ks')
 hold off
 axis equal
+title(animal_ID)
 
 
 %%% make a brightfield stitch as a base, dimensions are off using
