@@ -23,6 +23,13 @@ if isfield(session_data,'ROI_definitions')
     end
     
     varargout{1}=ROIs;
+elseif isprop(session_data,'ROI_definitions')
+    if isfield(session_data.ROI_definitions,'ROI')
+        ROIs=session_data.ROI_definitions(ROI_definition_nr).ROI;
+        varargout{1}=ROIs;
+    else
+        varargout{1}=[];
+    end    
 else
     error('No ROIs field found...')
 end
