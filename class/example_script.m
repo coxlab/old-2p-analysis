@@ -8,7 +8,7 @@ header_script
 %data_folder=fullfile(data_root,exp_folder);
 files=scandir(data_folder,'tif');
 nFiles=length(files);
-
+%%
 
 for iFile=1:nFiles
     file_name=fullfile(data_folder,files(iFile).name);
@@ -24,6 +24,9 @@ for iFile=1:nFiles
         else
             load(save_name,'session_data')
         end
+        
+        %%% Make sure filenames are relative to data folder on this machine
+        session_data.rebase(data_root)
         
         %%% Extract info from movie
         session_data.get_mov_info()
@@ -84,7 +87,6 @@ end
 %%
 %%% After all preprocessing, compile session overview file so we can run
 %%% manual ROI definition
-die
 
 % Run step 03
 % Rest of pipeline is sort of same
@@ -114,6 +116,7 @@ for iFile=1:nFiles
         
     else
         step03_ROI_GUI()
+        die
     end
 end
 
