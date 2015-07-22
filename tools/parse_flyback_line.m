@@ -11,6 +11,9 @@ if nargin>=2&&~isempty(varargin{2})
     nBitCodes=varargin{2};
 else
     nBitCodes=find(vector==0,1,'first')-1;
+    if nBitCodes==0
+        nBitCodes=[];
+    end
 end
 
 %%% handle bitcodes
