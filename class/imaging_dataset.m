@@ -281,23 +281,27 @@ classdef imaging_dataset < handle
         
         function find_offset(varargin)
             tic
-            self=varargin{1};
-            if isempty(self.bitCodes.offset)
-                A=self.bitCodes.scim_bitCodes(:,2);
-                B=self.bitCodes.MWorks_bitCodes(:,2);
-                CC=normxcorr2(A,B);
-                [self.bitCodes.max_val,loc]=max(CC);
-                if self.bitCodes.max_val>.99
-                    self.bitCodes.offset=loc-length(A)+1;
+            if ismac
+                self=varargin{1};
+                if isempty(self.bitCodes.offset)
+                    A=self.bitCodes.scim_bitCodes(:,2);
+                    B=self.bitCodes.MWorks_bitCodes(:,2);
+                    CC=normxcorr2(A,B);
+                    [self.bitCodes.max_val,loc]=max(CC);
+                    if self.bitCodes.max_val>.99
+                        self.bitCodes.offset=loc-length(A)+1;
+                    else
+                        self.bitCodes.offset=[];
+                    end
                 else
-                    self.bitCodes.offset=[];
+                    disp('Using existing offset...')
                 end
+                
+                self.elapsed=toc;
+                self.last_action='find_offset';
             else
-                disp('Using existing offset...')
-            end
-            
-            self.elapsed=toc;
-            self.last_action='find_offset';
+                
+            end            
         end
         
         
