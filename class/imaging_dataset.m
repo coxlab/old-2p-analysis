@@ -77,6 +77,9 @@ classdef imaging_dataset < handle
                 error('Rebase() needs folder to be used as root...')
             end
             self.file_name=fullfile(self.folder_info.root_folder,self.folder_info.rel_path);
+            [self.folder_info.data_folder,self.folder_info.raw_name]=fileparts(self.file_name);
+            self.folder_info.save_folder=fullfile(self.folder_info.data_folder,self.folder_info.save_folder_root);
+            self.save_name=fullfile(self.folder_info.save_folder,[self.folder_info.raw_name '.mat']);
         end
         
         
@@ -238,7 +241,11 @@ classdef imaging_dataset < handle
                     else % if none specified, use first mwk file found in data_folder
                         %F='2015-07-17_AG02.mwk';
                         files=scandir(self.folder_info.data_folder,'.mwk');
-                        F=files(1).name;
+                        if length(files)==0
+                            error('No .mwk file found in folder')
+                        else
+                            F=files(1).name;
+                        end
                     end
                     mwk_file_name=fullfile(self.folder_info.data_folder,F);
                     %disp('Reading MWK file...')
@@ -673,10 +680,8 @@ classdef imaging_dataset < handle
             tic
             self=varargin{1};
             
-            debugging=1;
-            
-            %if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data) isempty(self.MIP_cc_local.data)])
-            if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data)])
+            if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data) isempty(self.MIP_cc_local.data)])
+            %if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data)])
                 fprintf('Calculating MIPs... ')
                 %%% Get motion corrected frames
                 frames=self.get_frames([],1);
@@ -704,7 +709,7 @@ classdef imaging_dataset < handle
                     self.MIP_std.gamma_val=.8;
                 end
                 if isempty(self.MIP_cc_local.data)
-                    if debugging==0 % only if we are not debugging, takes a long time to run
+                    if ~ismac % only if we are on the server, takes a long time to run
                         self.MIP_cc_local.data=CrossCorrImage(frames);
                         self.MIP_cc_local.gamma_val=.6;
                     end
