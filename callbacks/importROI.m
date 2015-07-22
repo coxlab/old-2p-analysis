@@ -22,6 +22,8 @@ if isfield(session_data,'MIP_std')
     else
         im2=session_data.MIP_std; % for older version old
     end
+elseif isprop(session_data,'MIP_std')
+    im2=session_data.MIP_std.data; % temp MIP from other, existing file
 else
     session_data
     die
@@ -67,8 +69,13 @@ if get(handles.auto_align,'value')==1
     fprintf('Shifted all coordinates by x=%d and y=%d \n',offset)
         
     %%% Check if coords are still valid after the shift
-    Height=handles.session_data.data(4);
-    Width=handles.session_data.data(3);
+    if isfield(handles.session_data,'data')
+        Height=handles.session_data.data(4);
+        Width=handles.session_data.data(3);
+    else
+        Height=handles.session_data.mov_info.Height;
+        Width=handles.session_data.mov_info.Width;
+    end
     remove_vector=zeros(nROI,1);
     for iROI=1:nROI
         ROI_rect=ROI(iROI).ROI_rect;

@@ -150,8 +150,8 @@ switch key_event.Key
         end
         
     otherwise % for any other key
-        session_data=handles.session_data;
-        session_data.ROIs=handles.ROI;
+        %session_data=handles.session_data;
+        %session_data.ROIs=handles.ROI;
         %session_data
 end
 

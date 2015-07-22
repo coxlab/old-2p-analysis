@@ -6,10 +6,12 @@ handles=guidata(H);
 %%% this file, leave the session overview untouched!
 selected_session=handles.selected_session;
 session_data=handles.data_sessions(selected_session);
-[folder,file_name]=fileparts(session_data.file_name);
+file_name=session_data.name;
+%[folder,file_name]=fileparts(session_data.file_name);
 set(handles.session_name,'string',file_name)
 
-loadName=fullfile(folder,'data_analysis',[file_name '.mat']);
+
+loadName=fullfile(handles.data_folder,'data_analysis',file_name);
 handles.loadName=loadName;
 if exist(loadName,'file')
     load(loadName,'session_data')
@@ -29,10 +31,15 @@ else
     end
 end
 
-nFrames=session_data.data(2);
-session_data.nFrames=nFrames;
+if isfield(session_data,'data')
+    nFrames=session_data.data(2);
+else
+    nFrames=session_data.mov_info.nFrames;
+end
 
-if isfield(session_data,'MIP_std')
+%session_data.nFrames=nFrames;
+
+if isfield(session_data,'MIP_std')||isprop(session_data,'MIP_std')
     %%% Get MIP projections if present
     disp('Reloading std MIP')
     if isstruct(session_data.MIP_std)
@@ -45,7 +52,7 @@ if isfield(session_data,'MIP_std')
     else
         handles.MIP=session_data.MIP_std;
     end
-    handles.nFrames=session_data.data(2);
+    handles.nFrames=nFrames;
 else
     %%% if not, create them and store to file
     session_file_name=session_data.file_name;
@@ -102,7 +109,7 @@ set(handles.subplots(1).h(1),'buttonDownFcn',@clickFcnMIP)
 
 %%% Handle ROI definition data
 handles.session_data=session_data;
-handles.ROI_empty=struct('ROI_nr',[],'base_coord',[],'nCoords',0,'coords',[],'ellipse_properties',struct,'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],'ROI_rect',[],'mask_soma',[],'mask_neuropil',[]);
+handles.ROI_empty=struct('ROI_nr',[],'base_coord',[],'nCoords',0,'coords',[],'ellipse_properties',struct,'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[],'timeseries_neuropil',[]);
 handles.usePoly=0;
 
 
@@ -112,6 +119,9 @@ switch 1
     case 1
         try
             ROIs=get_ROI_definitions(session_data,handles.ROI_definition_nr);
+            if isempty(ROIs)
+                die
+            end
             handles.ROI=ROIs;
             handles.ROI_selector=1;
             handles.nROI=length(handles.ROI);
