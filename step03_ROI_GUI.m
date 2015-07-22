@@ -49,7 +49,12 @@ handles.green=green;
 handles.window_size=[40 40];
 
 %%% Set up GUI
-handles.figure1=figure(999);
+if nargin>=1&&~isempty(varargin{1})
+    figure_nr=varargin{1};
+else
+    figure_nr=999;
+end
+handles.figure1=figure(figure_nr);
 clf
 set(handles.figure1,'units','normalized','position',[0.60 0.25 0.35 0.5],'resize','on','menubar','none','NumberTitle','Off','Name','ROI-King: ROI extraction from 2p data')
 mainPanel=uipanel(handles.figure1,'units','normalized','position',[.01 .01 .98 .98]);
