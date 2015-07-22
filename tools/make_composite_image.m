@@ -22,7 +22,7 @@ clc
 % Based on FOV size in microns, move a certain percentage in all directions
 % and capture new image, naming can be manual.
 
-animal_selector=2;
+animal_selector=4;
 animal_list={'AF11','AF17','AG01','AG02'};
 animal_ID=animal_list{animal_selector};
 folder_name='2015-06-18_AF17_init';
