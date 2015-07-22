@@ -529,9 +529,9 @@ classdef imaging_dataset < handle
                 cur_frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
                 next_frame=double(imread(self.file_name,iFrame+1,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
                 
-                diff_vector(iFrame+1)=sum(sqrt((cur_frame(:)-next_frame(:)).^2));
-                del_str=repmat('\b',1,5);
+                diff_vector(iFrame+1)=sum(sqrt((cur_frame(:)-next_frame(:)).^2));                
                 if ismac
+                    del_str=repmat('\b',1,5);
                     fprintf([del_str '%03d%%\n'],round(iFrame/(self.mov_info.nFrames-1)*100))
                 end
             end
