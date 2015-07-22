@@ -530,7 +530,7 @@ classdef imaging_dataset < handle
             
             diff_vector=zeros(self.mov_info.nFrames,1);
             %fprintf('Completed: %03d%%\n',0)
-            fprintf('Running motion correction... ')
+            fprintf('Running motion detection... ')
             for iFrame=1:self.mov_info.nFrames-1
                 cur_frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
                 next_frame=double(imread(self.file_name,iFrame+1,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
@@ -625,8 +625,8 @@ classdef imaging_dataset < handle
                 ref=self.motion_correction.reference_image.im;
                 
                 fprintf('Running motion correction... ')
-                str=sprintf('%03d%%\n',0);
-                fprintf(str)
+                %str=sprintf('%03d%%\n',0);
+                %fprintf(str)
                 shift_matrix=zeros(self.mov_info.nFrames,3);
                 for iFrame=1:self.mov_info.nFrames
                     cur_frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
@@ -637,9 +637,12 @@ classdef imaging_dataset < handle
                     [r,c]=PCdemo(ref,cur_frame);
                     shift_matrix(iFrame,:)=[iFrame c r];
                     
-                    del_str=repmat('\b',1,length(str));
-                    fprintf([del_str '%03d%%\n'],round(iFrame/(self.mov_info.nFrames-1)*100))
+                    if ismac
+                        del_str=repmat('\b',1,length(str));
+                        fprintf([del_str '%03d%%\n'],round(iFrame/(self.mov_info.nFrames-1)*100))
+                    end
                 end
+                fprintf('Done! (Took %3.2f seconds)\n',toc)
                 self.motion_correction.shift_matrix=shift_matrix;
             else
                 disp('Using existing shift_matrix...')
