@@ -177,7 +177,7 @@ classdef imaging_dataset < handle
             M=cat(1,self.frame_info.xyz_micron);
             if any(std(M)>TH)
                 static_FOV=0;
-                fprintf('Some axis shows more variation (std XYZ=[%3.2f %3.2f %3.2f]) than excepted (TH=%3.2f)...\n',[std(M) TH])
+                fprintf('Some axis shows more variation (std XYZ=[%3.2f %3.2f %3.2f]) than is acceptable (TH=%3.2f)...\n',[std(M) TH])
             else % treat data as FOV recording where ROIs can be defined
                 static_FOV=1;
             end
