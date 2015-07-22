@@ -11,10 +11,10 @@ clc
 
 header_script
 
-%save_it=0;
+save_it=0;
 
 session_vector=[];
-switch 2
+switch 5
     case 1 % load single file recorded at same FOV, same stimuli
         cd(data_root)
         [file_name, pathname]=uigetfile('.mat','Pick data file');
@@ -46,12 +46,12 @@ switch 2
                 A=lasterror;
                 disp(A.message)
                 disp('Reading from alternate location...')
-                loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);                
+                loadName=fullfile(data_folder,'data_analysis',[file_name '.mat']);
                 load(loadName,'session_data');
             end
-                        
+            
             tifName=session_data.file_name;
-            if exist(tifName,'file')==0                
+            if exist(tifName,'file')==0
                 tifName=fullfile(data_folder,[file_name '.tif']);
                 if exist(tifName,'file')
                     disp('Reading tif from alternate location...')
@@ -85,6 +85,28 @@ switch 2
         loadName_format='20150305_AF11_%03d.mat';
         session_vector=[6];
         nSessions=length(session_vector);
+    case 5
+        mat_folder=fullfile(data_folder,'data_analysis');
+        session_files=scandir(mat_folder,'mat');
+        count=1;
+        for iFile=1:length(session_files)
+            file_name=session_files(iFile).name;
+            load_name=fullfile(mat_folder,file_name);
+            load(load_name,'session_data')
+            if session_data.is_static_FOV
+                ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
+                if ~isempty(ROIs)
+                    valid_sessions(count)=iFile;
+                    valid_session_names{count}=load_name;
+                    valid_session_names_short{count}=file_name;
+                    %valid_session_tif_name{count}=tifName;
+                    
+                    count=count+1;
+                end
+            end
+        end
+        session_vector=valid_sessions;
+        nSessions=length(session_vector);
 end
 %%
 session_vector
@@ -109,7 +131,7 @@ extraction_options.calc_delta_f.method                 =  6; % default 6
 extraction_options.do_FastNegDeconv                    =  1; % use Vogelstein's oopsi
 
 extraction_options.save_data                           =  save_it;
-extraction_options.plot_traces                         =  plot_it;
+extraction_options.plot_traces                         =  1;%plot_it;
 
 
 %%
@@ -121,91 +143,120 @@ for iSess=1:nSessions
     load(loadName,'session_data')
     loadName
     
-    %%% Get all data from tif file
-    tic
-    frame_rate=session_data.data(5);
-    tifName=valid_session_tif_name{iSess};
-    info=imfinfo(tifName);
-    nFrames=length(info);
-    rows=session_data.data(4);
-    cols=session_data.data(3);
-    
-    frames=zeros(rows-1,cols,nFrames);
-    for iFrame=1:nFrames
-        frame=double(imread(tifName,iFrame,'info',info));
-        frames(:,:,iFrame)=double(frame(1:end-1,:)); % no flyback line double
-    end
-    fprintf('Loading frames took: %3.1fs\n',toc);
-    
-    %% Extract ROI coordinates and construct time-series for each ROI
-    % BV20150409: use motion correction values here to shift ROIs with the
-    % movie.
-    if isfield(session_data,'motion_correction')
-        motion_correction=session_data.motion_correction;
-        apply_motion_correction=1;
-    else
-        apply_motion_correction=0;
-    end        
-
-    ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
-%     if isfield(session_data.ROI_definitions,'ROI_nr') % old
-%         ROIs=session_data.ROI_definitions;
-%     else % new
-%         ROIs=session_data.ROI_definitions(ROI_definition_nr).ROI;
-%     end
-    nROI=length(ROIs);
-    ROI_vector=cat(1,ROIs.ROI_nr);
-    
-    tic
-    %apply_motion_correction=1;
-    for iFrame=1:nFrames
-        if apply_motion_correction==1
-            offset_shift=motion_correction.shift_matrix(iFrame,4:5);
-            motion_correction.ignore_frames=medfilt1(double(motion_correction.ignore_frames),5)==1;
+    %%% Get all data from tif file    
+    if isfield(session_data,'data')
+        tic
+        frame_rate=session_data.data(5);
+        rows=session_data.data(4);
+        cols=session_data.data(3);
+        tifName=valid_session_tif_name{iSess};
+        info=imfinfo(tifName);
+        nFrames=length(info);
+        
+        frames=zeros(rows-1,cols,nFrames);
+        for iFrame=1:nFrames
+            frame=double(imread(tifName,iFrame,'info',info));
+            frames(:,:,iFrame)=double(frame(1:end-1,:)); % no flyback line double
+        end
+        fprintf('Loading frames took: %3.1fs\n',toc);
+        
+        %% Extract ROI coordinates and construct time-series for each ROI
+        % BV20150409: use motion correction values here to shift ROIs with the
+        % movie.
+        if isfield(session_data,'motion_correction')
+            motion_correction=session_data.motion_correction;
+            apply_motion_correction=1;
+        elseif isprop(session_data,'motion_correction')
+            motion_correction=session_data.motion_correction;
+            apply_motion_correction=1;
+        else
+            apply_motion_correction=0;
         end
         
-        %%% Shifts bigger then 1 FOV size will be problematic
-        ROI_size=[diff(ROIs(1).ROI_rect([1 3]))+1 diff(ROIs(1).ROI_rect([2 4]))+1];
-        offset_compensation=ROI_size;
+        ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
+        %     if isfield(session_data.ROI_definitions,'ROI_nr') % old
+        %         ROIs=session_data.ROI_definitions;
+        %     else % new
+        %         ROIs=session_data.ROI_definitions(ROI_definition_nr).ROI;
+        %     end
+        nROI=length(ROIs);
+        ROI_vector=cat(1,ROIs.ROI_nr);
         
-        frame=frames(:,:,iFrame);
-        frame=centerOnRect(frame,size(frame)+ROI_size*2,0);
-        
-        
-        for iROI=1:nROI
-            if apply_motion_correction==1                
-                if motion_correction.ignore_frames(iFrame)==1
-                    ROI_box=zeros(size(ROIs(iROI).mask_soma));
-                else                    
-                    try
-                        %ROI_box=frames(offset_shift(1)+ROIs(iROI).ROI_rect(2):offset_shift(1)+ROIs(iROI).ROI_rect(4),offset_shift(2)+ROIs(iROI).ROI_rect(1):offset_shift(2)+ROIs(iROI).ROI_rect(3),iFrame);
-                        ROI_box=frame(offset_compensation(1)+offset_shift(1)+(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4)),offset_compensation(2)+offset_shift(2)+(ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3)));% do motion correction on ROIs
-                    catch
-                        %disp('ROI bumping edge...')
-                        switch 2
-                            case 0 % ignore shift to avoid issue: bad fix                                
-                                ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
-                            case 1 % expand frames by half ROI size and pad with zeros, they may become general practice
-                            case 2 % fall of the map => all black
-                                ROI_box=zeros(size(ROIs(iROI).mask_soma));                                
+        tic
+        %apply_motion_correction=1;
+        for iFrame=1:nFrames
+            if apply_motion_correction==1
+                offset_shift=motion_correction.shift_matrix(iFrame,4:5);
+                motion_correction.ignore_frames=medfilt1(double(motion_correction.ignore_frames),5)==1;
+            end
+            
+            %%% Shifts bigger then 1 FOV size will be problematic
+            ROI_size=[diff(ROIs(1).ROI_rect([1 3]))+1 diff(ROIs(1).ROI_rect([2 4]))+1];
+            offset_compensation=ROI_size;
+            
+            frame=frames(:,:,iFrame);
+            frame=centerOnRect(frame,size(frame)+ROI_size*2,0);
+            
+            
+            for iROI=1:nROI
+                if apply_motion_correction==1
+                    if motion_correction.ignore_frames(iFrame)==1
+                        ROI_box=zeros(size(ROIs(iROI).mask_soma));
+                    else
+                        try
+                            %ROI_box=frames(offset_shift(1)+ROIs(iROI).ROI_rect(2):offset_shift(1)+ROIs(iROI).ROI_rect(4),offset_shift(2)+ROIs(iROI).ROI_rect(1):offset_shift(2)+ROIs(iROI).ROI_rect(3),iFrame);
+                            ROI_box=frame(offset_compensation(1)+offset_shift(1)+(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4)),offset_compensation(2)+offset_shift(2)+(ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3)));% do motion correction on ROIs
+                        catch
+                            %disp('ROI bumping edge...')
+                            switch 2
+                                case 0 % ignore shift to avoid issue: bad fix
+                                    ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
+                                case 1 % expand frames by half ROI size and pad with zeros, they may become general practice
+                                case 2 % fall of the map => all black
+                                    ROI_box=zeros(size(ROIs(iROI).mask_soma));
+                            end
                         end
                     end
-                end                                
-            else
-                ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
+                else
+                    ROI_box=frames(ROIs(iROI).ROI_rect(2):ROIs(iROI).ROI_rect(4),ROIs(iROI).ROI_rect(1):ROIs(iROI).ROI_rect(3),iFrame); % no motion correction
+                end
+                %box_frames(:,:,iFrame)=ROI_box;
+                ROIs(iROI).timeseries_soma(iFrame)=mean(ROI_box(ROIs(iROI).mask_soma==1));
+                ROIs(iROI).timeseries_neuropil(iFrame)=mean(ROI_box(ROIs(iROI).mask_neuropil==1));
             end
-            %box_frames(:,:,iFrame)=ROI_box;
-            ROIs(iROI).timeseries_soma(iFrame)=mean(ROI_box(ROIs(iROI).mask_soma==1));
-            ROIs(iROI).timeseries_neuropil(iFrame)=mean(ROI_box(ROIs(iROI).mask_neuropil==1));
-        end     
+        end
+        %     subplot(121)
+        %     imagesc(mean(box_frames,3))
+        %     %imagesc(box_frames(:,:,50))
+        %     subplot(122)
+        %     imagesc(mean(box_frames,3).*ROIs(iROI).mask_soma)
+        %     die
+        fprintf('Extracting %d ROIs data took: %3.1fs\n',[nROI toc]);
+    else
+        tic
+        frames=session_data.get_frames([],1); % get all frames, apply motion correction
+        nFrames=size(frames,3);
+        fprintf('Loading frames took: %3.1fs\n',toc);
+        %%
+        tic
+        frame_rate=session_data.mov_info.frame_rate;
+        ROIs=get_ROI_definitions(session_data,ROI_definition_nr);
+        nROI=length(ROIs);
+        ROI_vector=cat(1,ROIs.ROI_nr);
+        for iROI=1:nROI
+            rect=ROIs(iROI).ROI_rect;
+            vol=frames(rect(2):rect(4),rect(1):rect(3),:);
+            mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
+            res=vol.*mask;
+            ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
+            
+            mask=repmat(ROIs(iROI).mask_neuropil,1,1,size(vol,3));
+            res=vol.*mask;
+            ROIs(iROI).timeseries_neuropil=squeeze(mean(mean(res,1),2));
+        end
+        fprintf('Extracting %d ROIs data took: %3.1fs\n',[nROI toc]);
     end
-%     subplot(121)
-%     imagesc(mean(box_frames,3))
-%     %imagesc(box_frames(:,:,50))
-%     subplot(122)
-%     imagesc(mean(box_frames,3).*ROIs(iROI).mask_soma)
-%     die
-    fprintf('Extracting %d ROIs data took: %3.1fs\n',[nROI toc]);
+    
     
     %%% Construct activity matrix by processing previously extracted time-series
     activity_matrix=zeros(nROI,nFrames);
@@ -216,6 +267,8 @@ for iSess=1:nSessions
     %% Calculate number of dark frames (laser not on) at start of experiment
     if isfield(session_data,'blank_frames')
         blank_frames=session_data.blank_frames;
+    elseif isprop(session_data,'mov_info')
+        blank_frames=session_data.mov_info.blank_frames;
     else
         %blank_frames=zscore(mean_lum)<options.neuropil_subtraction.TH_no_data;
         %blank_frames(1:find(blank_frames>0,1,'last')+1)=true;
@@ -420,15 +473,15 @@ for iSess=1:nSessions
     
     if 0
         %%
-                
+        
         size(activity_matrix)
         overview_properties=struct();
         for iROI=1:nROI
-             trace=activity_matrix(iROI,:);
-             overview_properties(iROI).min=min(trace);
-             overview_properties(iROI).max=max(trace);
-             overview_properties(iROI).range=range(trace);
-             overview_properties(iROI).std=std(trace);             
+            trace=activity_matrix(iROI,:);
+            overview_properties(iROI).min=min(trace);
+            overview_properties(iROI).max=max(trace);
+            overview_properties(iROI).range=range(trace);
+            overview_properties(iROI).std=std(trace);
         end
         
         X=cat(1,overview_properties.range)./cat(1,overview_properties.std);
@@ -454,7 +507,7 @@ for iSess=1:nSessions
         session_data.normalization_matrix=normalization_matrix;
         session_data.spike_matrix=spike_matrix';
         session_data.oopsi_options=oopsi_options;
-        save(loadName,'session_data')
+        %save(loadName,'session_data')
     end
     
     nROI
@@ -465,8 +518,8 @@ for iSess=1:nSessions
         
         cols=ceil(sqrt(nROI));
         rows=ceil((nROI+1)/cols);
-        stim_data=session_data.stimulus_matrix_ext;
-        stim_vector=stim_data(:,4)>0;
+        %stim_data=session_data.stimulus_matrix_ext;
+        %stim_vector=stim_data(:,4)>0;
         for iROI=1:nROI
             subplot(rows,cols,iROI)
             ROI_nr=ROIs(iROI).ROI_nr;
@@ -476,7 +529,8 @@ for iSess=1:nSessions
             prop=ROIs(iROI).ellipse_properties;
             info=sprintf('Radius: %3.2f',prop.long_axis);
             
-            bar(spherify(stim_vector,2)*max_val,'barWidth',1,'FaceColor',[1 1 1]*.9,'EdgeColor',[1 1 1]*.9)
+            cla
+            %bar(spherify(stim_vector,2)*max_val,'barWidth',1,'FaceColor',[1 1 1]*.9,'EdgeColor',[1 1 1]*.9)
             hold on
             plot(F,'color',[0 1 0]*.7)
             text(nFrames/10,-max_val*.1,info)
@@ -503,15 +557,16 @@ for iSess=1:nSessions
         axis square
         
         %%
-        frame_selection=2:min([nFrames size(session_data.stimulus_matrix_ext,1)]);
+        %frame_selection=2:min([nFrames size(session_data.stimulus_matrix_ext,1)]);
         
-        stim_data=session_data.stimulus_matrix_ext(frame_selection,:);
-        stim_frames=stim_data(:,4)>0;
+        %stim_data=session_data.stimulus_matrix_ext(frame_selection,:);
+        %stim_frames=stim_data(:,4)>0;
         
         figure(2)
-        imagesc(activity_matrix(:,frame_selection))
+        %imagesc(activity_matrix(:,frame_selection))
+        imagesc(activity_matrix)
         hold on
-        plot(spherify(-stim_vector,2)+nROI-3,'r')
+        %plot(spherify(-stim_vector,2)+nROI-3,'r')
         hold off
         colormap(green)
     end
