@@ -69,7 +69,7 @@ for iFile=1:nFiles
             
             %%% Calculate z-projections
             session_data.do_calc_MIPs()
-            if 1
+            if 0
                 %%
                 session_data.imshow(session_data.MIP_std.data)
             end
