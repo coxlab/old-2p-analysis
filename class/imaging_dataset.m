@@ -241,7 +241,7 @@ classdef imaging_dataset < handle
                     else % if none specified, use first mwk file found in data_folder
                         %F='2015-07-17_AG02.mwk';
                         files=scandir(self.folder_info.data_folder,'.mwk');
-                        if length(files)==0
+                        if isempty(files)
                             error('No .mwk file found in folder')
                         else
                             F=files(1).name;
@@ -376,8 +376,7 @@ classdef imaging_dataset < handle
         %%% Get experiment info from MWorks
         function get_exp_type(varargin)
             self=varargin{1};
-            
-            
+                        
             if ismac
                 exp_type=[];
                 exp_name='';
@@ -680,8 +679,8 @@ classdef imaging_dataset < handle
             tic
             self=varargin{1};
             
-            if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data) isempty(self.MIP_cc_local.data)])
-            %if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data)])
+            %if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data) isempty(self.MIP_cc_local.data)])
+            if any([isempty(self.MIP_avg.data) isempty(self.MIP_max.data) isempty(self.MIP_std.data)])
                 fprintf('Calculating MIPs... ')
                 %%% Get motion corrected frames
                 frames=self.get_frames([],1);
@@ -930,18 +929,19 @@ classdef imaging_dataset < handle
             
             
             %self.analyse_data([Stim(:,1:3) Stim(:,variable) self.mov_info.mean_lum])
-            %self.analyse_data_new([Stim(:,1:3) Stim(:,variable) self.mov_info.mean_lum])
+            %self.analyse_data_new([Stim(:,1:3) Stim(:,variable) zscore(self.mov_info.mean_lum)],iROI)
             
             %self.analyse_data([Stim(:,1:3) Stim(:,variable) Resp(:,iROI)])
-            self.analyse_data_new([Stim(:,1:3) Stim(:,variable) Resp(:,iROI)])            
+            self.analyse_data_new([Stim(:,1:3) Stim(:,variable) Resp(:,iROI)],iROI)
         end
         
         function analyse_data_new(varargin)
             self=varargin{1};
             data=varargin{2};
+            iROI=varargin{3};
             condition_vector=data(:,4);
             conditions=unique(condition_vector(condition_vector>-1));
-            nConditions=length(conditions);
+            nConditions=length(conditions);            
             
             condition_matrix=parse_conditions(condition_vector);
             nTrials=size(condition_matrix,1); % ignore final trial, because it is rarely complete
