@@ -39,6 +39,7 @@ for iSess=nSessions
         load(loadName,'session_data');
     end
     
+    fprintf('Processing file: %s...\n',loadName)
     info=imfinfo(tifName);
     nFrames=session_data.data(2);
     rows=session_data.data(4);
