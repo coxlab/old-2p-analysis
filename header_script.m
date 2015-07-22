@@ -33,12 +33,17 @@ switch 0
         %exp_name='2015-03-05_AF03';
         
         %exp_name='2015-03-05_AF11'; % example session 12Hz
-        exp_name='2015-04-07_AF11'; % example session 3Hz
+        %exp_name='2015-03-05_AF11_compare';
+        %exp_name='2015-04-07_AF11'; % example session 3Hz
+        %exp_name='2015-04-07_AF11_compare'; 
         %exp_name='2015-04-10_AF11';
         
         %exp_name='2015-04-10_AF11_exp';
         %exp_name='2015-04-15_AF11'; % retinomapping
         %exp_name='2015-04-16_AF11';
+        
+        %exp_name='2015-07-17_AG02_awake';
+        exp_name='2015-07-20_AG02';
         
         
         % Julie's data
