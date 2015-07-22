@@ -1,8 +1,14 @@
 clear all
 clc
 
-datafile_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-04-16_AF11';
-file_name=fullfile(datafile_folder,'20150416_AF11_001.tif')
+switch 2
+    case 1
+        datafile_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-04-16_AF11';
+        file_name=fullfile(datafile_folder,'20150416_AF11_001.tif')
+    case 2
+        datafile_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-07-17_AG02_awake';
+        file_name=fullfile(datafile_folder,'2015-07-17_AG02_003.tif')
+end
 
 info=imfinfo(file_name);
 
@@ -92,7 +98,7 @@ end
 
 %%
 tic
-mwk_file_name=fullfile(datafile_folder,'20150416_AF11.mwk');
+mwk_file_name=fullfile(datafile_folder,'2015-07-17_AG02.mwk');
 disp('Reading MWK file...')
 A=getCodecs(mwk_file_name);
 event_codec=A.codec;
