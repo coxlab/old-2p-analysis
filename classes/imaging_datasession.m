@@ -1,4 +1,4 @@
-classdef imaging_dataset < handle
+classdef imaging_datasession < handle
     properties
         file_name='';
         save_name='';
@@ -41,7 +41,7 @@ classdef imaging_dataset < handle
         Z_stack=struct('CC_matrix',[],'im',[],'est_Z_depth',[],'CC_val',[]);
         
         motion_proxy=[];
-                
+        
         green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
         
         last_action='';
@@ -51,7 +51,7 @@ classdef imaging_dataset < handle
     
     methods
         %%% Constructor
-        function self=imaging_dataset(varargin)
+        function self=imaging_datasession(varargin)
             self.file_name=varargin{1};
             
             %%% split up in root_folder (until 2p-data)
@@ -174,10 +174,12 @@ classdef imaging_dataset < handle
             else
                 TH=3;
             end
+            
             M=cat(1,self.frame_info.xyz_micron);
+            
             if any(std(M)>TH)
                 static_FOV=0;
-                fprintf('Some axis shows more variation (std XYZ=[%3.2f %3.2f %3.2f]) than is acceptable (TH=%3.2f)...\n',[std(M) TH])
+                %fprintf('Some axes show more variation (std XYZ=[%3.2f %3.2f %3.2f]) than is acceptable (TH=%3.2f)...\n',[std(M) TH])
             else % treat data as FOV recording where ROIs can be defined
                 static_FOV=1;
             end
@@ -199,7 +201,7 @@ classdef imaging_dataset < handle
             out=repmat(B,N,1);
             self.bitCodes.scim_bitCodes_raw=out(:);
         end
-                
+        
         function get_scim_bitCodes(varargin)
             tic
             self=varargin{1};
@@ -308,7 +310,7 @@ classdef imaging_dataset < handle
                 self.last_action='find_offset';
             else
                 
-            end            
+            end
         end
         
         
@@ -343,7 +345,7 @@ classdef imaging_dataset < handle
                 frames(:,:,iFrame)=frame;
             end
         end
-       
+        
         function find_blank_frames(varargin)
             %%% Check for unusually dark frames, laser power not turned up
             %%% yet.
@@ -376,7 +378,7 @@ classdef imaging_dataset < handle
         %%% Get experiment info from MWorks
         function get_exp_type(varargin)
             self=varargin{1};
-                        
+            
             if ismac
                 exp_type=[];
                 exp_name='';
@@ -517,7 +519,7 @@ classdef imaging_dataset < handle
                 res(index)=count;
             end
         end
-                
+        
         
         %%%% Motion correction methods
         function do_motion_detection(varargin)
@@ -535,7 +537,7 @@ classdef imaging_dataset < handle
                 cur_frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
                 next_frame=double(imread(self.file_name,iFrame+1,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
                 
-                diff_vector(iFrame+1)=sum(sqrt((cur_frame(:)-next_frame(:)).^2));                
+                diff_vector(iFrame+1)=sum(sqrt((cur_frame(:)-next_frame(:)).^2));
                 if ismac
                     del_str=repmat('\b',1,5);
                     fprintf([del_str '%03d%%\n'],round(iFrame/(self.mov_info.nFrames-1)*100))
@@ -735,11 +737,12 @@ classdef imaging_dataset < handle
             else
                 ROI_definition_nr=1;
             end
-            
-            if isempty(self.Activity_traces.activity_matrix)
+                        
+            temp=get_ROI_definitions(self,ROI_definition_nr);
+            if isempty(self.Activity_traces.activity_matrix)||length(temp)~=size(self.Activity_traces.activity_matrix,2)
                 %% Grab average ROI activity over the motion corrected movie
                 %if ~isfield(self.ROI_definitions(ROI_definition_nr).ROI,'timeseries_soma')
-                temp=get_ROI_definitions(self,ROI_definition_nr);
+                
                 if isempty(temp)
                     disp('No valid ROI definitions found...')
                 else
@@ -778,7 +781,7 @@ classdef imaging_dataset < handle
                     self.Activity_traces.oopsi_options=oopsi_options;
                     
                     self.elapsed=toc;
-                    self.last_action='do_trace_extraction';                    
+                    self.last_action='do_trace_extraction';
                 end
             else
                 disp('Using existing trace_matrix')
@@ -789,7 +792,7 @@ classdef imaging_dataset < handle
             self=varargin{1};
             self.Activity_traces.activity_matrix=[];
         end
-            
+        
         function ROIs=extract_traces(varargin)
             %%% Goes way faster than before!
             self=varargin{1};
@@ -904,10 +907,137 @@ classdef imaging_dataset < handle
             
             delta_F_no_drift(blank_frames)=0;
             
-            trace=delta_F_no_drift;            
-        end                
+            trace=delta_F_no_drift;
+        end
         
+        %%% Join datasets
+        function [clusters,cluster_vector,nClusters,files]=find_FOV_clusters(varargin)
+            self=varargin{1};
+            folder=varargin{2};
+            if nargin>=3&&~isempty(varargin{3})
+                min_dist=varargin{3};
+            else
+                min_dist=20;
+            end
+            
+            files=scandir(folder,'mat');
+            nFiles=length(files);
+            center_coords=zeros(nFiles,2);
+            valid_FOV=zeros(nFiles,1);
+            for iFile=1:nFiles
+                 load_name=fullfile(folder,files(iFile).name);
+                 load(load_name,'session_data')
+                 
+                 if session_data.is_static_FOV()
+                     center_coords(iFile,:)=session_data.FOV_info.center;
+                     valid_FOV(iFile)=1;
+                 else
+                     valid_FOV(iFile)=0;
+                 end  
+            end
+            Z=linkage(center_coords,'average');
+            C=cluster(Z,'cutoff',min_dist,'Criterion','distance');
+            
+            % renumber clusters
+            cluster_vector=unique(C,'stable');
+            clusters=zeros(size(C));
+            nClusters=length(cluster_vector);
+            for iC=1:nClusters
+                sel=C==cluster_vector(iC);
+                clusters(sel)=iC;
+            end
+            clusters(valid_FOV==0)=NaN;
+            cluster_vector=unique(clusters(~isnan(clusters)));
+            nClusters=length(cluster_vector);
+        end
         
+        function ROI_counts=get_ROI_counts(varargin)
+            self=varargin{1};
+            ROI_definition_nr=varargin{2};
+            nSessions=length(self);
+            ROI_counts=zeros(nSessions,1);
+            for iSession=1:nSessions
+                ROIs=self(iSession).ROI_definitions(ROI_definition_nr).ROI;
+                ROI_counts(iSession)=length(ROIs);
+            end
+        end
+        
+        function distances=get_ROI_distances(varargin)
+            self=varargin{1};
+            ROI_definition_nr=varargin{2};
+            nSessions=length(self);
+            if nSessions>1
+                ref=self(1).ROI_definitions(ROI_definition_nr).ROI;
+                nROIs=length(ref);
+                distances=zeros(nROIs,nSessions-1);
+                for iSession=2:nSessions
+                    ROIs=self(iSession).ROI_definitions(ROI_definition_nr).ROI;
+                    A=cat(1,ref.center_coords);
+                    B=cat(1,ROIs.center_coords);
+                    distances(:,iSession-1)=calc_dist([A B]);
+                end
+            else
+                distances=[];
+            end
+        end
+        
+        function dataset=join_data_sessions(varargin)
+            self=varargin{1};
+            ROI_definition_nr=varargin{2};
+            
+            dataset=imaging_dataset(self(1),ROI_definition_nr);
+            %dataset.FOV_info=self(1).FOV_info;
+            %dataset.MIP_std=self(1).MIP_std;
+            %dataset.ROI_definitions=self(1).ROI_definitions(ROI_definition_nr).ROI;
+            %dataset.Experiment_info=[];
+            nSessions=length(self);
+            STIM=[];
+            RESP=[];
+            SPIKE=[];
+            for iSession=1:nSessions
+                M=self(iSession).Experiment_info.stim_matrix;
+                R=self(iSession).Activity_traces.activity_matrix;
+                S=self(iSession).Activity_traces.spike_matrix;
+                nTrials=max(M(:,2));
+                if mod(nTrials,2)==1
+                    nTrials_use=nTrials-2;
+                else
+                    nTrials_use=nTrials-1;
+                end
+                sel=M(:,2)<=nTrials_use;
+                
+                %%% 2DO: add selection based on blank_frames, ignore frames
+                %%% etc...
+                
+                STIM=cat(1,STIM,M(sel,:));                
+                RESP=cat(1,RESP,R(sel,:));
+                SPIKE=cat(1,SPIKE,S(sel,:));
+            end
+            %% reformat cols 1 and 2
+            STIM(:,1)=1:size(STIM,1);
+            %trial_nrs=STIM(:,2);
+            C=STIM(:,3); C(C==0)=-1;
+            condition_matrix=parse_conditions(C);
+            nTrials=max(condition_matrix(:,1));
+            STIM(:,2)=0;
+            for iTrial=1:nTrials
+                row=condition_matrix(iTrial,:);
+                if iTrial<nTrials
+                    next_row=condition_matrix(iTrial+1,:);
+                    STIM(row(2):next_row(3),2)=row(1);
+                else
+                    STIM(row(2):size(STIM,1),2)=row(1);
+                end
+            end
+            
+            %%% Fill dataset
+            dataset.STIM=STIM;
+            dataset.RESP=RESP;
+            dataset.SPIKE=SPIKE;
+            frame_time=1/self(1).mov_info.frame_rate;
+            dataset.timeline=dataset.STIM(:,1)*frame_time;
+        end
+         
         %%% Combine activity and stim properties
         function combine_act_stim(varargin)
             self=varargin{1};
@@ -925,7 +1055,7 @@ classdef imaging_dataset < handle
             Stim=self.Experiment_info.stim_matrix;
             Resp=self.Activity_traces.activity_matrix;
             %Resp=self.Activity_traces.spike_matrix;
-                        
+            
             %plot(self.mov_info.mean_lum)
             %plot([zscore(Stim(:,5)) zscore(self.mov_info.mean_lum)])
             %corr([zscore(Stim(:,5)) zscore(self.mov_info.mean_lum)])
@@ -944,7 +1074,7 @@ classdef imaging_dataset < handle
             iROI=varargin{3};
             condition_vector=data(:,4);
             conditions=unique(condition_vector(condition_vector>-1));
-            nConditions=length(conditions);            
+            nConditions=length(conditions);
             
             condition_matrix=parse_conditions(condition_vector);
             nTrials=size(condition_matrix,1); % ignore final trial, because it is rarely complete
@@ -1098,8 +1228,16 @@ classdef imaging_dataset < handle
                     gamma_val=.5;
                 end
             end
-            imshow(calc_gamma(im,gamma_val),[])
+            
+            nFrames=size(im,3);
+            H=imshow(calc_gamma(im(:,:,1),gamma_val),[]);
             colormap(self.green)
+            for iFrame=1:nFrames
+                frame=calc_gamma(im(:,:,iFrame),gamma_val);
+                set(H,'Cdata',frame)
+                drawnow
+            end
+            
         end
         
         function visualize_motion_correction(varargin)
@@ -1193,8 +1331,24 @@ classdef imaging_dataset < handle
         end
         
         function export_movie(varargin)
-            self=varargin{1};
-        end        
+            % option to do motion correction first
+            %self=varargin{1};
+            filename=varargin{2};
+            frames=varargin{3};
+            Tiff(filename,'w');
+            
+            nFrames=size(frames,3);
+            for iFrame=1:nFrames
+                obj = Tiff(filename,'a');
+                obj.setTag('ImageLength',size(frames,1));
+                obj.setTag('ImageWidth', size(frames,2));
+                obj.setTag('Photometric', Tiff.Photometric.MinIsBlack);
+                obj.setTag('PlanarConfiguration', Tiff.PlanarConfiguration.Chunky);
+                obj.setTag('BitsPerSample', 16); % was 8 in example
+                obj.write(uint16(frames(:,:,iFrame)));
+                obj.close();
+            end
+        end
         
         function loop_status(varargin)
             self=varargin{1};
