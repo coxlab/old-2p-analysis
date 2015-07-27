@@ -19,7 +19,7 @@ for iFile=1:nFiles
         
         if exist(save_name,'file')==0
             %%% Create file based on class file
-            session_data=imaging_dataset(file_name);
+            session_data=imaging_datasession(file_name);
             session_data.save_data()
         else
             load(save_name,'session_data')
@@ -37,9 +37,10 @@ for iFile=1:nFiles
         %%% Detect invalid frames
         session_data.find_blank_frames() % due to laser power not being on
         
+        session_data.save_data()
         if session_data.is_static_FOV()==0 % if recording at 1 position
             fprintf('Session does not appear to be a static FOV...\n')
-        else            
+        else
             %%% Extract bitcode information from two sources
             session_data.get_scim_bitCodes()
             session_data.get_MWorks_bitCodes()
@@ -90,7 +91,7 @@ end
 
 % Run step 03
 % Rest of pipeline is sort of same
-for iFile=1%:nFiles
+for iFile=4%1:nFiles
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name);
     save_name=strrep(save_name,'tif','mat');
     load(save_name,'session_data') % reload after step03, probably needs to be separate script
@@ -102,7 +103,7 @@ for iFile=1%:nFiles
         session_data.do_trace_extraction(ROI_definition_nr)
         session_data.save_data()
         %session_data.plot_traces()
-                
+        
         %% Extract stimulus relevant information
         %session_data.bitCodes.MWorks_bitCodes=[];
         session_data.get_MWorks_bitCodes()
@@ -110,9 +111,9 @@ for iFile=1%:nFiles
         session_data.get_MWorks_stimulus_info()
         session_data.create_stim_matrix()
         %session_data.Experiment_info.stim_matrix
-        
+        session_data.save_data()
         %%
-        session_data.combine_act_stim(1,5)
+        session_data.combine_act_stim(1,6)
         
     else
         step03_ROI_GUI()
@@ -120,7 +121,56 @@ for iFile=1%:nFiles
     end
 end
 
+%% Join datasets
 
+% check folder for joinable sessions: close in space (and time)
+[clusters,cluster_vector,nClusters,files]=session_data.find_FOV_clusters(session_data.folder_info.save_folder);
+
+% if close in space, but not in time, link files but call it a different
+% timepoint, so you can look at evolution and/or stability
+
+for iClust=1:nClusters
+    cluster_nr=cluster_vector(iClust);
+    session_vector=find(clusters==cluster_nr);
+    nSessions=length(session_vector);
+    
+    %% Load all session into one compound object
+    clear S
+    for iSession=1:nSessions
+        load_name=fullfile(session_data.folder_info.save_folder,files(iSession).name);
+        load(load_name,'session_data')
+        S(iSession)=session_data;
+    end
+    
+    %% Check whether same number of ROIs are defined in all sessions
+    ROI_counts=S.get_ROI_counts(ROI_definition_nr);
+    if all(ROI_counts==ROI_counts(1))
+        nROIs=mean(ROI_counts);
+    else
+        error('Number of ROIs has to be identical for all sessions');
+    end
+    
+    
+    %% Verify distances are closely matched over sessions
+    distances=S.get_ROI_distances(ROI_definition_nr);
+    if any(mean(distances)>10)
+        error('Large shift in ROI centers detected...')
+    else
+        % all good: take the ROI_definitions of one of the sessions
+        %ROI_definitions=S(1).ROI_definitions(ROI_definition_nr).ROI;
+        
+        % Then join them 
+        % leave out last trial
+        dataset=S.join_data_sessions(ROI_definition_nr);
+        dataset.cluster_nr=iClust;
+        dataset.session_vector=session_vector;
+        dataset.nFrames=size(dataset.STIM,1);
+    end
+        
+    
+    %% Do something with dataset
+    %dataset.
+end
 
 
 if 0
