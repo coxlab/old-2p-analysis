@@ -49,7 +49,7 @@ frame_selector_trace=[-6 12];
 frame_selector_resp=[2 7];
 calcium_matrix_01=zeros(nTrials,diff(frame_selector_trace)+1);
 calcium_matrix_02=zeros(nTrials,diff(frame_selector_trace)+1);
-data_01=orig.activity_matrix(:,4);;
+data_01=orig.activity_matrix(:,4);
 data_02=new.Activity_traces.activity_matrix(:,4);
 for iTrial=2:nTrials-1
     trial_info=condition_matrix_01(iTrial,:);
@@ -89,5 +89,6 @@ figure()
 M1=pivotTable(condition_matrix_01,5,'mean',7);
 M2=pivotTable(condition_matrix_02,5,'mean',7);
 bar([M1 M2])
+corr([M1 M2])
 
 
