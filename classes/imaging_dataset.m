@@ -47,6 +47,7 @@ classdef imaging_dataset < handle
         
         last_action='';
         elapsed=[];
+        updated=0;
     end
     
     
@@ -95,12 +96,13 @@ classdef imaging_dataset < handle
                 self.mov_info.nFrames=length(info);
                 self.mov_info.Width=info(1).Width;
                 self.mov_info.Height=info(1).Height;
+                
+                self.elapsed=toc;
+                self.last_action='get_mov_info';
+                self.updated=1;
             else
                 disp('Using existing mov_info')
-            end
-            
-            self.elapsed=toc;
-            self.last_action='get_mov_info';
+            end            
         end
         
         function get_scim_data(varargin)
@@ -118,11 +120,14 @@ classdef imaging_dataset < handle
                 self.mov_info.state=state;
                 self.mov_info.frame_rate=state.acq.frameRate;
                 self.mov_info.mov_start_time=state.internal.softTriggerTimeString;
+                
+                self.elapsed=toc;
+                self.last_action='get_scim_data';
+                self.updated=1;
             else
                 disp('Using existing scim_info...')
             end
-            self.elapsed=toc;
-            self.last_action='get_scim_data';
+            
         end
         
         function read_flyback(varargin)
@@ -142,11 +147,14 @@ classdef imaging_dataset < handle
                     self.frame_info(iFrame)=a;
                 end
                 self.bitCodes.nBitCodes=N;
+                                
+                self.elapsed=toc;
+                self.last_action='read_flyback';
+                self.updated=1;
             else
                 disp('Using existing frame_info...')
             end
-            self.elapsed=toc;
-            self.last_action='read_flyback';
+            
         end
         
         
@@ -225,12 +233,13 @@ classdef imaging_dataset < handle
                 T=((0:length(A)-1))'*bitCode_time;
                 
                 self.bitCodes.scim_bitCodes=[T(breaks) A(breaks) [0;diff(T(breaks))]];
+                
+                self.elapsed=toc;
+                self.last_action='get_scim_bitCodes';
+                self.updated=1;
             else
                 disp('Using existing scim_bitCodes...')
-            end
-            
-            self.elapsed=toc;
-            self.last_action='get_scim_bitCodes';
+            end            
         end
         
         function get_MWorks_bitCodes(varargin)
@@ -279,14 +288,17 @@ classdef imaging_dataset < handle
                     self.bitCodes.MWorks_bitCodes=MW_bitCodes;
                     self.bitCodes.mwk_file_name=mwk_file_name;
                     self.bitCodes.event_codec=event_codec;
+                    
+                    self.elapsed=toc;
+                    self.last_action='get_MWorks_bitCodes';
+                    self.updated=1;
                 else
                     disp('Using existing MWorks_bitCodes...')
                 end
             else
                 disp('MWorks magic only works in Matlab for mac...')
             end
-            self.elapsed=toc;
-            self.last_action='get_MWorks_bitCodes';
+            
         end
         
         function find_offset(varargin)
@@ -303,12 +315,13 @@ classdef imaging_dataset < handle
                     else
                         self.bitCodes.offset=[];
                     end
+                   
+                    self.elapsed=toc;
+                    self.last_action='find_offset';
+                    self.updated=1;
                 else
                     disp('Using existing offset...')
-                end
-                
-                self.elapsed=toc;
-                self.last_action='find_offset';
+                end                
             else
                 
             end
@@ -367,12 +380,13 @@ classdef imaging_dataset < handle
                 % low std, low mean
                 z_scores=(self.mov_info.mean_lum(1:round(end/4))-mean(self.mov_info.mean_lum(round(end/4):end)))/std(self.mov_info.mean_lum(round(end/4):end));
                 self.mov_info.blank_frames(1:find(z_scores<-4,1,'last')+1)=true;
+                
+                self.elapsed=toc;
+                self.last_action='find_blank_frames';
+                self.updated=1;
             else
                 disp('Using existing blank_frames...')
-            end
-            
-            self.elapsed=toc;
-            self.last_action='find_blank_frames';
+            end            
         end
         
         
@@ -631,6 +645,7 @@ classdef imaging_dataset < handle
                 
                 self.elapsed=toc;
                 self.last_action='find_reference_image';
+                self.updated=1;
             else
                 disp('Using existing reference image...')
             end
@@ -688,11 +703,10 @@ classdef imaging_dataset < handle
                 
                 self.elapsed=toc;
                 self.last_action='do_motion_correction';
+                self.updated=1;
             else
                 disp('Using existing shift_matrix...')
-            end
-            
-            
+            end            
         end
         
         function reset_motion_correction(varargin)
@@ -717,6 +731,7 @@ classdef imaging_dataset < handle
             
             self.elapsed=toc;
             self.last_action='find_motion_frames';
+            self.updated=1;
         end
         
         
@@ -760,12 +775,13 @@ classdef imaging_dataset < handle
                     end
                 end
                 fprintf('Done!\n')
+               
+                self.elapsed=toc;
+                self.last_action='do_calc_MIPs';
+                self.updated=1;
             else
                 disp('Using existing MIPs...')
-            end
-            
-            self.elapsed=toc;
-            self.last_action='do_calc_MIPs';
+            end            
         end
         
         
@@ -819,6 +835,7 @@ classdef imaging_dataset < handle
                     
                     self.elapsed=toc;
                     self.last_action='do_trace_extraction';
+                    self.updated=1;
                 end
             else
                 disp('Using existing trace_matrix')
@@ -1232,10 +1249,14 @@ classdef imaging_dataset < handle
             if ~isdir(self.folder_info.save_folder)
                 mkdir(self.folder_info.save_folder)
             end
-            session_data=self;
-            save(self.save_name,'session_data')
-            
-            fprintf('Data saved to %s!\n',self.save_name)
+            if self.updated==1
+                session_data=self;
+                save(self.save_name,'session_data')
+                
+                fprintf('Data saved to %s!\n',self.save_name)
+            else
+                disp('No changes detected, not saving...')
+            end
         end
         
         function load_data(varargin)
