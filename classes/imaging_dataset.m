@@ -587,7 +587,6 @@ classdef imaging_dataset < handle
                 A=floor(linspace(start_frame,end_frame-block_size,nBlocks));
                 M=[A(:) A(:)+block_size];
                 
-                fprintf('Calculating reference image... ')
                 reference_image_candidates=zeros([size(frames,1) size(frames,2) nBlocks]);
                 for iBlock=1:nBlocks
                     idx=M(iBlock,1):M(iBlock,2);
@@ -609,7 +608,7 @@ classdef imaging_dataset < handle
                         sample=convn(sample,self.motion_correction.kernel,'same');
                         
                         [r,c]=PCdemo(sample,ref);
-                        [CC_max,offset]=im_align(cur_frame,ref);
+                        [CC_max,offset]=im_align(sample,ref);
 
                         shift_matrix(iSample,:,iBlock)=[iSample c r offset CC_max];
                     end
@@ -632,8 +631,6 @@ classdef imaging_dataset < handle
                 
                 self.elapsed=toc;
                 self.last_action='find_reference_image';
-                
-                fprintf('Done!\n')
             else
                 disp('Using existing reference image...')
             end
