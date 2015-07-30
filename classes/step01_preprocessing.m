@@ -53,7 +53,7 @@ for iFile=1:nFiles
             
             %%% Motion Correction
             session_data.set_smoothing_kernel()
-            fprintf('Finding reference image...')
+            fprintf('Finding best reference image...')
             session_data.reset_reference_image();
             session_data.find_reference_image()
             fprintf(' took %3.2f seconds.',session_data.elapsed)
