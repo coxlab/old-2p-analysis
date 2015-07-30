@@ -2,11 +2,10 @@ function varargout=im_align(varargin)
 %FOV_shifted=offsetIm(FOV,40,67);
 %[CC_max,offset]=im_align(FOV_shifted,FOV)
 
-
 A=varargin{1};
 B=varargin{2};
 
-CC=normxcorr2(B,A);
+CC=normxcorr2(A,B);
 
 % get shift coordinates relative to biggest image
 CC_max=max(CC(:));
