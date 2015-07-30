@@ -1,6 +1,13 @@
+% Start from this script to create a full pipeline containing separate
+% chapters: 
+% - preprocessing - use cluster!
+% - manual ROI definition - locally!
+% - postprocessing/dataset creation
+% - various kinds of data analysis : using different class!
+
+
 clear all
 clc
-
 
 header_script
 %data_root='/Users/benvermaercke/Dropbox (coxlab)/2p-data/';
@@ -57,6 +64,7 @@ for iFile=1:nFiles
                 imshow(calc_gamma(session_data.motion_correction.reference_image.im,.5),[])
                 colormap(green)
             end
+            %session_data.reset_motion_correction();
             session_data.do_motion_correction()
             session_data.find_motion_frames(2)
             if 0
@@ -84,6 +92,21 @@ for iFile=1:nFiles
         end
     end
 end
+di
+
+if 0
+    %% 
+    iFile=1
+    file_name=fullfile(data_folder,files(iFile).name);
+    if exist(file_name,'file')==2
+        fprintf('Exporting file %s...\n',file_name)
+        save_name=fullfile(data_folder,'data_analysis',files(iFile).name);
+        save_name=strrep(save_name,'tif','mat');
+        load(save_name)
+        session_data.export_movie('test_01.tif',session_data.get_frames([],1))
+    end
+    disp('Done!')
+end
 
 %%
 %%% After all preprocessing, compile session overview file so we can run
@@ -91,12 +114,13 @@ end
 
 % Run step 03
 % Rest of pipeline is sort of same
-for iFile=4%1:nFiles
+for iFile=1:nFiles
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name);
     save_name=strrep(save_name,'tif','mat');
-    load(save_name,'session_data') % reload after step03, probably needs to be separate script
+    load(save_name,'session_data') % reload after step03, probably needs to be separate script    
     %if session_data.is_static_FOV()&&~isempty(fieldnames(session_data.ROI_definitions))
     %ROI_definition_nr=2;
+    session_data.ROI_definition_nr=ROI_definition_nr;
     if length(session_data.ROI_definitions)==ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
         %%% Extract activity traces
         %session_data.reset_trace_matrix() % allows to recalculate the traces
@@ -113,7 +137,7 @@ for iFile=4%1:nFiles
         %session_data.Experiment_info.stim_matrix
         session_data.save_data()
         %%
-        session_data.combine_act_stim(1,6)
+        %session_data.combine_act_stim(1,6)
         
     else
         step03_ROI_GUI()
@@ -166,10 +190,10 @@ for iClust=1:nClusters
         dataset.session_vector=session_vector;
         dataset.nFrames=size(dataset.STIM,1);
     end
-        
-    
+            
     %% Do something with dataset
-    %dataset.
+    %dataset.plot_traces()
+    dataset.RF_analysis(13)
 end
 
 
