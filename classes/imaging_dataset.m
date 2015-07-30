@@ -688,12 +688,14 @@ classdef imaging_dataset < handle
                 end
                 fprintf('Done! (Took %3.2f seconds)\n',toc)
                 self.motion_correction.shift_matrix=shift_matrix;
+                
+                self.elapsed=toc;
+                self.last_action='do_motion_correction';
             else
                 disp('Using existing shift_matrix...')
             end
             
-            self.elapsed=toc;
-            self.last_action='do_motion_correction';
+            
         end
         
         function reset_motion_correction(varargin)
