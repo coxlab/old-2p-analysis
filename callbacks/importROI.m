@@ -10,6 +10,7 @@ loadName=fullfile(pathname,filename);
 %%% Load data from file
 load(loadName,'session_data')
 
+
 %%% Load ROI definitions from selected session_data
 ROI=get_ROI_definitions(session_data,handles.ROI_definition_nr);
 nROI=length(ROI);
