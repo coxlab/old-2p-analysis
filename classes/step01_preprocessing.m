@@ -53,17 +53,16 @@ for iFile=1:nFiles
             
             %%% Motion Correction
             session_data.set_smoothing_kernel()
-            fprintf('Finding best reference image...')
-            session_data.reset_reference_image();
-            session_data.find_reference_image()
-            fprintf(' took %3.2f seconds.',session_data.elapsed)
+            
+            %session_data.reset_reference_image();
+            session_data.find_reference_image()            
             if 0
                 %%
                 imshow(calc_gamma(session_data.motion_correction.reference_image.im,.5),[])
                 colormap(green)
             end
             
-            session_data.reset_motion_correction();
+            %session_data.reset_motion_correction();
             session_data.do_motion_correction()
             session_data.find_motion_frames(2)
             if 0
@@ -79,6 +78,7 @@ for iFile=1:nFiles
             end
             
             %%% Calculate z-projections
+            session_data.reset_MIPs();
             session_data.do_calc_MIPs()
             if 0
                 %%

@@ -33,4 +33,5 @@ plot(M(:,5))
 hold off
 
 %%
+session_data.rebase(data_root)
 session_data.visualize_motion_correction()

@@ -591,6 +591,8 @@ classdef imaging_dataset < handle
             nSamples=100;
             
             if isempty(self.motion_correction.reference_image.im)
+                fprintf('Finding best reference image...')
+                
                 %%% Get frames
                 frames=self.get_frames();
                 
@@ -646,6 +648,8 @@ classdef imaging_dataset < handle
                 self.elapsed=toc;
                 self.last_action='find_reference_image';
                 self.updated=1;
+                
+                fprintf(' took %3.2f seconds.',session_data.elapsed)
             else
                 disp('Using existing reference image...')
             end
@@ -784,7 +788,13 @@ classdef imaging_dataset < handle
             end            
         end
         
-        
+        function reset_MIPs(varargin)
+            self=varargin{1};
+            self.MIP_avg.data=[];
+            self.MIP_max.data=[];
+            self.MIP_std.data=[];
+        end
+            
         %%% Do ROI extraction
         function do_trace_extraction(varargin)
             tic
