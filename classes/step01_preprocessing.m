@@ -44,14 +44,19 @@ for iFile=1:nFiles
             session_data.get_scim_bitCodes()
             session_data.get_MWorks_bitCodes()
             session_data.find_offset()
-            fprintf('Offset was determined to be %d events...\n',session_data.bitCodes.offset)
+            if ismac
+                fprintf('Offset was determined to be %d events...\n',session_data.bitCodes.offset)
+            end
             
             %%% Save results so far
             session_data.save_data()
             
             %%% Motion Correction
+            session_data.set_smoothing_kernel()
+            fprintf('Finding reference image...')
             session_data.reset_reference_image();
             session_data.find_reference_image()
+            fprintf(' took %3.2f seconds.',session_data.elapsed)
             if 0
                 %%
                 imshow(calc_gamma(session_data.motion_correction.reference_image.im,.5),[])
