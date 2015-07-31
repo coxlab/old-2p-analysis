@@ -33,5 +33,15 @@ plot(M(:,5))
 hold off
 
 %%
+
+
+plot(zscore([d M(:,6)]))
+
+%%
 session_data.rebase(data_root)
-session_data.visualize_motion_correction()
+session_data.visualize_motion_correction(1)
+
+if 0 
+    %%
+    session_data.export_movie('motion_corrected_007.tiff') 
+end
