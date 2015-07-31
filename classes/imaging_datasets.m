@@ -35,6 +35,7 @@ classdef imaging_datasets < handle
                 subplot(nRows,nCols,iROI)
                 plot(A(:,iROI))
                 axis([1 size(A,1) -10 40])
+                title(sprintf('ROI #%d',iROI))
                 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
         end
@@ -66,14 +67,18 @@ classdef imaging_datasets < handle
                 frame_range=trial_info(2)+frame_selector_trace(1):trial_info(2)+frame_selector_trace(2);
                 calcium_matrix(iTrial,:)=self.RESP(frame_range,iROI);
             end
+            
             M=pivotTable(condition_matrix,5,'mean',7);
             S=pivotTable(condition_matrix,5,'std',7);
             E=pivotTable(condition_matrix,5,'ste',7);
             %[M S E]
             
+            y_range=[-5 40];
             figure(2)
             subplot(211)
-            plot(self.RESP(:,iROI))
+            X=self.timeline;
+            plot(X,self.RESP(:,iROI))
+            axis([X([1 end])' y_range])
             subplot(212)
             if nConditions==32
                 MAP=flipud(reshape(M,4,8));
