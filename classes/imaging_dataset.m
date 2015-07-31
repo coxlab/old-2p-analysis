@@ -10,7 +10,7 @@ classdef imaging_dataset < handle
         
         
         motion_correction=struct('reference_image',struct('idx',[],'im',[],'shift_matrix',[],'min_val',[],'iBest',[],'total_shift',[]), ...
-            'kernel',[],'shift_matrix',[],'ignore_frames',[],'variability_threshold',[]);
+            'kernel',[],'shift_matrix',[],'motion_frames',[],'mismatch_frames',[],'ignore_frames',[],'variability_threshold',[]);
         
         MIP_avg=struct('data',[],'gamma_val',[]);
         MIP_max=struct('data',[],'gamma_val',[]);
@@ -102,7 +102,7 @@ classdef imaging_dataset < handle
                 self.updated=1;
             else
                 disp('Using existing mov_info')
-            end            
+            end
         end
         
         function get_scim_data(varargin)
@@ -147,7 +147,7 @@ classdef imaging_dataset < handle
                     self.frame_info(iFrame)=a;
                 end
                 self.bitCodes.nBitCodes=N;
-                                
+                
                 self.elapsed=toc;
                 self.last_action='read_flyback';
                 self.updated=1;
@@ -239,7 +239,7 @@ classdef imaging_dataset < handle
                 self.updated=1;
             else
                 disp('Using existing scim_bitCodes...')
-            end            
+            end
         end
         
         function get_MWorks_bitCodes(varargin)
@@ -315,13 +315,13 @@ classdef imaging_dataset < handle
                     else
                         self.bitCodes.offset=[];
                     end
-                   
+                    
                     self.elapsed=toc;
                     self.last_action='find_offset';
                     self.updated=1;
                 else
                     disp('Using existing offset...')
-                end                
+                end
             else
                 
             end
@@ -386,7 +386,7 @@ classdef imaging_dataset < handle
                 self.updated=1;
             else
                 disp('Using existing blank_frames...')
-            end            
+            end
         end
         
         
@@ -427,6 +427,7 @@ classdef imaging_dataset < handle
                 
                 self.Experiment_info.exp_type=exp_type;
                 self.Experiment_info.exp_name=exp_name;
+                self.updated=1;
             else
                 % no option
             end
@@ -474,6 +475,7 @@ classdef imaging_dataset < handle
                                 end
                             end
                             self.Experiment_info.stimulus_data=stimulus_data;
+                            self.updated=1;
                             
                         case 2 % Retinomapping
                             error('No processing pipeline defined for this experiment')
@@ -515,6 +517,8 @@ classdef imaging_dataset < handle
             end
             stim_matrix=[(1:self.mov_info.nFrames)' stim_matrix];
             self.Experiment_info.stim_matrix=stim_matrix;
+            
+            self.updated=1;
         end
         
         function res=expand_trial_numbers(varargin)
@@ -625,7 +629,7 @@ classdef imaging_dataset < handle
                         
                         [r,c]=PCdemo(sample,ref);
                         [CC_max,offset]=im_align(sample,ref);
-
+                        
                         shift_matrix(iSample,:,iBlock)=[iSample c r offset CC_max];
                     end
                 end
@@ -710,7 +714,7 @@ classdef imaging_dataset < handle
                 self.updated=1;
             else
                 disp('Using existing shift_matrix...')
-            end            
+            end
         end
         
         function reset_motion_correction(varargin)
@@ -727,11 +731,16 @@ classdef imaging_dataset < handle
                 TH=10;
             end
             
+            M=self.motion_correction.shift_matrix;
+            d=calc_dist([M(:,4:5) repmat(mean(M(:,4:5)),size(M,1),1)]); % euclidean distance moved vs center point, in px
+            self.motion_correction.motion_frames=d>5; % too large shift in FOV, cells might get out of the frame
+            self.motion_correction.mismatch_frames=M(:,6)<.65; % max crosscorrelation too low, probably z-motion
+            
             %T=self.motion_correction.shift_matrix(:,1);
             D=calc_dist([self.motion_correction.shift_matrix(:,4:5)*0 self.motion_correction.shift_matrix(:,4:5)]);
             M=[cat(1,D,[0; 0;0]) cat(1,0,D,[0;0]),cat(1,[0; 0],D,0),cat(1,[0; 0;0],D)];M(end-2:end,:)=[];
             self.motion_correction.ignore_frames=std(M,[],2)>TH;
-            self.motion_correction.variability_threshold=TH;
+            self.motion_correction.variability_threshold=TH; % too much variability, probably heavy motion artifacts
             
             self.elapsed=toc;
             self.last_action='find_motion_frames';
@@ -779,13 +788,13 @@ classdef imaging_dataset < handle
                     end
                 end
                 fprintf('Done!\n')
-               
+                
                 self.elapsed=toc;
                 self.last_action='do_calc_MIPs';
                 self.updated=1;
             else
                 disp('Using existing MIPs...')
-            end            
+            end
         end
         
         function reset_MIPs(varargin)
@@ -794,13 +803,154 @@ classdef imaging_dataset < handle
             self.MIP_max.data=[];
             self.MIP_std.data=[];
         end
+        
+        
+        %%% Find ROIs
+        function find_ROIs(varargin)
+            self=varargin{1};
             
+            tic
+            
+            window_size=[40 40];
+            
+            %%% Load MIP
+            IM=self.MIP_cc_local.data;
+            
+            %%% Adaptive threshold
+            ws=20;
+            C=-.03;
+            tm=0;
+            bw=adaptivethreshold(IM,ws,C,tm);
+            
+            %%% Remove speckle
+            SE=[0 1 0 ; 1 1 1 ; 0 1 0];
+            bw=imopen(bw,SE);
+            
+            %%% Filter based on spot size
+            props=regionprops(bw,'Area','Centroid');
+            coords=cat(1,props.Centroid);
+            TH.area=[100 500];
+            sel_area=between(cat(1,props.Area),TH.area);
+            
+            %%% Filter based on distance from the edge
+            sel_edge=all([between(coords(:,2),[window_size(1)/2+1 self.mov_info.Height-window_size(1)/2]) between(coords(:,1),[window_size(2)/2+1 self.mov_info.Width-window_size(2)/2])]')';
+                        
+            coords=coords(sel_area&sel_edge,:);
+            bw=bwselect(bw,coords(:,1),coords(:,2));
+                        
+            %%% Convert into ROIs
+            bw_separated=bwlabel(bw);
+            ROI_vector=unique(bw_separated(:));
+            ROI_vector=ROI_vector(ROI_vector>0);
+            nROI=length(ROI_vector);
+            
+            for iROI=1:nROI
+                ROI_nr=ROI_vector(iROI);
+                sel=bw_separated==ROI_nr;
+                neg=imerode(sel,SE);
+                edge=sel-neg;
+                                                
+                [X,Y]=find(edge);
+                                
+                ellipse_properties=fit_ellipse(Y,X);
+                
+                blank=self.blank_ROI();
+                ROI=blank.ROI;
+                
+                ROI.ROI_nr=ROI_nr;
+                ROI.base_coord=[ellipse_properties.X0_in ellipse_properties.Y0_in];
+                ROI.nCoords=size(coords,1);
+                ROI.coords=[Y-ROI.base_coord(1)+window_size(1)/2+1 X-ROI.base_coord(2)+window_size(2)/2+1];
+                
+                ROI.ellipse_properties=ellipse_properties;
+                ROI.ellipse_coords=[ellipse_properties.rotated_ellipse(1,:)'-ROI.base_coord(1)+window_size(1)/2+1 ellipse_properties.rotated_ellipse(2,:)'-ROI.base_coord(2)+window_size(2)/2+1];
+                ROI.ellipse_coords_centered=ROI.ellipse_coords;
+                ROI.coords_MIP=ellipse_properties.rotated_ellipse';
+                ROI.coords_MIP_plot=ellipse_properties.rotated_ellipse';
+                
+                ROI.center_coords=[ellipse_properties.X0_in ellipse_properties.Y0_in];
+                
+                ROI.ROI_rect=round([ROI.center_coords ROI.center_coords]+[-window_size/2+1 window_size/2]);
+                
+                %%% Create masks
+                % Get region from image around ROI
+                try
+                    T=IM(ROI.ROI_rect(2):ROI.ROI_rect(4),ROI.ROI_rect(1):ROI.ROI_rect(3));
+                catch
+                    figure()
+                    self.imshow(bw_separated)
+                    ROI.ROI_rect
+                    die
+                end
+                
+                % Generate mask to isolate soma pixels
+                %offset=ROI.ellipse_coords_centered(1,:)-window_size/2
+                mask_soma=poly2mask(ROI.ellipse_coords_centered(:,1),ROI.ellipse_coords_centered(:,2),size(T,1),size(T,2));
+                %figure(50)
+                %ROI.ellipse_coords_centered
+                %imshow(mask_soma,[])
+
+                %die
+                
+                % Generate mask to isolate neuropil pixels
+                mask_neuropil=imresize(mask_soma,sqrt(2),'nearest');
+                ext=round((size(mask_neuropil)-window_size)/2);
+                mask_neuropil=mask_neuropil(ext:ext+window_size(1)-1,ext:ext+window_size(2)-1);
+                mask_neuropil=mask_neuropil-mask_soma;
+                
+                ROI.mask_soma=mask_soma;
+                ROI.mask_neuropil=mask_neuropil;
+                
+                ROI.timeseries_soma=[];
+                ROI.time_series_neuropil=[];
+                %ROI.timeseries_neuropil=[];
+                
+                %%% Store ROI properties
+                self.ROI_definitions(1).ROI(iROI)=ROI;
+            end
+            fprintf('Found %d ROIs!\n',nROI)
+            
+            self.elapsed=toc;
+            self.last_action='find_ROIs';
+            self.updated=1;
+        end
+        
+        function reset_ROIs(varargin)
+            self=varargin{1};
+            self.ROI_definitions(1)=self.blank_ROI();
+        end
+        
+        function blank_ROI=blank_ROI(varargin)
+            blank_ROI=struct('ROI',struct(...
+                'ROI_nr',[],'base_coord',[],'nCoords',[],'coords',[],...
+                'ellipse_properties',[],'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],...
+                'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[],'time_series_neuropil',[])...
+                );
+            
+        end
+        
+        function plot_ROIs(varargin)
+            self=varargin{1};
+            im=self.MIP_cc_local.data;
+            ROI=self.ROI_definitions(1).ROI;
+            nROIs=length(ROI);
+            
+            figure(58)
+            self.imshow(im)
+            hold on
+            for iROI=1:nROIs
+                coords=ROI(iROI).coords_MIP_plot;
+                plot(coords(:,1),coords(:,2),'r')
+            end
+            hold off
+        end
+        
+        
         %%% Do ROI extraction
         function do_trace_extraction(varargin)
             tic
             self=varargin{1};
             
-                        
             temp=get_ROI_definitions(self);
             if isempty(self.Activity_traces.activity_matrix)||length(temp)~=size(self.Activity_traces.activity_matrix,2)
                 %% Grab average ROI activity over the motion corrected movie
@@ -815,6 +965,7 @@ classdef imaging_dataset < handle
                     else % load existing definitions
                         ROIs=get_ROI_definitions(self);
                     end
+                    
                     %ROI_vector=cat(1,ROIs.ROI_nr);
                     nROI=length(ROIs);
                     nFrames=self.mov_info.nFrames;
@@ -855,7 +1006,7 @@ classdef imaging_dataset < handle
         function reset_trace_matrix(varargin)
             self=varargin{1};
             self.Activity_traces.activity_matrix=[];
-            temp=self.ROI_definitions(self.ROI_definition_nr).ROI;            
+            temp=self.ROI_definitions(self.ROI_definition_nr).ROI;
             nROI=length(temp);
             for iROI=1:nROI
                 self.ROI_definitions(self.ROI_definition_nr).ROI(iROI).timeseries_soma=[];
@@ -869,7 +1020,7 @@ classdef imaging_dataset < handle
             
             tic
             fprintf('Loading frames... ')
-            self.file_name
+            %self.file_name
             frames=self.get_frames([],1); % get all frames, apply motion correction
             %nFrames=size(frames,3);
             fprintf('took: %3.1fs\n',toc);
@@ -884,10 +1035,11 @@ classdef imaging_dataset < handle
                 mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
                 res=vol.*mask;
                 ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
+                %squeeze(mean(mean(res,1),2))
                 
                 mask=repmat(ROIs(iROI).mask_neuropil,1,1,size(vol,3));
                 res=vol.*mask;
-                ROIs(iROI).timeseries_neuropil=squeeze(mean(mean(res,1),2));
+                ROIs(iROI).time_series_neuropil=squeeze(mean(mean(res,1),2));
             end
             fprintf('took: %3.1fs\n',toc);
         end
@@ -905,7 +1057,7 @@ classdef imaging_dataset < handle
             if extraction_options.neuropil_subtraction.use
                 %%% Step 01: get F
                 F_raw=ROI.timeseries_soma;
-                F_neuropil=ROI.timeseries_neuropil;
+                F_neuropil=ROI.time_series_neuropil;
                 
                 if any(blank_frames)
                     F_raw(blank_frames)=mean(F_raw(~blank_frames));
@@ -913,6 +1065,7 @@ classdef imaging_dataset < handle
                 end
                 
                 %%% subtract neuropil signals
+                %[mean(F_raw) mean(F_neuropil)]
                 F=F_raw-F_neuropil*extraction_options.neuropil_subtraction.factor; % values .5 (Feinberg) and .7 (Kerlin) have been reported: .7 is used for 16x Nikon
             else
                 %error('No neuropil subtraction?')
@@ -991,15 +1144,15 @@ classdef imaging_dataset < handle
             center_coords=zeros(nFiles,2);
             valid_FOV=zeros(nFiles,1);
             for iFile=1:nFiles
-                 load_name=fullfile(folder,files(iFile).name);
-                 load(load_name,'session_data')
-                 
-                 if session_data.is_static_FOV()
-                     center_coords(iFile,:)=session_data.FOV_info.center;
-                     valid_FOV(iFile)=1;
-                 else
-                     valid_FOV(iFile)=0;
-                 end  
+                load_name=fullfile(folder,files(iFile).name);
+                load(load_name,'session_data')
+                
+                if session_data.is_static_FOV()
+                    center_coords(iFile,:)=session_data.FOV_info.center;
+                    valid_FOV(iFile)=1;
+                else
+                    valid_FOV(iFile)=0;
+                end
             end
             Z=linkage(center_coords,'average');
             C=cluster(Z,'cutoff',min_dist,'Criterion','distance');
@@ -1023,7 +1176,9 @@ classdef imaging_dataset < handle
             nSessions=length(self);
             ROI_counts=zeros(nSessions,1);
             for iSession=1:nSessions
-                ROIs=self(iSession).ROI_definitions(self.ROI_definition_nr).ROI;
+                self(iSession).save_name
+                ROIs=get_ROI_definitions(self(iSession));
+                %ROIs=self(iSession).ROI_definitions(self.ROI_definition_nr).ROI;
                 ROI_counts(iSession)=length(ROIs);
             end
         end
@@ -1070,7 +1225,7 @@ classdef imaging_dataset < handle
                 %%% 2DO: add selection based on blank_frames, ignore frames
                 %%% etc...
                 
-                STIM=cat(1,STIM,M(sel,:));                
+                STIM=cat(1,STIM,M(sel,:));
                 RESP=cat(1,RESP,R(sel,:));
                 SPIKE=cat(1,SPIKE,S(sel,:));
             end
@@ -1098,7 +1253,7 @@ classdef imaging_dataset < handle
             frame_time=1/self(1).mov_info.frame_rate;
             dataset.timeline=dataset.STIM(:,1)*frame_time;
         end
-         
+        
         %%% Combine activity and stim properties
         function combine_act_stim(varargin)
             self=varargin{1};
@@ -1257,13 +1412,15 @@ classdef imaging_dataset < handle
             self=varargin{1};
             
             if ~isdir(self.folder_info.save_folder)
-                mkdir(self.folder_info.save_folder)
+                [s,mess,messid]=mkdir(self.folder_info.save_folder)
             end
             if self.updated==1
+                self.updated=0; % reset updated flag
                 session_data=self;
                 save(self.save_name,'session_data')
                 
                 fprintf('Data saved to %s!\n',self.save_name)
+                
             else
                 disp('No changes detected, not saving...')
             end
@@ -1332,7 +1489,7 @@ classdef imaging_dataset < handle
                 set(H,'Cdata',calc_gamma(cur_frame,.5))
                 set(p(1),'xData',coords(1),'yData',coords(2))
                 set(p(2),'xData',coords2(1),'yData',coords2(2))
-                if self.motion_correction.ignore_frames(iFrame)==1
+                if self.motion_correction.ignore_frames(iFrame)==2
                     set(p(1),'marker','o','color','m','markersize',5)
                     set(p(2),'marker','s','color','w','markersize',2)
                 else
@@ -1354,6 +1511,7 @@ classdef imaging_dataset < handle
                 subplot(nRows,nCols,iROI)
                 plot(A(:,iROI))
                 axis([1 size(A,1) -10 40])
+                title(sprintf('ROI #%d',iROI))
                 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
         end
@@ -1408,7 +1566,7 @@ classdef imaging_dataset < handle
             if nargin>=3&&~isempty(varargin{3})
                 frames=varargin{3};
             else
-                frames=self.get_frames([],1);
+                frames=self.get_frames([],1); % usually correct motion artefacts
             end
             Tiff(filename,'w');
             
