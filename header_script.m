@@ -33,7 +33,7 @@ switch 0
         %exp_name='2015-03-05_AF03';
         
         %exp_name='2015-03-05_AF11'; % example session 12Hz
-        %exp_name='2015-03-05_AF11_compare';
+        exp_name='2015-03-05_AF11_compare';
         %exp_name='2015-04-07_AF11'; % example session 3Hz
         %exp_name='2015-04-07_AF11_compare'; 
         %exp_name='2015-04-10_AF11';
@@ -43,7 +43,7 @@ switch 0
         %exp_name='2015-04-16_AF11';
         
         %exp_name='2015-07-17_AG02_awake';
-        exp_name='2015-07-20_AG02';
+        %exp_name='2015-07-20_AG02';
         %exp_name='2015-07-21_AG02';
         %exp_name='2015-07-22_AG02';
         
@@ -83,7 +83,7 @@ fprintf('Current working folder is : %s\n',data_folder)
 if use_custom_ROI_defs==1
     switch user_name
         case 'benvermaercke'
-            ROI_definition_nr=2;
+            ROI_definition_nr=2; % 2
         case 'juliana'
             ROI_definition_nr=3;
             %case '' % template for other named users
