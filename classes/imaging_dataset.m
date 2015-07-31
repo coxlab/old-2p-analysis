@@ -654,7 +654,7 @@ classdef imaging_dataset < handle
                 self.last_action='find_reference_image';
                 self.updated=1;
                 
-                fprintf(' took %3.2f seconds.',self.elapsed)
+                fprintf(' took %3.2f seconds.\n',self.elapsed)
             else
                 disp('Using existing reference image...')
             end
@@ -1413,7 +1413,7 @@ classdef imaging_dataset < handle
             self=varargin{1};
             
             if ~isdir(self.folder_info.save_folder)
-                [s,mess,messid]=mkdir(self.folder_info.save_folder)
+                [s,mess,messid]=mkdir(self.folder_info.save_folder);
             end
             if self.updated==1
                 self.updated=0; % reset updated flag
