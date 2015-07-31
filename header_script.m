@@ -35,7 +35,7 @@ switch 0
         %exp_name='2015-03-05_AF11'; % example session 12Hz
         %exp_name='2015-03-05_AF11_compare';
         %exp_name='2015-04-07_AF11'; % example session 3Hz
-        exp_name='2015-04-07_AF11_compare'; 
+        %exp_name='2015-04-07_AF11_compare'; 
         %exp_name='2015-04-10_AF11';
         
         %exp_name='2015-04-10_AF11_exp';
@@ -44,7 +44,7 @@ switch 0
         
         %exp_name='2015-07-17_AG02_awake';
         %exp_name='2015-07-20_AG02';
-        %exp_name='2015-07-21_AG02';
+        exp_name='2015-07-21_AG02';
         %exp_name='2015-07-22_AG02';
         
         
