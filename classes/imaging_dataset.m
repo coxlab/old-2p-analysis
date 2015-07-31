@@ -654,7 +654,7 @@ classdef imaging_dataset < handle
                 self.last_action='find_reference_image';
                 self.updated=1;
                 
-                fprintf(' took %3.2f seconds.',session_data.elapsed)
+                fprintf(' took %3.2f seconds.',self.elapsed)
             else
                 disp('Using existing reference image...')
             end
