@@ -18,7 +18,7 @@ for iFile=1:nFiles
         
         if exist(save_name,'file')==0
             %%% Create file based on class file
-            session_data=imaging_dataset(file_name);
+            session_data=imaging_dataset(file_name);            
             session_data.save_data()
         else
             load(save_name,'session_data')
