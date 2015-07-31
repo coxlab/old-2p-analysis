@@ -68,6 +68,7 @@ classdef imaging_dataset < handle
             [self.folder_info.data_folder,self.folder_info.raw_name]=fileparts(self.file_name);
             self.folder_info.save_folder=fullfile(self.folder_info.data_folder,self.folder_info.save_folder_root);
             self.save_name=fullfile(self.folder_info.save_folder,[self.folder_info.raw_name '.mat']);
+            self.updated=1;
         end
         
         %%% In case we need to change the root_folder to raw files
