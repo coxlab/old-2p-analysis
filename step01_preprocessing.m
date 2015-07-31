@@ -78,7 +78,7 @@ for iFile=1:nFiles
             end
             
             %%% Calculate z-projections
-            session_data.reset_MIPs();
+            %session_data.reset_MIPs();
             session_data.do_calc_MIPs()
             if 0
                 %%

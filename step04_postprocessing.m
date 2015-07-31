@@ -1,19 +1,32 @@
+clear all
+clc
+
+header_script
+
+
+files=scandir(data_folder,'tif');
+nFiles=length(files);
 %%
 %%% After all preprocessing, compile session overview file so we can run
 %%% manual ROI definition
 
 % Run step 03
 % Rest of pipeline is sort of same
+
+%ROI_definition_nr=1; % use auto ROIs
+
 for iFile=1:nFiles
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name)
     save_name=strrep(save_name,'tif','mat');
     load(save_name,'session_data') % reload after step03, probably needs to be separate script
     %if session_data.is_static_FOV()&&~isempty(fieldnames(session_data.ROI_definitions))
     %ROI_definition_nr=2;
-    if length(session_data.ROI_definitions)==ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
+    if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
+        
+        session_data.ROI_definition_nr=ROI_definition_nr;
         %%% Extract activity traces
-        session_data.reset_trace_matrix() % allows to recalculate the traces
-        session_data.do_trace_extraction(ROI_definition_nr)
+        %session_data.reset_trace_matrix() % allows to recalculate the traces
+        session_data.do_trace_extraction()
         session_data.save_data()
         %session_data.plot_traces()
         
