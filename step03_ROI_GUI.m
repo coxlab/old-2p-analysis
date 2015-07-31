@@ -119,7 +119,8 @@ handles.ROI_properties_table_name='ROI_properties';
 set(handles.ROI_properties_table,'ColumnName',{'Parameter' 'Value'},'ColumnWidth',{150 200},'ColumnEditable',[false true],'ColumnFormat',{'char' ''},'RowName',[],'CellEditCallback',{@readTable,handles.ROI_properties_table_name})
 
 %%% Import ROIs from other file
-uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.1 .3 .3 .2],'string','Import ROIs','callback',@importROI)
+uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.1 .3 .3 .2],'string','Import ROIs','callback',{@importROI,1})
+uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.1 .1 .3 .2],'string','Auto ROIs','callback',{@importROI,2})
 handles.auto_align=uicontrol(allROIPanel,'Style','checkbox','units','normalized','position',[.1 .55 .15 .2],'string','Align');
 
 % All ROI move buttons
