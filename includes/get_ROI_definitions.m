@@ -26,7 +26,12 @@ if isfield(self,'ROI_definitions')
 elseif isprop(self,'ROI_definitions')
     if isfield(self.ROI_definitions,'ROI')
         ROIs=self.ROI_definitions(ROI_definition_nr).ROI;
-        varargout{1}=ROIs;
+        
+        if ~isempty(ROIs(1).ROI_nr)
+            varargout{1}=ROIs;
+        else
+            varargout{1}=[];
+        end
     else
         varargout{1}=[];
     end    
