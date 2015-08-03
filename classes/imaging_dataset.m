@@ -818,10 +818,14 @@ classdef imaging_dataset < handle
             IM=self.MIP_cc_local.data;
             
             %%% Adaptive threshold
-            ws=20;
-            C=-.03;
-            tm=0;
-            bw=adaptivethreshold(IM,ws,C,tm);
+            try
+                ws=20;
+                C=-.03;
+                tm=0;
+                bw=adaptivethreshold(IM,ws,C,tm);
+            catch
+                self.imshow(IM)
+            end
             
             %%% Remove speckle
             SE=[0 1 0 ; 1 1 1 ; 0 1 0];
@@ -1142,14 +1146,14 @@ classdef imaging_dataset < handle
             
             files=scandir(folder,'mat');
             nFiles=length(files);
-            center_coords=zeros(nFiles,2);
+            center_coords=zeros(nFiles,3);
             valid_FOV=zeros(nFiles,1);
             for iFile=1:nFiles
                 load_name=fullfile(folder,files(iFile).name);
                 load(load_name,'session_data')
                 
                 if session_data.is_static_FOV()
-                    center_coords(iFile,:)=session_data.FOV_info.center;
+                    center_coords(iFile,:)=session_data.FOV_info.coords;
                     valid_FOV(iFile)=1;
                 else
                     valid_FOV(iFile)=0;
@@ -1177,7 +1181,6 @@ classdef imaging_dataset < handle
             nSessions=length(self);
             ROI_counts=zeros(nSessions,1);
             for iSession=1:nSessions
-                self(iSession).save_name
                 ROIs=get_ROI_definitions(self(iSession));
                 %ROIs=self(iSession).ROI_definitions(self.ROI_definition_nr).ROI;
                 ROI_counts(iSession)=length(ROIs);
@@ -1204,55 +1207,60 @@ classdef imaging_dataset < handle
         end
         
         function dataset=join_data_sessions(varargin)
-            self=varargin{1};
-            
-            dataset=imaging_datasets(self(1),self.ROI_definition_nr);
-            nSessions=length(self);
-            STIM=[];
-            RESP=[];
-            SPIKE=[];
-            for iSession=1:nSessions
-                M=self(iSession).Experiment_info.stim_matrix;
-                R=self(iSession).Activity_traces.activity_matrix;
-                S=self(iSession).Activity_traces.spike_matrix;
-                nTrials=max(M(:,2));
-                if mod(nTrials,2)==1
-                    nTrials_use=nTrials-2;
-                else
-                    nTrials_use=nTrials-1;
-                end
-                sel=M(:,2)<=nTrials_use & M(:,3)>=0;
+            if nargin>=1
+                self=varargin{1};
                 
-                %%% 2DO: add selection based on blank_frames, ignore frames
-                %%% etc...
-                
-                STIM=cat(1,STIM,M(sel,:));
-                RESP=cat(1,RESP,R(sel,:));
-                SPIKE=cat(1,SPIKE,S(sel,:));
-            end
-            %% reformat cols 1 and 2
-            STIM(:,1)=1:size(STIM,1);
-            %trial_nrs=STIM(:,2);
-            C=STIM(:,3); C(C==0)=-1;
-            condition_matrix=parse_conditions(C);
-            nTrials=max(condition_matrix(:,1));
-            STIM(:,2)=0;
-            for iTrial=1:nTrials
-                row=condition_matrix(iTrial,:);
-                if iTrial<nTrials
-                    next_row=condition_matrix(iTrial+1,:);
-                    STIM(row(2):next_row(3),2)=row(1);
-                else
-                    STIM(row(2):size(STIM,1),2)=row(1);
+                dataset=imaging_datasets(self(1),self.ROI_definition_nr);
+                nSessions=length(self);
+                STIM=[];
+                RESP=[];
+                SPIKE=[];
+                for iSession=1:nSessions
+                    M=self(iSession).Experiment_info.stim_matrix;
+                    R=self(iSession).Activity_traces.activity_matrix;
+                    S=self(iSession).Activity_traces.spike_matrix;
+                    
+                    %%% Clip last trial or last trial and blank 
+                    nTrials=max(M(:,2));
+                    if mod(nTrials,2)==1
+                        nTrials_use=nTrials-2;
+                    else
+                        nTrials_use=nTrials-1;
+                    end
+                    sel=M(:,2)<=nTrials_use & M(:,3)>=0;
+                    
+                    %%% 2DO: add selection based on blank_frames, ignore frames
+                    %%% etc...
+                    
+                    STIM=cat(1,STIM,M(sel,:));
+                    RESP=cat(1,RESP,R(sel,:));
+                    SPIKE=cat(1,SPIKE,S(sel,:));
                 end
-            end
+                %% reformat cols 1 and 2
+                STIM(:,1)=1:size(STIM,1);
+                %trial_nrs=STIM(:,2);
+                C=STIM(:,3); C(C==0)=-1;
+                condition_matrix=parse_conditions(C);
+                nTrials=max(condition_matrix(:,1));
+                STIM(:,2)=0;
+                for iTrial=1:nTrials
+                    row=condition_matrix(iTrial,:);
+                    if iTrial<nTrials
+                        next_row=condition_matrix(iTrial+1,:);
+                        STIM(row(2):next_row(3),2)=row(1);
+                    else
+                        STIM(row(2):size(STIM,1),2)=row(1);
+                    end
+                end
+                
+                %%% Fill dataset
+                dataset.STIM=STIM;
+                dataset.RESP=RESP;
+                dataset.SPIKE=SPIKE;
+                frame_time=1/self(1).mov_info.frame_rate;
+                dataset.timeline=dataset.STIM(:,1)*frame_time;
             
-            %%% Fill dataset
-            dataset.STIM=STIM;
-            dataset.RESP=RESP;
-            dataset.SPIKE=SPIKE;
-            frame_time=1/self(1).mov_info.frame_rate;
-            dataset.timeline=dataset.STIM(:,1)*frame_time;
+            end
         end
         
         %%% Combine activity and stim properties
@@ -1563,7 +1571,13 @@ classdef imaging_dataset < handle
             % option to do motion correction first
             %self=varargin{1};
             self=varargin{1};
-            filename=varargin{2};
+            if nargin>=2&&~isempty(varargin{2})
+                filename=varargin{2};
+            else
+                [f,fn,ext]=fileparts(self.file_name);
+                filename=fullfile(f,'Processed',[fn '_motionCorrected' ext]);
+                savec(filename)
+            end
             if nargin>=3&&~isempty(varargin{3})
                 frames=varargin{3};
             else
