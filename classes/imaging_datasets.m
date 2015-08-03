@@ -10,17 +10,19 @@ classdef imaging_datasets < handle
         STIM=[];
         RESP=[];
         SPIKE=[];
-        timeline=[];        
+        timeline=[];
     end
     
     methods
         % Constructor
         function self=imaging_datasets(varargin)
-            builder=varargin{1};
-            self.ROI_definition_nr=varargin{2};
-            self.FOV_info=builder.FOV_info;
-            self.MIP_std=builder.MIP_std;
-            self.ROI_definitions=builder.ROI_definitions(self.ROI_definition_nr).ROI;            
+            if nargin>=1
+                builder=varargin{1};
+                self.ROI_definition_nr=builder.ROI_definition_nr;
+                self.FOV_info=builder.FOV_info;
+                self.MIP_std=builder.MIP_std;
+                self.ROI_definitions=builder.ROI_definitions(self.ROI_definition_nr).ROI;
+            end
         end
         
         % Data analysis functions
@@ -38,6 +40,25 @@ classdef imaging_datasets < handle
                 title(sprintf('ROI #%d',iROI))
                 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
+        end
+        
+        function plot_FOV(varargin)
+            self=varargin{1};
+            self.FOV_info
+            figure(23)
+            clf
+            hold on 
+            circle([0 0],2,100,'r-',2);
+            center=self.FOV_info.center;
+            FOV_rect=[0 0 self.FOV_info.size_um];
+            ROI=CenterRectOnPoint(FOV_rect,center(1),center(2))/1000;
+            
+            plotRect(ROI,'k');
+            hold off
+            axis equal
+            axis square
+            
+            title(sprintf('Depth %3.1fµm',self.FOV_info.Z_depth))
         end
         
         function RF_analysis(varargin)
@@ -81,8 +102,9 @@ classdef imaging_datasets < handle
             axis([X([1 end])' y_range])
             subplot(212)
             if nConditions==32
-                MAP=flipud(reshape(M,4,8));
+                MAP=(reshape(M,4,8));
                 imagesc(MAP)
+                axis xy
                 set(gca,'CLim',[-3 3])
                 %self.Results.RF_maps(:,:,iROI)=MAP;
             else
@@ -98,18 +120,24 @@ classdef imaging_datasets < handle
             for iCondition=1:nConditions
                 condition_nr=conditions(iCondition);
                 sel=condition_matrix(:,5)==condition_nr;
+                nTrials=sum(sel);
                 avg_trace=mean(calcium_matrix(sel,:));
+                std_trace=ste(calcium_matrix(sel,:));
                 subplot(nRows,nCols,iCondition)
-                X_AX=frame_selector_trace(1):frame_selector_trace(2);
+                frame_rate=1/mean(diff(self.timeline));
+                X_AX=(frame_selector_trace(1):frame_selector_trace(2))/frame_rate;
+                stim_duration=2;
                 cla
                 hold on
-                y_range=[-1 4];
+                y_range=[-1 10];
                 plot([0 0],y_range,'r')
-                plot([7 7],y_range,'k')
-                plot(X_AX,avg_trace)
-                
+                plot([stim_duration stim_duration],y_range,'k')
+                shadedErrorBar(X_AX,avg_trace,std_trace);
+                %plot(X_AX,avg_trace,'k')
+                plot(X_AX,calcium_matrix(sel,:))
+                                
                 axis([X_AX([1 end]) y_range])
-                title(condition_nr)
+                title(sprintf('Cond #%d (N=%d)',[condition_nr nTrials]))
                 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
             
