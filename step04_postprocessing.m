@@ -21,28 +21,39 @@ for iFile=1:nFiles
     load(save_name,'session_data') % reload after step03, probably needs to be separate script
     %if session_data.is_static_FOV()&&~isempty(fieldnames(session_data.ROI_definitions))
     %ROI_definition_nr=2;
-    if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
-        
+    
+    if session_data.is_static_FOV==1
         session_data.ROI_definition_nr=ROI_definition_nr;
-        %%% Extract activity traces
-        %session_data.reset_trace_matrix() % allows to recalculate the traces
-        session_data.do_trace_extraction()
-        session_data.save_data()
-        %session_data.plot_traces()
-        
-        %% Extract stimulus relevant information
-        %session_data.bitCodes.MWorks_bitCodes=[];
-        session_data.get_MWorks_bitCodes()
-        session_data.get_exp_type()
-        session_data.get_MWorks_stimulus_info()
-        session_data.create_stim_matrix()
-        %session_data.Experiment_info.stim_matrix
-        session_data.save_data()
-        %%
-        %session_data.combine_act_stim(1,6)
-        
-    else
-        step03_ROI_GUI()
-        die
+        if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
+            
+            session_data.ROI_definition_nr=ROI_definition_nr;
+            %%% Extract activity traces
+            session_data.reset_trace_matrix() % allows to recalculate the traces
+            session_data.do_trace_extraction()
+            session_data.save_data()
+            %session_data.plot_traces()
+            
+            %% Extract stimulus relevant information
+            %session_data.bitCodes.MWorks_bitCodes=[];
+            try
+                session_data.get_scim_bitCodes()
+                session_data.get_MWorks_bitCodes()
+                session_data.find_offset()
+                session_data.get_MWorks_bitCodes()
+                session_data.get_exp_type()
+                session_data.get_MWorks_stimulus_info()
+                session_data.create_stim_matrix()
+                %session_data.Experiment_info.stim_matrix
+                session_data.save_data()
+            catch
+                disp('This file was not analysed properly')
+            end
+            %%
+            %session_data.combine_act_stim(1,6)
+            
+        else
+            %step03_ROI_GUI()
+            die
+        end
     end
 end
