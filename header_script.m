@@ -44,8 +44,8 @@ switch 0
         
         %exp_name='2015-07-17_AG02_awake';
         %exp_name='2015-07-20_AG02';
-        exp_name='2015-07-21_AG02';
-        %exp_name='2015-07-22_AG02';
+        %exp_name='2015-07-21_AG02';
+        exp_name='2015-07-22_AG02';
         
         
         % Julie's data
