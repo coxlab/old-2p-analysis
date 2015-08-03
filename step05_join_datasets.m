@@ -36,7 +36,7 @@ for iClust=1:nClusters
         session_nr=session_vector(iSession);
         load_name=fullfile(session_data.folder_info.save_folder,files(session_nr).name);
         load(load_name,'session_data')
-        S(iSession)=session_data;
+        S(iSession)=session_data;        
     end
     
     %% Check whether same number of ROIs are defined in all sessions
@@ -55,10 +55,10 @@ for iClust=1:nClusters
     else
         % all good: take the ROI_definitions of one of the sessions
         %ROI_definitions=S(1).ROI_definitions(ROI_definition_nr).ROI;
-        
+            
         % Then join them
         % leave out last trial
-        dataset(iClust)=S.join_data_sessions(ROI_definition_nr);
+        dataset(iClust)=S.join_data_sessions();
         dataset(iClust).cluster_nr=iClust;
         dataset(iClust).session_vector=session_vector;
         dataset(iClust).nFrames=size(dataset(iClust).STIM,1);
@@ -68,9 +68,12 @@ end
 
 
 %%% Do something with dataset
+%% Plot FOV
+dataset(2).plot_FOV()
+
 %% look at temporal profile
 dataset(2).plot_traces()
 
 %%
-dataset(6).RF_analysis(1)
+dataset(2).RF_analysis(65)
 
