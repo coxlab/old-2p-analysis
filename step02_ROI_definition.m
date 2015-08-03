@@ -21,19 +21,22 @@ for iFile=1:nFiles
         else
             load(save_name,'session_data')
             
-            %%% Make sure filenames are relative to data folder on this machine
-            session_data.rebase(data_root)
             
-            %%% Calc ROIs based on adaptive thresholding
-            %session_data.reset_ROIs()
-            session_data.find_ROIs()
-                        
-            %%% Save to ROI_definitions, first field
-            session_data.save_data()
-            if 0
-                %%
-                session_data.ROI_definitions(1).ROI;
-                session_data.plot_ROIs()
+            if session_data.is_static_FOV==1
+                %%% Make sure filenames are relative to data folder on this machine
+                session_data.rebase(data_root)
+                
+                %%% Calc ROIs based on adaptive thresholding
+                %session_data.reset_ROIs()
+                session_data.find_ROIs()
+                
+                %%% Save to ROI_definitions, first field
+                session_data.save_data()
+                if 0
+                    %%
+                    session_data.ROI_definitions(1).ROI;
+                    session_data.plot_ROIs()
+                end
             end
         end
     end
