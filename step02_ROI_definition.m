@@ -20,8 +20,7 @@ for iFile=1:nFiles
             error('Run step 01 first...')
         else
             load(save_name,'session_data')
-            
-            
+                        
             if session_data.is_static_FOV==1
                 %%% Make sure filenames are relative to data folder on this machine
                 session_data.rebase(data_root)
