@@ -10,7 +10,8 @@ if isunix==1
     end
 else % 2p
     [~, user_name] = system('whoami');user_name=user_name(1:end-1);
-    root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
+    %root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
+    root_folder='D:\Dropbox (coxlab)';
 end
 
 % define data folder
@@ -35,7 +36,7 @@ switch 0
         %exp_name='2015-03-05_AF11'; % example session 12Hz
         %exp_name='2015-03-05_AF11_compare';
         %exp_name='2015-04-07_AF11'; % example session 3Hz
-        exp_name='2015-04-07_AF11_compare'; 
+        %exp_name='2015-04-07_AF11_compare'; 
         %exp_name='2015-04-10_AF11';
         
         %exp_name='2015-04-10_AF11_exp';
@@ -92,6 +93,8 @@ if use_custom_ROI_defs==1
             ROI_definition_nr=3;
             %case '' % template for other named users
             %    handles.ROI_definition_nr=4;
+        case 'coxlab-2p\labuser'
+            ROI_definition_nr=2;
         otherwise
             ROI_definition_nr=1;
             
