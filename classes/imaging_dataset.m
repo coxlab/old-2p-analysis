@@ -144,6 +144,10 @@ classdef imaging_dataset < handle
                     % info: bitCodes, position, laser power
                     flyback_line=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[self.mov_info.Height self.mov_info.Height],[1 self.mov_info.Width]}));
                     
+                    
+                    flyback_line
+                    die
+                    
                     [a,N]=parse_flyback_line(flyback_line,N);
                     self.frame_info(iFrame)=a;
                 end
@@ -158,6 +162,101 @@ classdef imaging_dataset < handle
             
         end
         
+        function recover_scim_bitCodes_from_MWorks(varargin)
+            % for the rare cases flyback line gets overwritten, reconstruct
+            % frame bitcodes from MWork timestamps
+            self=varargin{1};
+            self.get_MWorks_bitCodes()
+            M=self.bitCodes.MWorks_bitCodes;
+            sel=M(:,1)>0;
+            M=M(sel,:);
+            
+            
+            T=M(:,1);
+            T=T-min(T);
+            D=diff(T);
+            breaks=cat(1,find(D>2.5),length(T));
+            
+            break_matrix=[breaks(1:end-1) breaks(2:end) diff(breaks)+1];
+            break_matrix(break_matrix(:,3)<200,:)=[];
+            break_matrix=cat(2,(1:size(break_matrix,1))',break_matrix);
+            
+            nSessions=size(break_matrix,1);
+            
+            for iSession=1%1:nSessions
+               row=break_matrix(iSession,:);
+               timestamps=M(row(2):row(3),1);
+               bit_codes=M(row(2):row(3),2);
+               
+               nFrames=self.mov_info.nFrames;
+               frame_rate=self.mov_info.frame_rate;
+               
+               if 0
+                   N=500;
+                   T=M(1:N,1);T=T-T(2);
+                   [(1:N)' T diff(M(1:N+1,1)) M(1:N,2)]
+                   die
+               end
+               
+               output=[timestamps-timestamps(2)+1/frame_rate bit_codes];
+               % fix first frame: bitCode is correct, duration not
+               output(1,1)=0;
+               
+               % fix last frame: only runs until nFrames
+               output(end,1)=(nFrames-1)/frame_rate;
+               
+               frame_vector=round(output(:,1)*frame_rate)+1;
+               output=[frame_vector output [diff(output(:,1));0]];
+               output(:,1:4)
+               
+               %output(:,4)
+           
+               die
+               
+               frame_durations=round(diff(timestamps)*self.mov_info.frame_rate);
+               frame_vector=[1 ; [0 ; cumsum(frame_durations)]+2 ; nFrames];
+               frame_times=(frame_vector-1)/frame_rate;
+               %[frame_times bit_codes [diff(frame_times) ; 0]]
+               
+               
+               
+               frame_matrix=zeros(nFrames,8)-1;
+               
+               
+               
+               cur_trial=0;
+               cur_idx=0;
+               timestamps=timestamps-timestamps(1);
+               for iFrame=1:nFrames
+                   frame_time=(iFrame-1)/frame_rate;
+                   if iFrame==1 % No stim in first frame
+                       frame_matrix(iFrame,1:2)=[iFrame frame_time];
+                   else                       
+                       idx=find(timestamps>frame_time,1,'first');
+                       if ~isempty(idx)
+                           if cur_idx~=idx
+                               %timestamps(idx)
+                               cur_idx=idx;
+                               cur_trial=cur_trial+1;
+                               bit_code=bit_codes(idx);
+                               %%% Build scim_bitCodes up from here
+                           end
+                           frame_matrix(iFrame,1:4)=[iFrame frame_time cur_trial bit_code];
+                           
+                           %%% Last distractor runs till last frame, next
+                           %%% change only when new session starts. so we
+                           %%% have to crop it to fill up the nFrames
+                       else
+                           frame_matrix(iFrame,1:4)=[iFrame frame_time cur_trial+1 M(row(3)+2,2)];
+                       end
+                   end
+               end
+              
+            end
+            
+            
+        end
+
         
         %%% Get FOV info
         function get_FOV_info(varargin)
@@ -403,29 +502,36 @@ classdef imaging_dataset < handle
                 tag_name='ExpType';
                 expType_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
                 if ~isempty(expType_events)
-                    exp_name_vector={'RSVP','Retinomapping'};
-                    exp_type=mode(expType_events);
-                    exp_name=exp_name_vector{exp_type};
+                    exp_type=mode(cat(1,expType_events.data));
+                    
+                    tag_name='ExpName_short';
+                    expName_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                    if ~isempty(expType_events)
+                        exp_name=expName_events(1).data;
+                    else
+                        exp_name_vector={'RSVP','Retinomapping'};
+                        exp_name=exp_name_vector{exp_type};
+                    end
+                else
+                    %%% Fallback is to look for the existance of specific tags
+                    %%% unique to either experiment
+                    tag_names={self.bitCodes.event_codec.tagname}';
+                    tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
+                    if ~isempty(tag_nr)
+                        exp_type=1; % RSVP
+                        exp_name='RSVP';
+                    end
+                    tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
+                    if ~isempty(tag_nr)
+                        exp_type=2; % Retinomapping
+                        exp_name='Retinomapping';
+                    end
+                    
+                    if isempty(exp_type)
+                        disp('Unable to determine experiment type...')
+                    end
                 end
-                
-                %%% Fallback is to look for the existance of specific tags
-                %%% unique to either experiment
-                tag_names={self.bitCodes.event_codec.tagname}';
-                tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
-                if ~isempty(tag_nr)
-                    exp_type=1; % RSVP
-                    exp_name='RSVP';
-                end
-                tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
-                if ~isempty(tag_nr)
-                    exp_type=2; % Retinomapping
-                    exp_name='Retinomapping';
-                end
-                
-                if isempty(exp_type)
-                    disp('Unable to determine experiment type...')
-                end
-                
+                                
                 self.Experiment_info.exp_type=exp_type;
                 self.Experiment_info.exp_name=exp_name;
                 self.updated=1;
@@ -908,10 +1014,18 @@ classdef imaging_dataset < handle
                 
                 ROI.timeseries_soma=[];
                 ROI.time_series_neuropil=[];
-                %ROI.timeseries_neuropil=[];
                 
+                if isfield(self.ROI_definitions(1).ROI,'timeseries_neuropil')
+                    self.ROI_definitions(1).ROI=rmfield(self.ROI_definitions(1).ROI,'timeseries_neuropil');
+                end
                 %%% Store ROI properties
-                self.ROI_definitions(1).ROI(iROI)=ROI;
+                try
+                    self.ROI_definitions(1).ROI(iROI)=ROI;
+                catch
+                    self.ROI_definitions(1).ROI(iROI)
+                    ROI
+                    error('Objects are not identical...')
+                end
             end
             fprintf('Found %d ROIs!\n',nROI)
             
@@ -1565,6 +1679,23 @@ classdef imaging_dataset < handle
             self.elapsed=toc;
             self.last_action='find_FOV_in_stack';
             
+        end
+        
+        function import_movie(varargin)
+            self=varargin{1};
+            filename=varargin{2};
+            
+            obj = Tiff(filename,'r');
+            
+            if obj.isTiled
+                obj.numberOfTiles
+            else
+                obj.numberOfStrips
+            end
+            obj.PlanarConfiguration
+            
+            im=double(obj.read);
+            self.imshow(im(1:end,:))
         end
         
         function export_movie(varargin)
