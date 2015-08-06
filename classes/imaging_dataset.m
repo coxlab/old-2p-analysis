@@ -268,7 +268,12 @@ classdef imaging_dataset < handle
                 self.FOV_info.pixel_size_micron=.85;
             end
             if self.is_static_FOV()
-                self.FOV_info.coords=self.frame_info(1).xyz_submicron;
+                if isempty(self.frame_info(1).xyz_submicron)
+                    % not there for older files
+                    self.FOV_info.coords=self.frame_info(1).xyz_micron;
+                else 
+                    self.FOV_info.coords=self.frame_info(1).xyz_submicron;
+                end                
                 self.FOV_info.center=self.FOV_info.coords(1:2);
                 self.FOV_info.Z_depth=self.FOV_info.coords(3);
                 self.FOV_info.size_px=[self.mov_info.Width self.mov_info.Height];
