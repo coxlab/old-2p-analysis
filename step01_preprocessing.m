@@ -30,7 +30,7 @@ for iFile=1:nFiles
         session_data.get_scim_data()
         session_data.read_flyback()
         %session_data.get_FOV_info(.85)
-        session_data.get_FOV_info([384 680]./[296 1024])
+        session_data.get_FOV_info([384 680]./[300 1024])
         
         
         %%% Detect invalid frames
@@ -65,6 +65,7 @@ for iFile=1:nFiles
             %session_data.reset_motion_correction();
             session_data.do_motion_correction()
             session_data.find_motion_frames(2)
+            session_data.save_data()
             if 0
                 %%
                 plot(session_data.motion_correction.shift_matrix(:,2))
