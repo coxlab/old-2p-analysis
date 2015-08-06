@@ -29,6 +29,9 @@ end
 
 offset=double(intmax('uint16')/2);
 
+results=struct;
+results.version=version;
+
 switch version
     case 21
         nBitCodes=vector(2);
@@ -53,7 +56,7 @@ switch version
         piezo=headers(17); % micron
         laser_power=headers(18); % percent! not mW
         
-        results=struct;
+        %%% Build output struct
         results.bitCode_vector=bitCode_vector(:);
         results.main_bitCode=main_bitCode;
         results.nBitCodes=nBitCodes;
@@ -71,12 +74,12 @@ switch version
         main_bitCode=mode(bitCode_vector);
         
         headers=vector(end,end-4:end);
-        
+                
         xyz=headers(1:3)-offset;
         piezo=headers(4); % micron
         laser_power=headers(5); % percent! not mW
         
-        results=struct;
+        %%% Build output struct
         results.bitCode_vector=bitCode_vector(:);
         results.main_bitCode=main_bitCode;
         results.nBitCodes=nBitCodes;
