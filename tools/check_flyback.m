@@ -8,7 +8,7 @@ switch 2
         session_nr=2;
         file_name=fullfile(data_folder,sprintf('20150305_AF11_%03d_resaved.tif',session_nr));
     case 2
-        session_nr=2;
+        session_nr=13;
         data_folder='D:\Dropbox (coxlab)\2p-data\2015-08-03_AH02_init\resaved';
         file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))   
 end
