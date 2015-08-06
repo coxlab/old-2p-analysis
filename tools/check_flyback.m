@@ -2,7 +2,7 @@ clear all
 clc
 
 %%
-switch 2
+switch 3
     case 1
         data_folder='D:\Dropbox (coxlab)\2p-data\2015-03-05_AF11\Resaved';
         session_nr=2;
@@ -10,6 +10,10 @@ switch 2
     case 2
         session_nr=13;
         data_folder='D:\Dropbox (coxlab)\2p-data\2015-08-03_AH02_init\resaved';
+        file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))   
+    case 3
+        session_nr=1;
+        data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-08-03_AH02_init/resaved';
         file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))   
 end
 %file_name='C:\Users\labuser\Desktop\20150305_AF11_009_resaved.tif';
