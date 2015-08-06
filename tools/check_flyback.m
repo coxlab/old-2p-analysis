@@ -1,8 +1,8 @@
-clear all
-clc
+%clear all
+%clc
 
 %%
-switch 4
+switch 2
     case 1
         data_folder='D:\Dropbox (coxlab)\2p-data\2015-03-05_AF11\resaved';
         session_nr=18;
@@ -32,8 +32,9 @@ W=info(1).Width;
 H=info(1).Height;
 dataMatrix=zeros(nFrames,7);
 
+%%
 offset=double(intmax('uint16')/2);
-for iFrame=50%1:nFrames %min([500 nFrames])
+for iFrame=5%1:nFrames %min([500 nFrames])
     % read out last line of the frame, here we store frame specific
     % info: bitCodes, position, laser power
     frame=imread(file_name,iFrame,'info',info);
