@@ -17,7 +17,7 @@ else
 end
 
 %% Determine version of flyback format
-if vector(1)>20 % newest
+if vector(1)>20&&vector(1)<100 % newest
     version=vector(1);
 else
     if vector(end-17)>2000 % current
