@@ -114,14 +114,16 @@ classdef imaging_dataset < handle
                 info=imfinfo(self.file_name);
                 
                 %% Get SCIM headers
-                scim_info=info(1).ImageDescription;
+                scim_info=info(1).ImageDescription;                                
+                if ~ismember(double(scim_info(end)),[10 13])
+                     scim_info=[scim_info char(13)];
+                     disp('Corrected last char')
+                end                
                 scim_info=strrep(scim_info,char(10),char(13));
-                scim_info=strrep(scim_info,char(13),[';' char(13)]);                
-                eval(scim_info); % revive scan image variables
-                %scinfo=strsplit(scim_info,char(13));
-                %scim_info=strjoin(scinfo,[';' char(13)]);
-                %eval([scim_info  ';']); % revive scan image variables                
+                scim_info=strrep(scim_info,char(13),[';' char(13)]);
+                eval(scim_info); % revive scan image variables                
                 self.mov_info.state=state;
+                
                 self.mov_info.frame_rate=state.acq.frameRate;
                 self.mov_info.mov_start_time=state.internal.softTriggerTimeString;
                 
