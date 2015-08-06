@@ -50,8 +50,9 @@ switch 0
         
         %% 1024x300 sessions
         %exp_name='2015-08-03_AH02_init'; % no scim bitcodes...
-        exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes!
+        %exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes!
         
+        exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
         
         
         % Julie's data
