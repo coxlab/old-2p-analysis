@@ -2,9 +2,7 @@ clear all
 clc
 
 header_script
-%data_root='/Users/benvermaercke/Dropbox (coxlab)/2p-data/';
-%exp_folder='2015-07-17_AG02_awake';
-%data_folder=fullfile(data_root,exp_folder);
+
 files=scandir(data_folder,'tif');
 nFiles=length(files);
 %%
@@ -55,7 +53,7 @@ for iFile=1:nFiles
             session_data.set_smoothing_kernel()
             
             %session_data.reset_reference_image();
-            session_data.find_reference_image()            
+            session_data.find_reference_image()
             if 0
                 %%
                 imshow(calc_gamma(session_data.motion_correction.reference_image.im,.5),[])
