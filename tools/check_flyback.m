@@ -2,7 +2,7 @@ clear all
 clc
 
 %%
-switch 1
+switch 4
     case 1
         data_folder='D:\Dropbox (coxlab)\2p-data\2015-03-05_AF11\resaved';
         session_nr=18;
@@ -16,6 +16,10 @@ switch 1
         session_nr=1;
         data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-08-03_AH02_init/resaved';
         file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))   
+    case 4
+        session_nr=1;
+        data_folder='C:\Users\labuser\Documents\ben\Movies\2015-08-06_test';
+        file_name=fullfile(data_folder,sprintf('test_%03d.tif',session_nr))
 end
 %file_name='C:\Users\labuser\Desktop\20150305_AF11_009_resaved.tif';
 
@@ -33,6 +37,7 @@ for iFrame=50%1:nFrames %min([500 nFrames])
     % read out last line of the frame, here we store frame specific
     % info: bitCodes, position, laser power
     frame=imread(file_name,iFrame,'info',info);
+    figure(66)
     imshow(frame,[])
     
     flyback_line=double(imread(file_name,iFrame,'info',info,'PixelRegion',{[H H],[1 W]}));
