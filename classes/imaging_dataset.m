@@ -6,7 +6,7 @@ classdef imaging_dataset < handle
         mov_info=struct('nFrames',[],'Width',[],'Height',[],'state',[],'frame_rate',[],'mov_start_time',[],'mean_lum',[],'blank_frames',[])
         frame_info=struct('version',[],'nBitCodes',[],'bitCode_vector',[],'main_bitCode',[],'date_num',[],'timestamp',[],'switch_times',[],'switch_detected',[],'xyz_micron',[],'xyz_submicron',[],'piezo',[],'laser_power',[]);
         bitCodes=struct('nBitCodes',[],'scim_bitCodes_raw',[],'scim_bitCodes',[],'MWorks_bitCodes',[],'mwk_file_name','','event_codec',[],'offset',[],'max_val',[])
-        FOV_info=struct('coords',[],'center',[],'Z_depth',[],'size_px',[],'pixel_size_micron',[],'size_um',[])
+        FOV_info=struct('coords',[],'center',[],'Z_depth',[],'size_px',[],'pixel_size_micron',[],'pixel_aspect_ratio',[],'size_um',[])
         
         
         motion_correction=struct('reference_image',struct('idx',[],'im',[],'shift_matrix',[],'min_val',[],'iBest',[],'total_shift',[]), ...
@@ -271,7 +271,7 @@ classdef imaging_dataset < handle
             if nargin>=2
                 self.FOV_info.pixel_size_micron=varargin{2};
             else
-                self.FOV_info.pixel_size_micron=.85;
+                self.FOV_info.pixel_size_micron=[.85 .85];
             end
             if self.is_static_FOV()
                 if isempty(self.frame_info(1).xyz_submicron)
@@ -280,10 +280,12 @@ classdef imaging_dataset < handle
                 else 
                     self.FOV_info.coords=self.frame_info(1).xyz_submicron;
                 end                
+
                 self.FOV_info.center=self.FOV_info.coords(1:2);
                 self.FOV_info.Z_depth=self.FOV_info.coords(3);
                 self.FOV_info.size_px=[self.mov_info.Width self.mov_info.Height];
-                self.FOV_info.size_um=self.FOV_info.size_px*self.FOV_info.pixel_size_micron;
+                self.FOV_info.pixel_aspect_ratio=pixel_size_micron(1)/pixel_size_micron(2);
+                self.FOV_info.size_um=self.FOV_info.size_px.*fliplr(self.FOV_info.pixel_size_micron);                
             end
             %
         end
