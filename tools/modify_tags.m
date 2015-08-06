@@ -7,8 +7,7 @@ else
     root_folder='D:\Dropbox (coxlab)\2p-data\';
 end
 
-
-switch 2
+switch 1
     case 1 % 2015-08-03_AH02_init
         data_folder=fullfile(root_folder,'2015-08-03_AH02_init/resaved');
         src_file_name='2015-08-03_AH02_%03d.tif';
@@ -29,18 +28,24 @@ for session_nr=1:nSessions
         src=Tiff(load_name,'r');
         tag_content=src.getTag('ImageDescription');
         src.close()
+                
+        %new_tag=[tag_content(1:end-1) char(10)];
         
-        if 0
+        if 1
             %% Write tag to target file
             load_name=fullfile(data_folder,sprintf(tgt_file_name,session_nr));
-            tgt=Tiff(load_name,'r+');
-            tgt.setTag('ImageDescription',tag_content)
-            tgt.close()
-            
-            %% double check
-            tgt=Tiff(load_name,'r');
-            tag_content=tgt.getTag('ImageDescription');
-            tgt.close()
+            if exist(load_name,'file')==2
+                tgt=Tiff(load_name,'r+');
+                tgt.setTag('ImageDescription',new_tag)
+                tgt.close()
+                
+                %% double check
+                tgt=Tiff(load_name,'r');
+                tag_content=tgt.getTag('ImageDescription');
+                tgt.close()
+            else
+                disp('No file to correct..')
+            end
         end
     else
         disp('Skipping')
