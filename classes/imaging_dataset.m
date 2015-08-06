@@ -4,7 +4,7 @@ classdef imaging_dataset < handle
         save_name='';
         folder_info=struct('main_folder','2p-data','root_folder','','rel_path','','data_folder','','raw_name','','save_folder','','save_folder_root','data_analysis')
         mov_info=struct('nFrames',[],'Width',[],'Height',[],'state',[],'frame_rate',[],'mov_start_time',[],'mean_lum',[],'blank_frames',[])
-        frame_info=struct('version',[],'bitCode_vector',[],'main_bitCode',[],'nBitCodes',[],'date_num',[],'timestamp',[],'switch_times',[],'switch_detected',[],'xyz_micron',[],'xyz_submicron',[],'piezo',[],'laser_power',[]);
+        frame_info=struct('version',[],'nBitCodes',[],'bitCode_vector',[],'main_bitCode',[],'date_num',[],'timestamp',[],'switch_times',[],'switch_detected',[],'xyz_micron',[],'xyz_submicron',[],'piezo',[],'laser_power',[]);
         bitCodes=struct('nBitCodes',[],'scim_bitCodes_raw',[],'scim_bitCodes',[],'MWorks_bitCodes',[],'mwk_file_name','','event_codec',[],'offset',[],'max_val',[])
         FOV_info=struct('coords',[],'center',[],'Z_depth',[],'size_px',[],'pixel_size_micron',[],'size_um',[])
         
@@ -150,7 +150,13 @@ classdef imaging_dataset < handle
                     flyback_line=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[self.mov_info.Height self.mov_info.Height],[1 self.mov_info.Width]}));                                                            
                     
                     [a,N]=parse_flyback_line(flyback_line,N);                    
-                    self.frame_info(iFrame)=a;
+                    try
+                        self.frame_info(iFrame)=a;
+                    catch
+                        self.frame_info(iFrame)
+                        a
+                        die
+                    end
                 end
                 self.bitCodes.nBitCodes=N;
                 
