@@ -4,7 +4,7 @@ classdef imaging_dataset < handle
         save_name='';
         folder_info=struct('main_folder','2p-data','root_folder','','rel_path','','data_folder','','raw_name','','save_folder','','save_folder_root','data_analysis')
         mov_info=struct('nFrames',[],'Width',[],'Height',[],'state',[],'frame_rate',[],'mov_start_time',[],'mean_lum',[],'blank_frames',[])
-        frame_info=struct('bitCode_vector',[],'main_bitCode',[],'nBitCodes',[],'date_num',[],'timestamp',[],'switch_times',[],'switch_detected',[],'xyz_micron',[],'xyz_submicron',[],'piezo',[],'laser_power',[]);
+        frame_info=struct('version',[],'bitCode_vector',[],'main_bitCode',[],'nBitCodes',[],'date_num',[],'timestamp',[],'switch_times',[],'switch_detected',[],'xyz_micron',[],'xyz_submicron',[],'piezo',[],'laser_power',[]);
         bitCodes=struct('nBitCodes',[],'scim_bitCodes_raw',[],'scim_bitCodes',[],'MWorks_bitCodes',[],'mwk_file_name','','event_codec',[],'offset',[],'max_val',[])
         FOV_info=struct('coords',[],'center',[],'Z_depth',[],'size_px',[],'pixel_size_micron',[],'size_um',[])
         
@@ -115,9 +115,12 @@ classdef imaging_dataset < handle
                 
                 %% Get SCIM headers
                 scim_info=info(1).ImageDescription;
-                scinfo=strsplit(scim_info,char(13));
-                scim_info=strjoin(scinfo,[';' char(13)]);
-                eval([scim_info  ';']); % revive scan image variables
+                scim_info=strrep(scim_info,char(10),char(13));
+                scim_info=strrep(scim_info,char(13),[';' char(13)]);                
+                eval(scim_info); % revive scan image variables
+                %scinfo=strsplit(scim_info,char(13));
+                %scim_info=strjoin(scinfo,[';' char(13)]);
+                %eval([scim_info  ';']); % revive scan image variables                
                 self.mov_info.state=state;
                 self.mov_info.frame_rate=state.acq.frameRate;
                 self.mov_info.mov_start_time=state.internal.softTriggerTimeString;
@@ -142,13 +145,9 @@ classdef imaging_dataset < handle
                 for iFrame=1:self.mov_info.nFrames
                     % read out last line of the frame, here we store frame specific
                     % info: bitCodes, position, laser power
-                    flyback_line=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[self.mov_info.Height self.mov_info.Height],[1 self.mov_info.Width]}));
+                    flyback_line=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[self.mov_info.Height self.mov_info.Height],[1 self.mov_info.Width]}));                                                            
                     
-                    
-                    flyback_line
-                    die
-                    
-                    [a,N]=parse_flyback_line(flyback_line,N);
+                    [a,N]=parse_flyback_line(flyback_line,N);                    
                     self.frame_info(iFrame)=a;
                 end
                 self.bitCodes.nBitCodes=N;
