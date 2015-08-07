@@ -157,7 +157,18 @@ classdef imaging_dataset < handle
                         a
                         die
                     end
+                end    
+                
+                N=mode(cat(1,self.frame_info.nBitCodes));
+                
+                for iFrame=1:self.mov_info.nFrames
+                    V=self.frame_info(iFrame).bitCode_vector;
+                    if length(V)<N
+                         self.frame_info(iFrame).bitCode_vector=ones(1,N)*mode(V);
+                         fprintf('Fixed bitCodes in frame %d...\n', iFrame)
+                    end                    
                 end
+                
                 self.bitCodes.nBitCodes=N;
                 
                 self.elapsed=toc;
