@@ -38,7 +38,7 @@ switch version
         nBitCodes=vector(2);
         
         %%% handle bitcodes
-        bitCode_vector=vector(1:nBitCodes);
+        bitCode_vector=vector(3:nBitCodes+2);
         main_bitCode=mode(bitCode_vector);
         
         %%% handle headers
