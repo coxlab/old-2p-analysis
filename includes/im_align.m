@@ -5,11 +5,28 @@ function varargout=im_align(varargin)
 A=varargin{1};
 B=varargin{2};
 
-CC=normxcorr2(A,B);
+if nargin>=3&&~isempty(varargin{3})
+    use_GPU=varargin{3};
+else
+    use_GPU=0;
+end
 
-% get shift coordinates relative to biggest image
-CC_max=max(CC(:));
-[i,j]=find(CC==CC_max);
+tic
+if use_GPU==1&&gpuDeviceCount>0
+    %%% 
+    disp('Using GPU acceleration')
+        
+    CC=gather(normxcorr2(gpuArray(A),gpuArray(B)));
+    % get shift coordinates relative to biggest image
+    CC_max=max(CC(:));
+    [i,j]=find(CC==CC_max);
+else
+    CC=normxcorr2(A,B);
+    % get shift coordinates relative to biggest image
+    CC_max=max(CC(:));
+    [i,j]=find(CC==CC_max);
+end
+toc
 
 peakX=j-size(B,2)/2;
 peakY=i-size(B,1)/2;
