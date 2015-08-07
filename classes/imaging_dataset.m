@@ -1004,9 +1004,9 @@ classdef imaging_dataset < handle
                     T=IM(ROI.ROI_rect(2):ROI.ROI_rect(4),ROI.ROI_rect(1):ROI.ROI_rect(3));
                 catch
                     figure()
-                    self.imshow(bw_separated)
-                    ROI.ROI_rect
-                    die
+                    self.imshow(sel)
+                    title('Failed to fit ROI')
+                    break
                 end
                 
                 % Generate mask to isolate soma pixels
