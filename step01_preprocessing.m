@@ -30,7 +30,7 @@ for iFile=1:nFiles
         session_data.get_scim_data()
         session_data.read_flyback()
         %session_data.get_FOV_info(.85)
-        session_data.get_FOV_info([384 680]./[300 1024])
+        session_data.get_FOV_info([384 680]./[296 1024])
         
         
         %%% Detect invalid frames
