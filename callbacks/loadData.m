@@ -93,10 +93,14 @@ end
 handles.subplots(1).fig=subplot(121);
 %handles.MIP_gamma_val=1;
 MIP=calc_gamma(handles.MIP_raw,handles.MIP_gamma_val);
-handles.subplots(1).h(1)=imshow(MIP,[0 50]);
+%MIP=imresize(MIP,size(MIP).*[1 1]);
+%handles.subplots(1).h(1)=imshow(MIP,[0 50]);
+handles.subplots(1).h(1)=imagesc(MIP);
+%get(handles.subplots(1).h(1))
+%set(handles.subplots(1),'Xtick',[],'Ytick',[])
 hold on
 handles.subplots(1).p(1)=plot(-1,-1,'r-'); % all ROIs
-
+axis off % hide plot labels
 handles.nROI_preload=200;
 for iROI=1:handles.nROI_preload
     handles.subplots(1).p(10+iROI)=plot(-1,-1,'r-','buttonDownFcn',{@selectROI,iROI}); % individual ROIs
