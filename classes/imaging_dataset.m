@@ -1618,6 +1618,7 @@ classdef imaging_dataset < handle
             end
             
             nFrames=size(im,3);
+            figure(444)
             H=imshow(calc_gamma(im(:,:,1),gamma_val),[]);
             colormap(self.green)
             for iFrame=1:nFrames
