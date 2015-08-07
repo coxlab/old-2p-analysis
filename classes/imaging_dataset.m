@@ -164,8 +164,9 @@ classdef imaging_dataset < handle
                 for iFrame=1:self.mov_info.nFrames
                     V=self.frame_info(iFrame).bitCode_vector;
                     if length(V)<N
-                         self.frame_info(iFrame).bitCode_vector=ones(1,N)*mode(V);
+                         self.frame_info(iFrame).bitCode_vector=ones(N,1)*mode(V);
                          fprintf('Fixed bitCodes in frame %d...\n', iFrame)
+                         self.frame_info(iFrame).nBitCodes=length(self.frame_info(iFrame).bitCode_vector);
                     end                    
                 end
                 
