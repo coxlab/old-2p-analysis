@@ -23,6 +23,7 @@ for iFile=1:nFiles
                         
             if session_data.is_static_FOV==1
                 %%% Make sure filenames are relative to data folder on this machine
+                % necessary step if preprocessing is run on the server
                 session_data.rebase(data_root)
                 
                 %%% Calc ROIs based on adaptive thresholding
