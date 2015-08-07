@@ -5,6 +5,7 @@ handles=guidata(H);
 %%% Update MIP
 MIP=calc_gamma(handles.MIP_raw,handles.MIP_gamma_val);
 MIP(MIP(:)<0)=0;
+%MIP=imresize(MIP,size(MIP).*[2 1]);
 set(handles.subplots(1).h(1),'Cdata',MIP);
 
 set(handles.MIP_selector,'value',handles.MIP_type)
@@ -59,7 +60,7 @@ else
             RGB(RGB<0)=0;
             RGB=calc_gamma(RGB,1.7);
             RGB=RGB/max(RGB(:));
-            handles.detail=RGB;
+            handles.detail=RGB;            
             
             set(handles.subplots(2).h(1),'cData',RGB);
             set(handles.subplots(2).fig,'cLim',[min(RGB(:)) max(RGB(:))]);
