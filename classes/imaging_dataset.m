@@ -165,8 +165,12 @@ classdef imaging_dataset < handle
                     V=self.frame_info(iFrame).bitCode_vector;
                     if length(V)<N
                          self.frame_info(iFrame).bitCode_vector=ones(N,1)*mode(V);
-                         fprintf('Fixed bitCodes in frame %d...\n', iFrame)
                          self.frame_info(iFrame).nBitCodes=length(self.frame_info(iFrame).bitCode_vector);
+                         fprintf('Padded bitCodes in frame %d...\n', iFrame)
+                    elseif length(V)>N
+                        self.frame_info(iFrame).bitCode_vector=V(1:N);
+                        self.frame_info(iFrame).nBitCodes=N;
+                        fprintf('Cropped bitCodes in frame %d...\n', iFrame)
                     end                    
                 end
                 
@@ -570,6 +574,8 @@ classdef imaging_dataset < handle
         function get_MWorks_stimulus_info(varargin)
             self=varargin{1};
             
+            self.bitCodes.offset
+            self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),2)
             if mean(eq(self.bitCodes.scim_bitCodes(:,2),self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),2)))>.99
                 stim_times=self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),1);
                 stim_times([1 end]); % these time are sufficient to capture all events for this experiment
@@ -1077,7 +1083,7 @@ classdef imaging_dataset < handle
         
         function plot_ROIs(varargin)
             self=varargin{1};
-            im=self.MIP_cc_local.data;
+            im=self.MIP_cc_local;
             ROI=self.ROI_definitions(1).ROI;
             nROIs=length(ROI);
             
@@ -1182,10 +1188,19 @@ classdef imaging_dataset < handle
                 res=vol.*mask;
                 ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
                 %squeeze(mean(mean(res,1),2))
+                                                
+                %figure()
+                %subplot(221)
+                %self.imshow(mean(vol,3))
+                %subplot(222)
+                %self.imshow(mean(res,3))
+                
                 
                 mask=repmat(ROIs(iROI).mask_neuropil,1,1,size(vol,3));
                 res=vol.*mask;
                 ROIs(iROI).time_series_neuropil=squeeze(mean(mean(res,1),2));
+                %subplot(223)
+                %self.imshow(mean(res,3))
             end
             fprintf('took: %3.1fs\n',toc);
         end
@@ -1274,6 +1289,7 @@ classdef imaging_dataset < handle
             
             trace=delta_F_no_drift;
         end
+        
         
         %%% Join datasets
         function [clusters,cluster_vector,nClusters,files]=find_FOV_clusters(varargin)
@@ -1606,7 +1622,7 @@ classdef imaging_dataset < handle
             colormap(self.green)
             for iFrame=1:nFrames
                 frame=calc_gamma(im(:,:,iFrame),gamma_val);
-                set(H,'Cdata',frame)
+                set(H,'Cdata',real(frame))
                 drawnow
             end
             
