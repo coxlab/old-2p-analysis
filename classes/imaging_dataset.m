@@ -491,6 +491,37 @@ classdef imaging_dataset < handle
             end
         end
         
+        function g_frames=get_frames_GPU(varargin)
+            self=varargin{1};
+            if nargin>=2&&~isempty(varargin{2})
+                idx=varargin{2};
+            else
+                idx=1:self.mov_info.nFrames;
+            end
+            if nargin>=3&&~isempty(varargin{3})
+                apply_motion_correction=varargin{3};
+            else
+                apply_motion_correction=0;
+            end
+            N=length(idx);
+            info=imfinfo(self.file_name); % never save info, is huge
+            g_frames=zeros([self.mov_info.Height-1 self.mov_info.Width N],'gpuArray');
+            for iFrame=1:N
+                frame=double(imread(self.file_name,idx(iFrame),'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
+                if apply_motion_correction==1
+                    offset_ij=self.motion_correction.shift_matrix(iFrame,[4 5]);
+                    frame=offsetIm(frame,offset_ij(1),offset_ij(2),0);
+                else
+                    % do nothing
+                end
+                if size(frame,3)==3
+                    frame=rgb2gray(frame/256);
+                    %frame=frame(:,:,1);
+                end
+                g_frames(:,:,iFrame)=frame;
+            end
+        end        
+        
         function find_blank_frames(varargin)
             %%% Check for unusually dark frames, laser power not turned up
             %%% yet.
@@ -724,6 +755,23 @@ classdef imaging_dataset < handle
             
             self.motion_correction.kernel=bellCurve2(1,kernel_size/2,[sigma sigma],kernel_size,0);
         end
+
+        function set_smoothing_kernel_GPU(varargin)
+            self=varargin{1};
+            if nargin>=2&&~isempty(varargin{2})
+                kernel_size=varargin{2};
+            else
+                kernel_size=[6 6];
+            end
+            if nargin>=3&&~isempty(varargin{3})
+                sigma=varargin{3};
+            else
+                sigma=.65;
+            end
+            
+            self.motion_correction.kernel=gpuArray(bellCurve2(1,kernel_size/2,[sigma sigma],kernel_size,0));
+        end
+
         
         function find_reference_image(varargin)
             % Implementing motion correction method by Poort et al. 2015 Neuron
@@ -747,6 +795,7 @@ classdef imaging_dataset < handle
                 A=floor(linspace(start_frame,end_frame-block_size,nBlocks));
                 M=[A(:) A(:)+block_size];
                 
+                %%% collect candidate reference images
                 reference_image_candidates=zeros([size(frames,1) size(frames,2) nBlocks]);
                 for iBlock=1:nBlocks
                     idx=M(iBlock,1):M(iBlock,2);
@@ -784,6 +833,81 @@ classdef imaging_dataset < handle
                 
                 self.motion_correction.reference_image.idx=M(iBest,1):M(iBest,2);
                 self.motion_correction.reference_image.im=reference_image_candidates(:,:,iBest);
+                self.motion_correction.reference_image.shift_matrix=shift_matrix;
+                self.motion_correction.reference_image.min_val=min_val;
+                self.motion_correction.reference_image.iBest=iBest;
+                self.motion_correction.reference_image.total_shift=total_shift;
+                
+                self.elapsed=toc;
+                self.last_action='find_reference_image';
+                self.updated=1;
+                
+                fprintf(' took %3.2f seconds.\n',self.elapsed)
+            else
+                disp('Using existing reference image...')
+            end
+        end
+        
+        function find_reference_image_GPU(varargin)
+            % Implementing motion correction method by Poort et al. 2015 Neuron
+            tic
+            self=varargin{1};
+            
+            nBlocks=30;
+            block_size=10; % less frames, but more time given our lower sampling rate: 3 vs 30Hz
+            nSamples=100;
+                        
+            if isempty(self.motion_correction.reference_image.im)
+                fprintf('Finding best reference image...')
+                
+                %%% Get frames
+                g_frames=gpuArray(self.get_frames(1:30));
+                
+                start_frame=find(self.mov_info.blank_frames==0,1,'first'); % find first non-blank frame
+                end_frame=self.mov_info.nFrames;
+                
+                %%% space 30 blocks of 30 linearly across the stack (or 1s)
+                A=floor(linspace(start_frame,end_frame-block_size,nBlocks));
+                M=[A(:) A(:)+block_size];
+                
+                %%% collect candidate reference images
+                g_reference_image_candidates=zeros([size(g_frames,1) size(g_frames,2) nBlocks],'gpuArray');
+                for iBlock=1:nBlocks
+                    idx=M(iBlock,1):M(iBlock,2);
+                    g_reference_image_candidates(:,:,iBlock)=mean(g_frames(:,:,idx),3);
+                end
+                
+                % space 100 single frames linearly across the stack
+                A=floor(linspace(start_frame,end_frame,nSamples));
+                g_sample_images=g_frames(:,:,A);
+                
+                % cross-correlate
+                %self.motion_correction.reference_image.CC_matrix=zeros(nSamples,nBlocks);
+                shift_matrix=zeros(nSamples,6,nBlocks);
+                for iBlock=1:nBlocks
+                    g_ref=g_reference_image_candidates(:,:,iBlock);
+                    for iSample=1:nSamples
+                        g_sample=g_sample_images(:,:,iSample);
+                        % smooth B?
+                        g_sample=convn(g_sample,self.motion_correction.kernel,'same');
+                        
+                        [r,c]=PCdemo(g_sample,g_ref);
+                        [CC_max,offset]=im_align(g_sample,g_ref);
+                        
+                        shift_matrix(iSample,:,iBlock)=[iSample gather(c) gather(r) offset CC_max];
+                    end
+                end
+                
+                % find best
+                total_shift=zeros(nBlocks,1);
+                for iBlock=1:nBlocks
+                    %total_shift(iBlock)=sum(sqrt(sum(shift_matrix(:,2:3,iBlock).^2,2)));
+                    total_shift(iBlock)=sum(sqrt(sum(shift_matrix(:,4:5,iBlock).^2,2)));
+                end
+                [min_val,iBest]=min(total_shift);
+                
+                self.motion_correction.reference_image.idx=M(iBest,1):M(iBest,2);
+                self.motion_correction.reference_image.im=g_reference_image_candidates(:,:,iBest);
                 self.motion_correction.reference_image.shift_matrix=shift_matrix;
                 self.motion_correction.reference_image.min_val=min_val;
                 self.motion_correction.reference_image.iBest=iBest;
