@@ -5,7 +5,7 @@ header_script
 load(fullfile(data_folder,'data_analysis','2015-08-07_AH03_001.mat'))
 
 session_data.rebase(data_root)
-frames=double(session_data.get_frames(1:100,1));
+frames=double(session_data.get_frames(1:1000,1));
 
 ref=mean(frames(:,:,20:30),3);
 nFrames=size(frames,3);
