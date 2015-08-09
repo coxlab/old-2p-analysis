@@ -73,7 +73,7 @@ if 0
 end
 
 %% load frames onto gpu directly = slower?
-nFrames=100;
+nFrames=500;
 tic
 F1=gpuArray(session_data.get_frames(1:nFrames));
 T1=toc;
