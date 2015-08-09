@@ -605,11 +605,9 @@ classdef imaging_dataset < handle
         function get_MWorks_stimulus_info(varargin)
             self=varargin{1};
             
-            self.bitCodes.offset
-            self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),2)
             if mean(eq(self.bitCodes.scim_bitCodes(:,2),self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),2)))>.99
                 stim_times=self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),1);
-                stim_times([1 end]); % these time are sufficient to capture all events for this experiment
+                %stim_times([1 end]); % these time are sufficient to capture all events for this experiment
                 
                 if ~isempty(self.Experiment_info.exp_type)
                     switch self.Experiment_info.exp_type
@@ -1805,6 +1803,34 @@ classdef imaging_dataset < handle
                 title(sprintf('ROI #%d',iROI))
                 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
+        end
+        
+        function corr_traces(varargin)
+            self=varargin{1};
+            A=self.Activity_traces.activity_matrix;
+            CC=corr(A);
+            CC_zero_diag=CC;
+            CC_zero_diag(eye(size(CC))==1)=0;
+            CC_vector=squareform(CC_zero_diag);
+            if any(CC_vector>.80)
+                figure(555)
+                plot(sort(CC_vector,'descend'))
+                axis([1 length(CC_vector) -1 1])
+                box off; axis square
+                die
+            else
+                figure(555)
+                subplot(121)
+                imagesc(CC)
+                box off; axis square
+                
+                subplot(122)
+                plot(sort(CC_vector,'descend'))
+                line([1 length(CC_vector)],[0 0])
+                axis([1 length(CC_vector) -1 1])
+                box off; axis square                
+            end
+            
         end
         
         
