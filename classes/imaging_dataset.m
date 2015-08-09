@@ -1805,32 +1805,33 @@ classdef imaging_dataset < handle
             end
         end
         
-        function corr_traces(varargin)
+        function CC=corr_traces(varargin)
             self=varargin{1};
             A=self.Activity_traces.activity_matrix;
             CC=corr(A);
             CC_zero_diag=CC;
             CC_zero_diag(eye(size(CC))==1)=0;
             CC_vector=squareform(CC_zero_diag);
-            if any(CC_vector>.80)
-                figure(555)
-                plot(sort(CC_vector,'descend'))
-                axis([1 length(CC_vector) -1 1])
-                box off; axis square
-                die
-            else
-                figure(555)
-                subplot(121)
-                imagesc(CC)
-                box off; axis square
-                
-                subplot(122)
-                plot(sort(CC_vector,'descend'))
-                line([1 length(CC_vector)],[0 0])
-                axis([1 length(CC_vector) -1 1])
-                box off; axis square                
+            if usejava('jvm')
+                if any(CC_vector>.80)
+                    figure(555)
+                    plot(sort(CC_vector,'descend'))
+                    axis([1 length(CC_vector) -1 1])
+                    box off; axis square
+                    die
+                else
+                    figure(555)
+                    subplot(121)
+                    imagesc(CC)
+                    box off; axis square
+                    
+                    subplot(122)
+                    plot(sort(CC_vector,'descend'))
+                    line([1 length(CC_vector)],[0 0])
+                    axis([1 length(CC_vector) -1 1])
+                    box off; axis square
+                end
             end
-            
         end
         
         
