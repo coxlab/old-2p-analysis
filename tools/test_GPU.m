@@ -5,10 +5,13 @@ header_script
 load(fullfile(data_folder,'data_analysis','2015-08-07_AH03_001.mat'))
 
 session_data.rebase(data_root)
-frames=double(session_data.get_frames());
 
-ref=mean(frames(:,:,20:30),3);
-nFrames=size(frames,3);
+if 0
+    frames=double(session_data.get_frames());
+    
+    ref=mean(frames(:,:,20:30),3);
+    nFrames=size(frames,3);
+end
 
 if 0
     %% Single frame case
@@ -63,10 +66,10 @@ if 0
     end
     
     sum(diff([data_matrix_cpu(:,2) data_matrix_gpu(:,2)],[],2).^2)
-
-
-%% convn
-A=convn(g_frame,session_data.motion_correction.kernel);
+    
+    
+    %% convn
+    A=convn(g_frame,session_data.motion_correction.kernel);
 end
 
 %% load frames onto gpu directly = slower?
