@@ -55,7 +55,7 @@ T2=toc
 if all(eq(data_matrix_cpu(:),data_matrix_gpu(:)))
    disp('cool...')    
 else
-    plot(data_matrix_cpu(:,2),data_matrix_gpu(:,2),'.')    
+    %plot(data_matrix_cpu(:,2),data_matrix_gpu(:,2),'.')    
 end
 
 sum(diff([data_matrix_cpu(:,2) data_matrix_gpu(:,2)],[],2).^2)
