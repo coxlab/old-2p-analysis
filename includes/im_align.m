@@ -12,19 +12,23 @@ else
 end
 
 if use_GPU==1&&gpuDeviceCount>0
-    %%% 
+    %%%
     disp('Using GPU acceleration')
-        
+    
     CC=gather(normxcorr2(gpuArray(A),gpuArray(B)));
     % get shift coordinates relative to biggest image
     CC_max=max(CC(:));
     [i,j]=find(CC==CC_max);
 else
     CC=normxcorr2(A,B);
+    if strcmpi(class(CC),'gpuArray')==1
+        CC=gather(CC);
+    end
     % get shift coordinates relative to biggest image
     CC_max=max(CC(:));
     [i,j]=find(CC==CC_max);
 end
+
 
 peakX=j-size(B,2)/2;
 peakY=i-size(B,1)/2;
