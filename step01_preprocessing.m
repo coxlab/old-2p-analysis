@@ -52,7 +52,7 @@ for iFile=1:nFiles
             session_data.save_data()
             
             %%% Motion Correction
-            if useGPU==1&&gpuDeviceCount==1
+            if use_GPU==1&&gpuDeviceCount==1
                 session_data.set_smoothing_kernel()
                 %session_data.reset_reference_image();
                 session_data.find_reference_image()
