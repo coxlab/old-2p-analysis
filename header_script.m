@@ -81,6 +81,7 @@ cd(root_folder)
 % suppress output so we can run in -nojvm mode
 plot_it=0;
 save_it=1;
+use_GPU=0;
 use_custom_ROI_defs=1; % Relevant for step 3 (GUI)
 
 
