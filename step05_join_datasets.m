@@ -21,7 +21,7 @@ session_data.rebase(data_root)
 
 % check folder for joinable sessions: close in space (and time)
 [clusters,cluster_vector,nClusters,files]=session_data.find_FOV_clusters(session_data.folder_info.save_folder);
-clusters(2)=NaN
+clusters(4)=NaN
 
 % if close in space, but not in time, link files but call it a different
 % timepoint, so you can look at evolution and/or stability
@@ -88,7 +88,7 @@ if 0
 end
 if 0
     %% look at temporal profile
-    dataset_nr=1;
+    dataset_nr=2;
     dataset(dataset_nr).plot_traces()
 end
 
