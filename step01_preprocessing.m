@@ -52,10 +52,16 @@ for iFile=1:nFiles
             session_data.save_data()
             
             %%% Motion Correction
-            session_data.set_smoothing_kernel()
+            if useGPU==1&&gpuDeviceCount==1
+                session_data.set_smoothing_kernel()
+                %session_data.reset_reference_image();
+                session_data.find_reference_image()
+            else
+                session_data.set_smoothing_kernel_GPU()
+                %session_data.reset_reference_image();
+                session_data.find_reference_image_GPU()
+            end            
             
-            %session_data.reset_reference_image();
-            session_data.find_reference_image()
             if 0
                 %%
                 imshow(calc_gamma(session_data.motion_correction.reference_image.im,.5),[])
