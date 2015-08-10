@@ -2,7 +2,7 @@
 %clc
 
 %%
-switch 2
+switch 5
     case 1
         data_folder='D:\Dropbox (coxlab)\2p-data\2015-03-05_AF11\resaved';
         session_nr=18;
@@ -20,6 +20,10 @@ switch 2
         session_nr=1;
         data_folder='C:\Users\labuser\Documents\ben\Movies\2015-08-06_test';
         file_name=fullfile(data_folder,sprintf('test_%03d.tif',session_nr))
+    case 5
+        session_nr=28;
+        data_folder='C:\Users\labuser\Documents\ben\Movies\2015-08-10_AH02';
+        file_name=fullfile(data_folder,sprintf('2015-08-10_AH02_%03d.tif',session_nr))
 end
 %file_name='C:\Users\labuser\Desktop\20150305_AF11_009_resaved.tif';
 
