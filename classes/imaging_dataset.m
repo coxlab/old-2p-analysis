@@ -17,7 +17,7 @@ classdef imaging_dataset < handle
         MIP_std=struct('data',[],'gamma_val',[]);
         MIP_cc_local=struct('data',[],'gamma_val',[]);
         
-        Experiment_info=struct('exp_type',[],'exp_name','','stimulus_data',struct('timestamp',[]));
+        Experiment_info=struct('exp_type',[],'exp_name','','stim_duration',[],'stimulus_data',struct('timestamp',[]));
         
         ROI_definitions=struct('ROI',struct(...
             'ROI_nr',[],'base_coord',[],'nCoords',[],'coords',[],...
@@ -612,6 +612,17 @@ classdef imaging_dataset < handle
                 if ~isempty(self.Experiment_info.exp_type)
                     switch self.Experiment_info.exp_type
                         case 1
+                            tag_name='DistractorPresentation_Time';
+                            stimDuration_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                            stimDuration(1)=stimDuration_events(1).data;
+                            tag_name='DistractorIdleTime';
+                            blankDuration_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                            stimDuration(2)=blankDuration_events(1).data;
+                            if isfield(self.Experiment_info,'stimDuration')
+                                self.Experiment_info=rmfield(self.Experiment_info,'stimDuration');
+                            end
+                            self.Experiment_info.stim_duration=stimDuration;
+                            
                             %%% Read all events between start and end of
                             %%% session
                             tag_name='#stimDisplayUpdate';
@@ -643,7 +654,7 @@ classdef imaging_dataset < handle
                                         error('Unexpected amount of fields in event data...')
                                 end
                             end
-                            self.Experiment_info.stimulus_data=stimulus_data;
+                            self.Experiment_info.stimulus_data=stimulus_data;                            
                             self.updated=1;
                             
                         case 2 % Retinomapping
@@ -769,7 +780,6 @@ classdef imaging_dataset < handle
             
             self.motion_correction.kernel=gpuArray(bellCurve2(1,kernel_size/2,[sigma sigma],kernel_size,0));
         end
-
         
         function find_reference_image(varargin)
             % Implementing motion correction method by Poort et al. 2015 Neuron
@@ -1533,12 +1543,14 @@ classdef imaging_dataset < handle
                 end
                 
                 %%% Fill dataset
+                dataset.exp_type=self(1).Experiment_info.exp_type;
+                dataset.exp_name=self(1).Experiment_info.exp_name;
+                dataset.stim_duration=self(1).Experiment_info.stim_duration;
                 dataset.STIM=STIM;
                 dataset.RESP=RESP;
                 dataset.SPIKE=SPIKE;
                 frame_time=1/self(1).mov_info.frame_rate;
-                dataset.timeline=dataset.STIM(:,1)*frame_time;
-            
+                dataset.timeline=dataset.STIM(:,1)*frame_time;            
             end
         end
         

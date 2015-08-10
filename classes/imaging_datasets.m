@@ -4,11 +4,15 @@ classdef imaging_datasets < handle
         session_vector=[];
         nSessions=[];
         nFrames=[];
+        frame_rate=[];
         nROIs=[];
         FOV_info=struct;
         MIP_std=[];
         ROI_definitions=struct;
         ROI_definition_nr=[];
+        exp_type=[];
+        exp_name='';
+        stim_duration=[];        
         STIM=[];
         RESP=[];
         SPIKE=[];
@@ -96,7 +100,8 @@ classdef imaging_datasets < handle
             nTrials=size(condition_matrix,1); % ignore final trial, because it is rarely complete
             
             frame_selector_trace=[-6 12];
-            frame_selector_resp=[1 4];
+            %frame_selector_resp=[1 4];
+            frame_selector_resp=round([0 self.stim_duration(1)/1000]*self.frame_rate);            
             
             results.nROIs=length(ROI_vector);
             results.ROI_vector=ROI_vector;
@@ -150,8 +155,8 @@ classdef imaging_datasets < handle
                 
                 results.condAverage(iROI).RF_map=MAP;
                 
-                frame_rate=1/mean(diff(self.timeline));
-                X=(frame_selector_trace(1):frame_selector_trace(2))/frame_rate;
+                %frame_rate=1/mean(diff(self.timeline));
+                X=(frame_selector_trace(1):frame_selector_trace(2))/self.frame_rate;
                 results.condTraces(iROI).nRepeats=zeros(nConditions,1);
                 results.condTraces(iROI).avg_X=X;
                 results.condTraces(iROI).avg=zeros(nFrames_sel,nConditions);
@@ -211,7 +216,7 @@ classdef imaging_datasets < handle
                 if results.deconvolve==0
                     set(gca,'CLim',[-3 3])
                 else
-                    set(gca,'CLim',[-1 1]/.5)
+                    set(gca,'CLim',[-1 1]/.2)
                 end
                 
                 %%% plot avg trace per condition
@@ -224,7 +229,7 @@ classdef imaging_datasets < handle
                 nRepeats=results.condTraces.nRepeats;
                 for iCondition=1:nConditions
                     condition_nr=results.condition_vector(iCondition);
-                    stim_duration=1;
+                    %stim_duration=1;
                     
                     subplot(nRows,nCols,condition_nr)
                     cla
@@ -235,7 +240,7 @@ classdef imaging_datasets < handle
                         y_range=[-1 4];
                     end
                     plot([0 0],y_range,'r')
-                    plot([stim_duration stim_duration],y_range,'k')
+                    plot([self.stim_duration(1) self.stim_duration(1)],y_range,'k')
                     shadedErrorBar(X,results.condTraces.trace(condition_nr).avg,results.condTraces.trace(condition_nr).ste);
                     
                     axis([X([1 end]) y_range])
@@ -258,7 +263,7 @@ classdef imaging_datasets < handle
                     if results.deconvolve==0
                         set(gca,'CLim',[-3 3])
                     else
-                        set(gca,'CLim',[-1 1])
+                        set(gca,'CLim',[-1 1]*.25)
                     end
                     title(sprintf('#%d',ROI_nr))
                 end
