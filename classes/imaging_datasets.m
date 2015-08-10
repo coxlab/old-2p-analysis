@@ -96,7 +96,7 @@ classdef imaging_datasets < handle
             nTrials=size(condition_matrix,1); % ignore final trial, because it is rarely complete
             
             frame_selector_trace=[-6 12];
-            frame_selector_resp=[2 7];
+            frame_selector_resp=[1 4];
             
             results.nROIs=length(ROI_vector);
             results.ROI_vector=ROI_vector;
@@ -192,7 +192,6 @@ classdef imaging_datasets < handle
             end
             
             results=self.RF_analysis(ROI_vector,deconvolve);
-            
             N=results.nROIs;
             
             if N==1
@@ -206,7 +205,7 @@ classdef imaging_datasets < handle
                 axis([X([1 end])' y_range])
                 %%% plot RF map
                 subplot(212)
-                MAP=results.condAverage(iROI).RF_map;
+                MAP=results.condAverage.RF_map;
                 imagesc(MAP)
                 axis xy
                 if results.deconvolve==0
@@ -221,11 +220,11 @@ classdef imaging_datasets < handle
                 nConditions=32;
                 nCols=8;
                 nRows=ceil(nConditions/nCols);
-                X=results.condTraces(iROI).avg_X;
+                X=results.condTraces.avg_X;
                 nRepeats=results.condTraces.nRepeats;
                 for iCondition=1:nConditions
                     condition_nr=results.condition_vector(iCondition);
-                    stim_duration=2;
+                    stim_duration=1;
                     
                     subplot(nRows,nCols,condition_nr)
                     cla
@@ -237,7 +236,7 @@ classdef imaging_datasets < handle
                     end
                     plot([0 0],y_range,'r')
                     plot([stim_duration stim_duration],y_range,'k')
-                    shadedErrorBar(X,results.condTraces(iROI).trace(condition_nr).avg,results.condTraces(iROI).trace(condition_nr).ste);
+                    shadedErrorBar(X,results.condTraces.trace(condition_nr).avg,results.condTraces.trace(condition_nr).ste);
                     
                     axis([X([1 end]) y_range])
                     title(sprintf('Cond #%d (N=%d)',[condition_nr nRepeats(condition_nr)]))
