@@ -18,7 +18,7 @@ switch 3
         src_file_name='20150305_AF11_%03d.tif';
         tgt_file_name='20150305_AF11_%03d_resaved.tif';
         nSessions=18;
-    case 3 % 2015-08-02
+    case 3 % 2015-08-10_AH02
         data_folder=fullfile(root_folder,'2015-08-10_AH02');
         src_file_name='2015-08-10_AH02_%03d.tif';
         tgt_file_name='resaved/2015-08-10_AH02_%03d.tif';
