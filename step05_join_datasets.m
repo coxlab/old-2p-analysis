@@ -21,7 +21,7 @@ session_data.rebase(data_root)
 
 % check folder for joinable sessions: close in space (and time)
 [clusters,cluster_vector,nClusters,files]=session_data.find_FOV_clusters(session_data.folder_info.save_folder);
-clusters(4)=NaN
+%clusters(4)=NaN
 
 % if close in space, but not in time, link files but call it a different
 % timepoint, so you can look at evolution and/or stability
@@ -66,6 +66,7 @@ for iClust=1:nClusters
             dataset(iClust).session_vector=session_vector;
             dataset(iClust).nSessions=length(session_vector);
             dataset(iClust).nFrames=size(dataset(iClust).STIM,1);
+            dataset(iClust).frame_rate=S(1).mov_info.frame_rate;
             valid_datasets(iClust)=1;
         end
         
@@ -95,9 +96,9 @@ end
 if 0
     %% Look at RF of individual ROI
     dataset_nr=1;
-    ROI_nr=1;
+    ROI_nr=36;
     %dataset(dataset_nr).RF_analysis(ROI_nr)
-    dataset(dataset_nr).plot_RF_map(ROI_nr)
+    dataset(dataset_nr).plot_RF_map(ROI_nr,0)
 end
 
 %% Plot RF maps for all ROIs
@@ -121,7 +122,6 @@ for iDS=1:N
             imagesc(AVG_MAP)
             axis xy
             title(sprintf('Dataset #%d',dataset_nr))
-    end
-    
+    end    
 end
 
