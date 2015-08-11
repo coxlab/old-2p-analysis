@@ -4,10 +4,12 @@ clc
 header_script
 
 switch exp_name
-    case '2015-08-10_AH02'
-        iFile=22
+    case '2015-08-10_AH02/resaved'
+        iFile=22;
+        pixel_size_micron=[529 680]./[199 512];
     case '2015-08-10_AH03'
         iFile=1;
+        pixel_size_micron=[500 680]./[191 512];
     otherwise
         iFile=1;
 end
@@ -33,7 +35,7 @@ if exist(file_name,'file')==2
     session_data.get_mov_info()
     session_data.get_scim_data()
     session_data.read_flyback()
-    session_data.get_FOV_info(.85)
+    session_data.get_FOV_info(pixel_size_micron)
     session_data.save_data()
     
     %%
@@ -67,11 +69,12 @@ if exist(file_name,'file')==2
             %%% write to tif stack
             frames=session_data.get_frames(idx);
             tif_name=fullfile(session_data.folder_info.save_folder,'substacks',sprintf('substack_%03d.tif',iTrack));
-            %savec(tif_name)
+            savec(tif_name)
             %session_data.export_movie(tif_name,frames)
             
             %%% save avg projection
             frames_avg=imresize(mean(frames,3),[191*2 512]);
+            savec(tif_name)
             tif_name=fullfile(session_data.folder_info.save_folder,'substacks',sprintf('MIP_%03d.tif',iTrack));
             session_data.export_movie(tif_name,frames_avg)
         end
