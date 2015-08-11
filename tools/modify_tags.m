@@ -20,7 +20,7 @@ switch 3
         nSessions=18;
     case 3 % 2015-08-10_AH02
         data_folder=fullfile(root_folder,'2015-08-10_AH02');
-        src_file_name='2015-08-10_AH02_%03d.tif';
+        src_file_name='originals/2015-08-10_AH02_%03d.tif';
         tgt_file_name='resaved/2015-08-10_AH02_%03d.tif';
         nSessions=26;
 end
@@ -28,13 +28,14 @@ end
 
 for session_nr=1:nSessions
     %%% Read correct tag
-    load_name=fullfile(data_folder,sprintf(src_file_name,session_nr));
+    load_name=fullfile(data_folder,sprintf(src_file_name,session_nr));    
     if exist(load_name,'file')==2
         src=Tiff(load_name,'r');
         tag_content=src.getTag('ImageDescription');
         src.close()
                         
-        new_tag=[tag_content(1:end-1) char(10)];
+        %%% Fix warning about not ending in null byte
+        new_tag=[tag_content(1:end-1) char(10)];     
         
         if 1
             %% Write tag to target file
