@@ -30,7 +30,7 @@ for iFile=1:nFiles
             session_data.ROI_definition_nr=ROI_definition_nr;
             
             %%% Extract activity traces
-            session_data.reset_trace_matrix() % allows to recalculate the traces
+            %session_data.reset_trace_matrix() % allows to recalculate the traces
             session_data.do_trace_extraction()
             session_data.save_data()
             %session_data.plot_traces()
