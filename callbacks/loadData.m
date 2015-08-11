@@ -96,6 +96,7 @@ MIP=calc_gamma(handles.MIP_raw,handles.MIP_gamma_val);
 %MIP=imresize(MIP,size(MIP).*[1 1]);
 %handles.subplots(1).h(1)=imshow(MIP,[0 50]);
 handles.subplots(1).h(1)=imagesc(MIP);
+pbaspect([session_data.FOV_info.size_um 1])
 %get(handles.subplots(1).h(1))
 %set(handles.subplots(1),'Xtick',[],'Ytick',[])
 hold on
