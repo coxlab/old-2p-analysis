@@ -90,7 +90,10 @@ set(handles.MIP_selector,'value',3)
 %%% Prepare image placeholder for detail blow-up
 blank_im=zeros(handles.window_size);
 handles.subplots(2).fig=subplot(1,2,2,'Parent',graphPanel);
-handles.subplots(2).h(1)=imshow(blank_im);
+%handles.subplots(2).h(1)=imshow(blank_im);
+handles.subplots(2).h(1)=imagesc(blank_im);
+handles.subplots(2).ax=get(handles.subplots(2).h(1),'parent');
+axis off
 handles.subplots(2).blank_im=blank_im;
 hold on
 handles.subplots(2).p(1)=plot(-1,-1,'r*'); % marker
