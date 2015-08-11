@@ -11,11 +11,11 @@ switch 5
     case 2
         session_nr=1;
         data_folder='D:\Dropbox (coxlab)\2p-data\2015-08-03_AH02_init\resaved';
-        file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))   
+        file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))
     case 3
         session_nr=1;
         data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data/2015-08-03_AH02_init/resaved';
-        file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))   
+        file_name=fullfile(data_folder,sprintf('2015-08-03_AH02_%03d_resaved.tif',session_nr))
     case 4
         session_nr=1;
         data_folder='C:\Users\labuser\Documents\ben\Movies\2015-08-06_test';
