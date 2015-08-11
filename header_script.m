@@ -52,7 +52,9 @@ switch 0
         %exp_name='2015-08-03_AH02_init'; % no scim bitcodes...
         %exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes!
         %exp_name='2015-08-06_AH02';
-        exp_name='2015-08-07_AH03';
+        %exp_name='2015-08-07_AH03';
+        %exp_name='2015-08-10_AH02';
+        exp_name='2015-08-10_AH03';
         
         %exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
         
