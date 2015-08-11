@@ -1218,8 +1218,7 @@ classdef imaging_dataset < handle
             im=self.MIP_cc_local;
             ROI=self.ROI_definitions(1).ROI;
             nROIs=length(ROI);
-            
-            figure(58)
+                        
             self.imshow(im)
             hold on
             for iROI=1:nROIs
@@ -1753,14 +1752,19 @@ classdef imaging_dataset < handle
             
             nFrames=size(im,3);
             figure(444)
-            H=imshow(calc_gamma(im(:,:,1),gamma_val),[]);
+            %H=imshow(real(calc_gamma(im(:,:,1),gamma_val)),[]);
+            H=imagesc(real(calc_gamma(im(:,:,1),gamma_val)));
+            pbaspect([self.FOV_info.size_um 1])
+            axis off
             colormap(self.green)
-            for iFrame=1:nFrames
-                frame=calc_gamma(im(:,:,iFrame),gamma_val);
-                set(H,'Cdata',real(frame))
-                drawnow
-            end
-            
+            if nFrames>1
+                %%% Show movie
+                for iFrame=1:nFrames
+                    frame=calc_gamma(im(:,:,iFrame),gamma_val);
+                    set(H,'Cdata',real(frame))
+                    drawnow
+                end
+            end            
         end
         
         function visualize_motion_correction(varargin)
