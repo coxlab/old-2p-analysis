@@ -53,13 +53,13 @@ for iFile=1:nFiles
             
             %%% Motion Correction
             if use_GPU==1&&gpuDeviceCount==1
-                session_data.set_smoothing_kernel()
-                %session_data.reset_reference_image();
-                session_data.find_reference_image()
-            else
                 session_data.set_smoothing_kernel_GPU()
                 %session_data.reset_reference_image();
                 session_data.find_reference_image_GPU()
+            else
+                session_data.set_smoothing_kernel()
+                %session_data.reset_reference_image();
+                session_data.find_reference_image()                
             end            
             
             if 0
