@@ -1756,8 +1756,15 @@ classdef imaging_dataset < handle
                 end
             end
             
+            
+            if nargin>=4&&~isempty(varargin{4})
+                fH=varargin{4};
+            else
+                fH=444;
+            end
+            
             nFrames=size(im,3);
-            figure(444)
+            figure(fH)
             %H=imshow(real(calc_gamma(im(:,:,1),gamma_val)),[]);
             H=imagesc(real(calc_gamma(im(:,:,1),gamma_val)));
             pbaspect([self.FOV_info.size_um 1])
