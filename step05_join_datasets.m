@@ -21,7 +21,7 @@ session_data.rebase(data_root)
 
 % check folder for joinable sessions: close in space (and time)
 [clusters,cluster_vector,nClusters,files]=session_data.find_FOV_clusters(session_data.folder_info.save_folder);
-%clusters(4)=NaN
+clusters(22)=NaN
 
 % if close in space, but not in time, link files but call it a different
 % timepoint, so you can look at evolution and/or stability
@@ -102,7 +102,7 @@ if 0
 end
 
 %% Plot RF maps for all ROIs
-IND_AVG=1;
+IND_AVG=2;
 deconvolve=0;
 for iDS=1:N
     dataset_nr=valid_dataset_vector(iDS);    
