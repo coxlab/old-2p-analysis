@@ -114,14 +114,14 @@ classdef imaging_dataset < handle
                 info=imfinfo(self.file_name);
                 
                 %% Get SCIM headers
-                scim_info=info(1).ImageDescription;                                
+                scim_info=info(1).ImageDescription;
                 if ~ismember(double(scim_info(end)),[10 13])
-                     scim_info=[scim_info char(13)];
-                     disp('Corrected last char')
-                end                
+                    scim_info=[scim_info char(13)];
+                    disp('Corrected last char')
+                end
                 scim_info=strrep(scim_info,char(10),char(13));
                 scim_info=strrep(scim_info,char(13),[';' char(13)]);
-                eval(scim_info); % revive scan image variables                
+                eval(scim_info); % revive scan image variables
                 self.mov_info.state=state;
                 
                 self.mov_info.frame_rate=state.acq.frameRate;
@@ -147,9 +147,9 @@ classdef imaging_dataset < handle
                 for iFrame=1:self.mov_info.nFrames
                     % read out last line of the frame, here we store frame specific
                     % info: bitCodes, position, laser power
-                    flyback_line=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[self.mov_info.Height self.mov_info.Height],[1 self.mov_info.Width]}));                                                            
+                    flyback_line=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[self.mov_info.Height self.mov_info.Height],[1 self.mov_info.Width]}));
                     
-                    [a,N]=parse_flyback_line(flyback_line,N);                    
+                    [a,N]=parse_flyback_line(flyback_line,N);
                     try
                         self.frame_info(iFrame)=a;
                     catch
@@ -157,21 +157,21 @@ classdef imaging_dataset < handle
                         a
                         die
                     end
-                end    
+                end
                 
                 N=mode(cat(1,self.frame_info.nBitCodes));
                 
                 for iFrame=1:self.mov_info.nFrames
                     V=self.frame_info(iFrame).bitCode_vector;
                     if length(V)<N
-                         self.frame_info(iFrame).bitCode_vector=ones(N,1)*mode(V);
-                         self.frame_info(iFrame).nBitCodes=length(self.frame_info(iFrame).bitCode_vector);
-                         fprintf('Padded bitCodes in frame %d...\n', iFrame)
+                        self.frame_info(iFrame).bitCode_vector=ones(N,1)*mode(V);
+                        self.frame_info(iFrame).nBitCodes=length(self.frame_info(iFrame).bitCode_vector);
+                        fprintf('Padded bitCodes in frame %d...\n', iFrame)
                     elseif length(V)>N
                         self.frame_info(iFrame).bitCode_vector=V(1:N);
                         self.frame_info(iFrame).nBitCodes=N;
                         fprintf('Cropped bitCodes in frame %d...\n', iFrame)
-                    end                    
+                    end
                 end
                 
                 self.bitCodes.nBitCodes=N;
@@ -207,79 +207,79 @@ classdef imaging_dataset < handle
             nSessions=size(break_matrix,1);
             
             for iSession=1%1:nSessions
-               row=break_matrix(iSession,:);
-               timestamps=M(row(2):row(3),1);
-               bit_codes=M(row(2):row(3),2);
-               
-               nFrames=self.mov_info.nFrames;
-               frame_rate=self.mov_info.frame_rate;
-               
-               if 0
-                   N=500;
-                   T=M(1:N,1);T=T-T(2);
-                   [(1:N)' T diff(M(1:N+1,1)) M(1:N,2)]
-                   die
-               end
-               
-               output=[timestamps-timestamps(2)+1/frame_rate bit_codes];
-               % fix first frame: bitCode is correct, duration not
-               output(1,1)=0;
-               
-               % fix last frame: only runs until nFrames
-               output(end,1)=(nFrames-1)/frame_rate;
-               
-               frame_vector=round(output(:,1)*frame_rate)+1;
-               output=[frame_vector output [diff(output(:,1));0]];
-               output(:,1:4)
-               
-               %output(:,4)
-           
-               die
-               
-               frame_durations=round(diff(timestamps)*self.mov_info.frame_rate);
-               frame_vector=[1 ; [0 ; cumsum(frame_durations)]+2 ; nFrames];
-               frame_times=(frame_vector-1)/frame_rate;
-               %[frame_times bit_codes [diff(frame_times) ; 0]]
-               
-               
-               
-               frame_matrix=zeros(nFrames,8)-1;
-               
-               
-               
-               cur_trial=0;
-               cur_idx=0;
-               timestamps=timestamps-timestamps(1);
-               for iFrame=1:nFrames
-                   frame_time=(iFrame-1)/frame_rate;
-                   if iFrame==1 % No stim in first frame
-                       frame_matrix(iFrame,1:2)=[iFrame frame_time];
-                   else                       
-                       idx=find(timestamps>frame_time,1,'first');
-                       if ~isempty(idx)
-                           if cur_idx~=idx
-                               %timestamps(idx)
-                               cur_idx=idx;
-                               cur_trial=cur_trial+1;
-                               bit_code=bit_codes(idx);
-                               %%% Build scim_bitCodes up from here
-                           end
-                           frame_matrix(iFrame,1:4)=[iFrame frame_time cur_trial bit_code];
-                           
-                           %%% Last distractor runs till last frame, next
-                           %%% change only when new session starts. so we
-                           %%% have to crop it to fill up the nFrames
-                       else
-                           frame_matrix(iFrame,1:4)=[iFrame frame_time cur_trial+1 M(row(3)+2,2)];
-                       end
-                   end
-               end
-              
+                row=break_matrix(iSession,:);
+                timestamps=M(row(2):row(3),1);
+                bit_codes=M(row(2):row(3),2);
+                
+                nFrames=self.mov_info.nFrames;
+                frame_rate=self.mov_info.frame_rate;
+                
+                if 0
+                    N=500;
+                    T=M(1:N,1);T=T-T(2);
+                    [(1:N)' T diff(M(1:N+1,1)) M(1:N,2)]
+                    die
+                end
+                
+                output=[timestamps-timestamps(2)+1/frame_rate bit_codes];
+                % fix first frame: bitCode is correct, duration not
+                output(1,1)=0;
+                
+                % fix last frame: only runs until nFrames
+                output(end,1)=(nFrames-1)/frame_rate;
+                
+                frame_vector=round(output(:,1)*frame_rate)+1;
+                output=[frame_vector output [diff(output(:,1));0]];
+                output(:,1:4)
+                
+                %output(:,4)
+                
+                die
+                
+                frame_durations=round(diff(timestamps)*self.mov_info.frame_rate);
+                frame_vector=[1 ; [0 ; cumsum(frame_durations)]+2 ; nFrames];
+                frame_times=(frame_vector-1)/frame_rate;
+                %[frame_times bit_codes [diff(frame_times) ; 0]]
+                
+                
+                
+                frame_matrix=zeros(nFrames,8)-1;
+                
+                
+                
+                cur_trial=0;
+                cur_idx=0;
+                timestamps=timestamps-timestamps(1);
+                for iFrame=1:nFrames
+                    frame_time=(iFrame-1)/frame_rate;
+                    if iFrame==1 % No stim in first frame
+                        frame_matrix(iFrame,1:2)=[iFrame frame_time];
+                    else
+                        idx=find(timestamps>frame_time,1,'first');
+                        if ~isempty(idx)
+                            if cur_idx~=idx
+                                %timestamps(idx)
+                                cur_idx=idx;
+                                cur_trial=cur_trial+1;
+                                bit_code=bit_codes(idx);
+                                %%% Build scim_bitCodes up from here
+                            end
+                            frame_matrix(iFrame,1:4)=[iFrame frame_time cur_trial bit_code];
+                            
+                            %%% Last distractor runs till last frame, next
+                            %%% change only when new session starts. so we
+                            %%% have to crop it to fill up the nFrames
+                        else
+                            frame_matrix(iFrame,1:4)=[iFrame frame_time cur_trial+1 M(row(3)+2,2)];
+                        end
+                    end
+                end
+                
             end
             
             
         end
-
+        
         
         %%% Get FOV info
         function get_FOV_info(varargin)
@@ -293,20 +293,20 @@ classdef imaging_dataset < handle
                 if isempty(self.frame_info(1).xyz_submicron)
                     % not there for older files
                     self.FOV_info.coords=self.frame_info(1).xyz_micron;
-                else 
+                else
                     self.FOV_info.coords=self.frame_info(1).xyz_submicron;
-                end                
-
+                end
+                
                 self.FOV_info.center=self.FOV_info.coords(1:2);
                 self.FOV_info.Z_depth=self.FOV_info.coords(3);
                 self.FOV_info.size_px=[self.mov_info.Width self.mov_info.Height];
                 self.FOV_info.pixel_aspect_ratio=self.FOV_info.pixel_size_micron(1)/self.FOV_info.pixel_size_micron(2);
-                self.FOV_info.size_um=self.FOV_info.size_px.*fliplr(self.FOV_info.pixel_size_micron);                
+                self.FOV_info.size_um=self.FOV_info.size_px.*fliplr(self.FOV_info.pixel_size_micron);
                 self.updated=1;
             else
                 self.FOV_info.size_px=[self.mov_info.Width self.mov_info.Height];
                 self.FOV_info.pixel_aspect_ratio=self.FOV_info.pixel_size_micron(1)/self.FOV_info.pixel_size_micron(2);
-                self.FOV_info.size_um=self.FOV_info.size_px.*fliplr(self.FOV_info.pixel_size_micron);                
+                self.FOV_info.size_um=self.FOV_info.size_px.*fliplr(self.FOV_info.pixel_size_micron);
                 self.updated=1;
             end
             
@@ -526,7 +526,7 @@ classdef imaging_dataset < handle
                 end
                 g_frames(:,:,iFrame)=frame;
             end
-        end        
+        end
         
         function find_blank_frames(varargin)
             %%% Check for unusually dark frames, laser power not turned up
@@ -599,7 +599,7 @@ classdef imaging_dataset < handle
                         disp('Unable to determine experiment type...')
                     end
                 end
-                                
+                
                 self.Experiment_info.exp_type=exp_type;
                 self.Experiment_info.exp_name=exp_name;
                 self.updated=1;
@@ -660,7 +660,7 @@ classdef imaging_dataset < handle
                                         error('Unexpected amount of fields in event data...')
                                 end
                             end
-                            self.Experiment_info.stimulus_data=stimulus_data;                            
+                            self.Experiment_info.stimulus_data=stimulus_data;
                             self.updated=1;
                             
                         case 2 % Retinomapping
@@ -770,7 +770,7 @@ classdef imaging_dataset < handle
             
             self.motion_correction.kernel=bellCurve2(1,kernel_size/2,[sigma sigma],kernel_size,0);
         end
-
+        
         function set_smoothing_kernel_GPU(varargin)
             self=varargin{1};
             if nargin>=2&&~isempty(varargin{2})
@@ -870,7 +870,7 @@ classdef imaging_dataset < handle
             nBlocks=30;
             block_size=10; % less frames, but more time given our lower sampling rate: 3 vs 30Hz
             nSamples=100;
-                        
+            
             if isempty(self.motion_correction.reference_image.im)
                 fprintf('Finding best reference image...')
                 
@@ -1116,10 +1116,10 @@ classdef imaging_dataset < handle
             
             %%% Filter based on distance from the edge
             sel_edge=all([between(coords(:,2),[window_size(1)/2+1 self.mov_info.Height-window_size(1)/2]) between(coords(:,1),[window_size(2)/2+1 self.mov_info.Width-window_size(2)/2])]')';
-                        
+            
             coords=coords(sel_area&sel_edge,:);
             bw=bwselect(bw,coords(:,1),coords(:,2));
-                        
+            
             %%% Convert into ROIs
             bw_separated=bwlabel(bw);
             ROI_vector=unique(bw_separated(:));
@@ -1131,9 +1131,9 @@ classdef imaging_dataset < handle
                 sel=bw_separated==ROI_nr;
                 neg=imerode(sel,SE);
                 edge=sel-neg;
-                                                
+                
                 [X,Y]=find(edge);
-                                
+                
                 ellipse_properties=fit_ellipse(Y,X);
                 
                 blank=self.blank_ROI();
@@ -1171,7 +1171,7 @@ classdef imaging_dataset < handle
                 %figure(50)
                 %ROI.ellipse_coords_centered
                 %imshow(mask_soma,[])
-
+                
                 %die
                 
                 % Generate mask to isolate neuropil pixels
@@ -1224,7 +1224,7 @@ classdef imaging_dataset < handle
             im=self.MIP_cc_local;
             ROI=self.ROI_definitions(1).ROI;
             nROIs=length(ROI);
-                        
+            
             self.imshow(im)
             hold on
             for iROI=1:nROIs
@@ -1325,7 +1325,7 @@ classdef imaging_dataset < handle
                 res=vol.*mask;
                 ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
                 %squeeze(mean(mean(res,1),2))
-                                                
+                
                 %figure()
                 %subplot(221)
                 %self.imshow(mean(vol,3))
@@ -1514,7 +1514,7 @@ classdef imaging_dataset < handle
                     R=self(iSession).Activity_traces.activity_matrix;
                     S=self(iSession).Activity_traces.spike_matrix;
                     
-                    %%% Clip last trial or last trial and blank 
+                    %%% Clip last trial or last trial and blank
                     nTrials=max(M(:,2));
                     if mod(nTrials,2)==1
                         nTrials_use=nTrials-2;
@@ -1555,7 +1555,7 @@ classdef imaging_dataset < handle
                 dataset.RESP=RESP;
                 dataset.SPIKE=SPIKE;
                 frame_time=1/self(1).mov_info.frame_rate;
-                dataset.timeline=dataset.STIM(:,1)*frame_time;            
+                dataset.timeline=dataset.STIM(:,1)*frame_time;
             end
         end
         
@@ -1749,13 +1749,12 @@ classdef imaging_dataset < handle
                 gamma_val=im.gamma_val;
                 im=im.data;
             else
-                if nargin>=3
+                if nargin>=3&&~isempty(varargin{3})
                     gamma_val=varargin{3};
                 else
                     gamma_val=.5;
                 end
             end
-            
             
             if nargin>=4&&~isempty(varargin{4})
                 fH=varargin{4};
@@ -1777,7 +1776,7 @@ classdef imaging_dataset < handle
                     set(H,'Cdata',real(frame))
                     drawnow
                 end
-            end            
+            end
         end
         
         function visualize_motion_correction(varargin)
@@ -1820,21 +1819,25 @@ classdef imaging_dataset < handle
         
         function plot_FOV(varargin)
             self=varargin{1};
-            session_data=self;
+            S=self;
             
-            center=session_data.FOV_info.center;
-            FOV_rect=[0 0 session_data.FOV_info.size_um];
-            ROI=CenterRectOnPoint(FOV_rect,center(1),center(2))/1000;
-            name=session_data.folder_info.raw_name;
-            name=strrep(name,'_',' ');
-            
+            nSessions=length(S);
             figure(23)
             clf
-            hold on                                    
-            circle([0 0],2,100,'r-',2);            
-            plotRect(ROI,'k');            
-            text(center(1)/1000,center(2)/1000,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))            
-            text(ROI(1),ROI(2)+.1,name)            
+            hold on
+            for iSession=1:nSessions
+                session_data=S(iSession);
+                center=session_data.FOV_info.center;
+                FOV_rect=[0 0 session_data.FOV_info.size_um];
+                ROI=CenterRectOnPoint(FOV_rect,center(1),center(2))/1000;
+                name=session_data.folder_info.raw_name;
+                name=strrep(name,'_',' ');
+                                
+                circle([0 0],2,100,'r-',2);
+                plotRect(ROI,'k');
+                text(center(1)/1000-.3,center(2)/1000+.2,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))
+                %text(ROI(1),ROI(2)+.1,name)
+            end
             hold off
             axis square
             axis equal
