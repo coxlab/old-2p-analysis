@@ -1830,13 +1830,13 @@ classdef imaging_dataset < handle
                 center=session_data.FOV_info.center;
                 FOV_rect=[0 0 session_data.FOV_info.size_um];
                 ROI=CenterRectOnPoint(FOV_rect,center(1),center(2))/1000;
-                name=session_data.folder_info.raw_name;
-                name=strrep(name,'_',' ');
+                %name=session_data.folder_info.raw_name;
+                %name=strrep(name,'_',' ');
                                 
                 circle([0 0],2,100,'r-',2);
                 plotRect(ROI,'k');
-                text(center(1)/1000-.3,center(2)/1000+.2,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))
-                %text(ROI(1),ROI(2)+.1,name)
+                text(ROI(1)+.05,ROI(2)+.25,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))
+                text(ROI(1)+.05,ROI(2)+.1,sprintf('#%d',iSession))
             end
             hold off
             axis square
