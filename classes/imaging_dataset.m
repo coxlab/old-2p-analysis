@@ -303,7 +303,13 @@ classdef imaging_dataset < handle
                 self.FOV_info.pixel_aspect_ratio=self.FOV_info.pixel_size_micron(1)/self.FOV_info.pixel_size_micron(2);
                 self.FOV_info.size_um=self.FOV_info.size_px.*fliplr(self.FOV_info.pixel_size_micron);                
                 self.updated=1;
+            else
+                self.FOV_info.size_px=[self.mov_info.Width self.mov_info.Height];
+                self.FOV_info.pixel_aspect_ratio=self.FOV_info.pixel_size_micron(1)/self.FOV_info.pixel_size_micron(2);
+                self.FOV_info.size_um=self.FOV_info.size_px.*fliplr(self.FOV_info.pixel_size_micron);                
+                self.updated=1;
             end
+            
             %
         end
         
