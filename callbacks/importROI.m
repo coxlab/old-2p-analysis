@@ -62,6 +62,8 @@ switch source
             else
                 offset=[peakX-size(template,2)/2 peakY-size(template,1)/2]-[1 0];
             end
+        else
+            offset=[0 0];
         end
         
     case 2 % auto ROIs
