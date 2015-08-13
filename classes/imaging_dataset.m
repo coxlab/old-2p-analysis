@@ -1222,13 +1222,15 @@ classdef imaging_dataset < handle
         function plot_ROIs(varargin)
             self=varargin{1};
             im=self.MIP_cc_local;
-            ROI=self.ROI_definitions(1).ROI;
-            nROIs=length(ROI);
+            ROI=self.ROI_definitions(self.ROI_definition_nr).ROI;
+            nROIs=length(ROI)
             
             self.imshow(im)
             hold on
             for iROI=1:nROIs
-                coords=ROI(iROI).coords_MIP_plot;
+                ROI(iROI)
+                %coords=ROI(iROI).coords_MIP_plot;
+                coords=ROI(iROI).coords_MIP;
                 plot(coords(:,1),coords(:,2),'r')
             end
             hold off
