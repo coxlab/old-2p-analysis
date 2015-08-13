@@ -39,29 +39,35 @@ switch source
         
         %%% Check GUI checkbox whether to align automatically or not
         if get(handles.auto_align,'value')==1
-            if numel(im1)>numel(im2)
-                A=im1;
-                template=im2;
-                ref=1;
+            [CC_max,offset]=im_align(im1,im2);
+            
+            if CC_max>.90
             else
-                A=im2;
-                template=im1;
-                ref=2;
+                offset=[0 0];
             end
-            CC=normxcorr2(template,A);
-            
-            % get shift coordinates relative to biggest image
-            CC_max=max(CC(:));
-            [i,j]=find(CC==CC_max);
-            
-            peakX=j-size(template,2)/2+1;
-            peakY=i-size(template,1)/2+1;
-            
-            if ref==1 % make shift relative to first image
-                offset=-[peakX-size(template,2)/2 peakY-size(template,1)/2]-[1 0];
-            else
-                offset=[peakX-size(template,2)/2 peakY-size(template,1)/2]-[1 0];
-            end
+%             if numel(im1)>numel(im2)
+%                 A=im1;
+%                 template=im2;
+%                 ref=1;
+%             else
+%                 A=im2;
+%                 template=im1;
+%                 ref=2;
+%             end
+%             CC=normxcorr2(template,A);
+%             
+%             % get shift coordinates relative to biggest image
+%             CC_max=max(CC(:));
+%             [i,j]=find(CC==CC_max);
+%             
+%             peakX=j-size(template,2)/2+1;
+%             peakY=i-size(template,1)/2+1;
+%             
+%             if ref==1 % make shift relative to first image
+%                 offset=-[peakX-size(template,2)/2 peakY-size(template,1)/2]-[1 0];
+%             else
+%                 offset=[peakX-size(template,2)/2 peakY-size(template,1)/2]-[1 0];
+%             end
         else
             offset=[0 0];
         end
