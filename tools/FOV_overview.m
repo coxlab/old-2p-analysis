@@ -1,6 +1,9 @@
 clear all
 clc
 
+% run parse_volume_stack.m first
+% should work for vessel stitches as well
+
 header_script
 
 switch exp_name
