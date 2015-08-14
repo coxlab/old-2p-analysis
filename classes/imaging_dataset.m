@@ -1221,9 +1221,14 @@ classdef imaging_dataset < handle
         
         function plot_ROIs(varargin)
             self=varargin{1};
+            if nargin>=2&&~isempty(varargin{2})
+                ROI_definition_nr_local=varargin{2};
+            else
+                ROI_definition_nr_local=self.ROI_definition_nr;
+            end
             im=self.MIP_cc_local;
-            ROI=self.ROI_definitions(self.ROI_definition_nr).ROI;
-            nROIs=length(ROI)
+            ROI=self.ROI_definitions(ROI_definition_nr_local).ROI;
+            nROIs=length(ROI);
             
             self.imshow(im)
             hold on
