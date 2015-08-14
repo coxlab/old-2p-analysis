@@ -1111,7 +1111,7 @@ classdef imaging_dataset < handle
             %%% Filter based on spot size
             props=regionprops(bw,'Area','Centroid');
             coords=cat(1,props.Centroid);
-            TH.area=[100 500];
+            TH.area=[50 500];
             sel_area=between(cat(1,props.Area),TH.area);
             
             %%% Filter based on distance from the edge
