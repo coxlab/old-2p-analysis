@@ -1233,8 +1233,6 @@ classdef imaging_dataset < handle
             self.imshow(im)
             hold on
             for iROI=1:nROIs
-                ROI(iROI)
-                %coords=ROI(iROI).coords_MIP_plot;
                 coords=ROI(iROI).coords_MIP;
                 plot(coords(:,1),coords(:,2),'r')
             end
