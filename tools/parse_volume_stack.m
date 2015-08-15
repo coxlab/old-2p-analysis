@@ -3,6 +3,8 @@ clc
 
 header_script
 
+write_substacks=1;
+
 switch exp_name
     case '2015-08-10_AH02/resaved'
         iFile=22;
@@ -10,10 +12,14 @@ switch exp_name
     case '2015-08-10_AH03'
         iFile=1;
         pixel_size_micron=[500 680]./[191 512];
+    case '2015-08-14_AH05'
+        iFile=1;
+        pixel_size_micron=[500 680]./[191 512];
     otherwise
         iFile=1;
+        die
 end
-write_substacks=1;
+
 
 files=scandir(data_folder,'tif');
 nFiles=length(files);
