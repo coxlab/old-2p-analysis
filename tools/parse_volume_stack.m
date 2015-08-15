@@ -13,7 +13,7 @@ switch exp_name
         iFile=1;
         pixel_size_micron=[500 680]./[191 512];
     case '2015-08-14_AH05'
-        iFile=1;
+        iFile=2;
         pixel_size_micron=[500 680]./[191 512];
     otherwise
         iFile=1;
