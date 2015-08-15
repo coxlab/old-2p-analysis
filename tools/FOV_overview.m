@@ -21,6 +21,9 @@ switch exp_name
         MIP_folder=fullfile(data_folder,'data_analysis','substacks');
         pixel_size_micron=[500 680]./[191 512];
         session_vector=[2 6 10 14 18];
+        
+        load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH03_20150807.mat')
+        window_center=Calibration.window.center_coords;
     otherwise
         die
 end
@@ -65,10 +68,15 @@ end
 
 %% Parse out coords to fill up giant image in micron space (1 pixel is 1 micron)
 coords_list=cat(1,coords.rect);
-offset=min(coords_list(:,1:2));
-coords_list_pos=coords_list-repmat(offset,nFiles,2);
-
-dim=ceil(max(coords_list_pos(:,3:4)));
+switch 2
+    case 1
+        offset=-min(coords_list(:,1:2));
+        dim=ceil(max(coords_list_pos(:,3:4)));
+    case 2
+        offset=round(window_center([2 1])*1000);
+        dim=ceil([13 13]*1000);
+end
+coords_list_pos=coords_list+repmat(offset,nFiles,2);
 
 %% Generate blank image
 STITCH.data=zeros(dim);
@@ -94,7 +102,7 @@ for iSession=1:nSessions
     session_nr=session_vector(iSession);
     load_name=fullfile(data_folder,'data_analysis',sprintf(load_format,session_nr));
     load(load_name);
-    data(iSession).center=session_data.FOV_info.center-offset([2 1]);
+    data(iSession).center=session_data.FOV_info.center+offset([2 1]);
     %data(iSession).rect=CenterRectOnPoint([0 0 session_data.FOV_info.center([2 1])],session_data.FOV_info.center(2)-offset(2),session_data.FOV_info.center(1)-offset(1));
     data(iSession).MIP=imresize(session_data.MIP_avg.data,[382 512]);
     S(iSession)=session_data;
@@ -112,9 +120,25 @@ S.plot_FOV()
 
 %%
 session_data.imshow(STITCH,[],333)
+hold on
+circle(window_center*1000,2000,100,'r',1);
+hold off
 axis xy
+axis equal
 colormap(green)
 
+if 0
+    %%
+    save_name=exp_name;
+    print(save_name,'-dpng')
+    
+    im=uint8(imresize(real(calc_gamma(STITCH.data,STITCH.gamma_val))*256/2,.1));
+    im=flipud(im);
+    im=cat(3,im*0,im,im*0);
+    imwrite(im,[save_name '_im.png'])
+end
+
+%%
 session_data.imshow(STITCH_add)
 axis xy
 hold on
