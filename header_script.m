@@ -79,7 +79,7 @@ switch 0
         cd(data_root)
         data_folder=uigetdir(data_root);
 end
-cd(root_folder)
+%cd(root_folder)
 
 % suppress output so we can run in -nojvm mode
 plot_it=0;
