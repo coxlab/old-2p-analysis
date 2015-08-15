@@ -48,8 +48,10 @@ if exist(file_name,'file')==2
     M=[cat(1,session_data.frame_info.xyz_submicron) cat(1,session_data.frame_info.laser_power)];
     
     %plot(M(:,3:4))
-    z_depth=M(:,3);    
+    z_depth=M(:,3);
     A=diff(z_depth)>0;
+    %A=imopen(A,[0 1 0]);
+    A=medfilt1(double(A),3);
     trajectory_parts=bwlabel(A);   
     %trajectory_parts=parse_conditions(A)
     %max_frames=min(trajectory_parts(:,4));
