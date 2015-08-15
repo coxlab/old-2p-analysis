@@ -30,9 +30,9 @@ switch exp_name
         load_name=fullfile(data_folder,'data_analysis',sprintf(load_format,iFile));
         MIP_folder=fullfile(data_folder,'data_analysis','substacks');
         pixel_size_micron=[500 680]./[191 512];
-        session_vector=[];
+        session_vector=[3 8];
         
-        load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH03_20150807.mat')
+        load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH05_20150814.mat')
         window_center=Calibration.window.center_coords;
     otherwise
         die
@@ -46,6 +46,7 @@ end
 M=[cat(1,session_data.frame_info.xyz_submicron) cat(1,session_data.frame_info.laser_power)];
 z_depth=M(:,3);
 A=diff(z_depth)>0;
+A=medfilt1(double(A),3);
 trajectory_parts=bwlabel(A);
 trajectories=unique(trajectory_parts);
 nTrajectories=max(trajectories);
@@ -81,12 +82,14 @@ coords_list=cat(1,coords.rect);
 switch 2
     case 1
         offset=-min(coords_list(:,1:2));
-        dim=ceil(max(coords_list_pos(:,3:4)));
+        coords_list_pos=coords_list+repmat(offset,nFiles,2);
+        dim=ceil(max(coords_list_pos(:,3:4)));        
     case 2
         offset=round(window_center([2 1])*1000);
         dim=ceil([13 13]*1000);
+        coords_list_pos=coords_list+repmat(offset,nFiles,2);
 end
-coords_list_pos=coords_list+repmat(offset,nFiles,2);
+
 
 %% Generate blank image
 STITCH.data=zeros(dim);
@@ -114,12 +117,13 @@ for iSession=1:nSessions
     load(load_name);
     data(iSession).center=session_data.FOV_info.center+offset([2 1]);
     %data(iSession).rect=CenterRectOnPoint([0 0 session_data.FOV_info.center([2 1])],session_data.FOV_info.center(2)-offset(2),session_data.FOV_info.center(1)-offset(1));
-    data(iSession).MIP=imresize(session_data.MIP_avg.data,[382 512]);
+    %data(iSession).MIP=imresize(session_data.MIP_avg.data,[382 512]);
+    data(iSession).MIP=imresize(session_data.MIP_avg.data,[502 680]);
     S(iSession)=session_data;
     
     c=data(iSession).center;
     dim=size(data(iSession).MIP);
-    %[round(c(2)-dim(2)/2+1) round(c(2)+dim(2)/2) round(c(1)-dim(1)/2+1) round(c(1)+dim(1)/2)]
+    %[round(c(2)-dim(1)/2+1) round(c(2)+dim(1)/2) round(c(1)-dim(2)/2+1) round(c(1)+dim(2)/2)]
     STITCH_add.data(round(c(2)-dim(1)/2+1):round(c(2)+dim(1)/2),round(c(1)-dim(2)/2+1):round(c(1)+dim(2)/2))=flipud(data(iSession).MIP);
     
 end
@@ -142,7 +146,10 @@ if 0
     save_name=exp_name;
     print(save_name,'-dpng')
     
-    im=uint8(imresize(real(calc_gamma(STITCH.data,STITCH.gamma_val))*256/2,.1));
+    im=real(calc_gamma(STITCH.data,STITCH.gamma_val));
+    im=im/max(im(:))*256;
+    %im=imresize(im,.1);
+    im=uint8(im);
     im=flipud(im);
     im=cat(3,im*0,im,im*0);
     imwrite(im,[save_name '_im.png'])
@@ -157,8 +164,8 @@ hold off
 
 if 0
     %%
-    A=S(2).MIP_avg.data;
-    B=S(3).MIP_avg.data;
+    A=S(1).MIP_avg.data;
+    B=S(2).MIP_avg.data;
     session_data.imshow(A,.5,1)
     session_data.imshow(B,.5,2)
     
