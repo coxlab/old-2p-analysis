@@ -25,7 +25,7 @@ switch exp_name
         load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH03_20150807.mat')
         window_center=Calibration.window.center_coords;
     case '2015-08-14_AH05'
-        iFile=1;
+        iFile=2;
         load_format='2015-08-14_AH05_%03d.mat';
         load_name=fullfile(data_folder,'data_analysis',sprintf(load_format,iFile));
         MIP_folder=fullfile(data_folder,'data_analysis','substacks');
