@@ -14,6 +14,9 @@ switch exp_name
         MIP_folder=fullfile(data_folder,'data_analysis','substacks');
         pixel_size_micron=[529 680]./[199 512];
         session_vector=[1 6 10 14 18 23];
+        
+        load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH02_20150803.mat')
+        window_center=Calibration.window.center_coords;
     case '2015-08-10_AH03'
         iFile=1;
         load_format='2015-08-10_AH03_%03d.mat';
