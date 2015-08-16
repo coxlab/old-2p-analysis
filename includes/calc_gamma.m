@@ -25,4 +25,4 @@ if coef>1
     %disp('Warning: gamma-value exceeds 1. Typically this should be lower than 1...')
 end
 
-result = value.^(coef) ./ (maxVal.^(coef));
+result = real(value.^(coef) ./ (maxVal.^(coef)));
