@@ -1459,7 +1459,7 @@ classdef imaging_dataset < handle
                 end
             end
             Z=linkage(center_coords,'average');
-            C=cluster(Z,'cutoff',min_dist,'Criterion','distance');
+            C=cluster(Z,'cutoff',min_dist,'Criterion','distance');            
             
             % renumber clusters
             cluster_vector=unique(C,'stable');
@@ -1470,8 +1470,8 @@ classdef imaging_dataset < handle
                 clusters(sel)=iC;
             end
             clusters(valid_FOV==0)=NaN;
-            cluster_numbers=1:size(C,1);
-            cluster_vector=unique(cluster_numbers(~isnan(clusters)));
+            %cluster_numbers=1:size(C,1);            
+            cluster_vector=unique(clusters(~isnan(clusters)));
             nClusters=length(unique(clusters(~isnan(clusters))));
         end
         
