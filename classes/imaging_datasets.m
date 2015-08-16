@@ -216,7 +216,7 @@ classdef imaging_datasets < handle
                 if results.deconvolve==0
                     set(gca,'CLim',[-3 3])
                 else
-                    set(gca,'CLim',[-1 1]/.2)
+                    set(gca,'CLim',[-1 1]*.5)
                 end
                 
                 %%% plot avg trace per condition
@@ -240,7 +240,7 @@ classdef imaging_datasets < handle
                         y_range=[-1 4];
                     end
                     plot([0 0],y_range,'r')
-                    plot([self.stim_duration(1) self.stim_duration(1)],y_range,'k')
+                    plot([self.stim_duration(1) self.stim_duration(1)]/1e3,y_range,'k')
                     shadedErrorBar(X,results.condTraces.trace(condition_nr).avg,results.condTraces.trace(condition_nr).ste);
                     
                     axis([X([1 end]) y_range])
