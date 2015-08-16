@@ -36,6 +36,9 @@ else
             %%
             T=handles.MIP(ROI.ROI_rect(2):ROI.ROI_rect(4),ROI.ROI_rect(1):ROI.ROI_rect(3));
             switch 2
+                case 0
+                    % do nothing
+                    disp('Showing unprocessed detail')
                 case 1
                     G_size=[3 3];
                     G=bellCurve2(1,G_size/2+1,[1 1],G_size,0);

@@ -45,6 +45,7 @@ if isfield(handles,'session_data')
             %%% Apply slight blur to get rid of pixelation
             switch 2
                 case 0
+                    disp('Showing unprocessed detail')
                 case 1
                     G_size=[3 3];
                     G=bellCurve2(1,G_size/2+1,[1 1],G_size,0);
