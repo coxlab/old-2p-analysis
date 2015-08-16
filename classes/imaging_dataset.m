@@ -692,7 +692,8 @@ classdef imaging_dataset < handle
             stimulus_data=self.Experiment_info.stimulus_data;
             % map each event to a range of frames
             %A=self.bitCodes.scim_bitCodes; % fixed!
-            B=mode(reshape(self.bitCodes.scim_bitCodes_raw,50,[]))';
+            B=mode(reshape(self.bitCodes.scim_bitCodes_raw,self.bitCodes.nBitCodes,[]))';
+            %B=clean_up_bitCodes_raw();
             
             trial_mapping=self.expand_trial_numbers(B);
             stim_matrix=zeros(self.mov_info.nFrames,10)-1;
