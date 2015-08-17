@@ -22,8 +22,8 @@ clc
 % Based on FOV size in microns, move a certain percentage in all directions
 % and capture new image, naming can be manual.
 
-animal_selector=4;
-animal_list={'AF11','AF17','AG01','AG02'};
+animal_selector=5;
+animal_list={'AF11','AF17','AG01','AG02','AH06'};
 animal_ID=animal_list{animal_selector};
 folder_name='2015-06-18_AF17_init';
 
@@ -147,6 +147,37 @@ switch animal_ID
         epi_coordinates=[ 0 0 ]; % in mm
         epi_offset=[0 0]; % mm
         epi_coordinates_px=epi_coordinates(:,1:2)*surgery_im_scaling_factor+repmat(surgery_im_center+epi_offset*surgery_im_scaling_factor,size(epi_coordinates,1),1);
+        
+        
+    case 'AH06'
+        craniotomy_center=[-7.99 5]; % AP ML in mm, recorded during implant. Final center may be off by exact placement of headplate and location of drilling.
+        
+        surgery_im_name='IMG_7280.JPG'; % will be converted into a micron sized grid
+        real_diameter=4; % mm, approximate coverslip diameter
+        
+        surgery_im_scaling_factor=397.381;
+        surgery_im_center=[1883 1172];
+        
+        orientation=2;
+                
+        injection_coords=[0 0 ; -0.71 0.11 ; -0.63 0.96 ; -0.13 1.08 ; 0.45 1.37 ; 0.27 1.93 ; -0.49 2.85 ; 1.03 1.57 ; 1.97 1.23 ; 1.10 0.35]; % AP ML in mm, recorded during window surgery
+        injection_coords_offset=[-1.6 -0.2]; % in mm, how we have to shift to coregister injections with surgery image
+        
+        injection_volumes=[150 150 150 150 150 150 150 150 150 150]; % nl
+        injection_speed=50; % nl/min
+        
+        injection_depths=[-.60 -.60 -.60 -.60 -.60 -.60 -.60 -.60 -.60 -.60]; % mm, from pial surface
+        injection_qualities=[1 1 1 1 3 1 2 1 3 1]; % scale of 1 to 5
+        injection_names={'IMG_6226.jpg','IMG_6229.jpg','IMG_6231.jpg','IMG_6235.jpg','IMG_6237.jpg','IMG_6245.jpg','IMG_6255.jpg','IMG_6259.JPG','',''};
+        
+        epi_names={''};
+        epi_FOV_size_micron=[945.9854 709.4891]/1000; % in mm
+        epi_FOV_size_px=[640 486]; % px
+        epi_scaling_factor=epi_FOV_size_px/epi_FOV_size_micron;
+        epi_coordinates=[ 0 0 ]; % in mm
+        epi_offset=[0 0]; % mm
+        epi_coordinates_px=epi_coordinates(:,1:2)*surgery_im_scaling_factor+repmat(surgery_im_center+epi_offset*surgery_im_scaling_factor,size(epi_coordinates,1),1);
+        
         
     otherwise
         disp('No data for this rat')
