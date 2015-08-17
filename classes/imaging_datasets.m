@@ -69,6 +69,7 @@ classdef imaging_datasets < handle
                 axis square
                 axis equal
                 
+                %title(session_data.exp_name)
                 text(center(1)/1000,center(2)/1000,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))
                 text(ROI(1),ROI(2)+.1,sprintf('#%d',dataset_nr))
             end
