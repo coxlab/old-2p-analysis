@@ -201,12 +201,28 @@ classdef imaging_datasets < handle
             
             if N==1
                 iROI=ROI_vector(1);
+                onset_times=find(diff(self.STIM(:,3))==1);
+                offset_times=find(diff(self.STIM(:,3))==-1);
+
                 %%% plot trace
-                y_range=[-5 40];
+                if results.deconvolve==0
+                    y_range=[-5 40];
+                else
+                    y_range=[-1 4];
+                end
                 figure(2)
                 subplot(211)
                 X=self.timeline;
-                plot(X,self.RESP(:,iROI))
+                %bar(X,self.STIM(:,3)*y_range(2))
+                plot(X([onset_times onset_times])',y_range,'r')
+                hold on
+                plot(X([offset_times offset_times])',y_range,'k')
+                if results.deconvolve==0
+                    plot(X,self.RESP(:,iROI))
+                else
+                    plot(X,self.SPIKE(:,iROI))
+                end
+                hold off
                 axis([X([1 end])' y_range])
                 %%% plot RF map
                 subplot(212)
