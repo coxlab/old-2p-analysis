@@ -43,6 +43,7 @@ switch source
             
             if CC_max>.90
             else
+                disp('Max cross-correlation was too low, no alignment was applied. Are you sure these fields are the same?')
                 offset=[0 0];
             end
 %             if numel(im1)>numel(im2)
