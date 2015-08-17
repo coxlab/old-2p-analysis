@@ -1067,7 +1067,7 @@ classdef imaging_dataset < handle
                     end
                 end
                 if isempty(self.MIP_kurtosis.data)
-                    self.MIP_kurtosis.data=3-kurtosis(frames);
+                    self.MIP_kurtosis.data=3-kurtosis(frames,[],3);
                     self.MIP_kurtosis.gamma_val=.6;
                 end
                 fprintf('Done!\n')
