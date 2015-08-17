@@ -692,7 +692,7 @@ classdef imaging_dataset < handle
             stimulus_data=self.Experiment_info.stimulus_data;
             % map each event to a range of frames
             %A=self.bitCodes.scim_bitCodes; % fixed!
-            B=mode(reshape(self.bitCodes.scim_bitCodes_raw,self.bitCodes.nBitCodes,[]))';
+            B=mode(reshape(self.bitCodes.scim_bitCodes_raw,self.bitCodes.nBitCodes,[]))'; % BV20150816:this line had a 50 hardcoded as nBitCodes, made sessions with different frame_rate return randomized results
             %B=clean_up_bitCodes_raw();
             
             trial_mapping=self.expand_trial_numbers(B);
@@ -1065,6 +1065,10 @@ classdef imaging_dataset < handle
                         self.MIP_cc_local.data=CrossCorrImage(frames);
                         self.MIP_cc_local.gamma_val=.6;
                     end
+                end
+                if isempty(self.MIP_kurtosis.data)
+                    self.MIP_kurtosis.data=3-kurtosis(frames);
+                    self.MIP_kurtosis.gamma_val=.6;
                 end
                 fprintf('Done!\n')
                 
