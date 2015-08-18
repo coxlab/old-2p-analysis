@@ -93,7 +93,7 @@ classdef imaging_dataset < handle
             else
                 error('Rebase_tif() needs folder to be used as root...')
             end
-            self.file_name=fullfile(new_folder,[self.folder_info.raw_name ',tif']);            
+            self.file_name=fullfile(new_folder,[self.folder_info.raw_name '.tif']);            
         end
         
         
