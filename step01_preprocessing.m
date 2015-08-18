@@ -5,6 +5,16 @@ header_script
 
 files=scandir(data_folder,'tif');
 nFiles=length(files);
+
+tif_in_sub_folder=0;
+if nFiles==0
+    % In case we moved the raw files to a subfolder to allow those to be
+    % selectively unsynced
+    data_folder_new=fullfile(data_folder,'tif_files');
+    files=scandir(data_folder_new,'tif');
+    nFiles=length(files);
+    tif_in_sub_folder=1;
+end
 %%
 
 for iFile=1:nFiles
