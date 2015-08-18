@@ -32,7 +32,7 @@ for iFile=1:nFiles
     %if session_data.is_static_FOV()&&~isempty(fieldnames(session_data.ROI_definitions))
     %ROI_definition_nr=2;
     
-    session_data.rebase(root_folder)
+    session_data.rebase(data_root)
     if tif_in_sub_folder==1
         session_data.rebase_tif(data_folder_new)
     end
