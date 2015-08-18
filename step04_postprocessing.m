@@ -24,7 +24,7 @@ end
 
 %ROI_definition_nr=1; % use auto ROIs
 
-for iFile=1:nFiles    
+for iFile=1:nFiles
     
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name)
     save_name=strrep(save_name,'tif','mat');
@@ -41,7 +41,6 @@ for iFile=1:nFiles
         session_data.ROI_definition_nr=ROI_definition_nr;
         if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
             
-            
             session_data.ROI_definition_nr=ROI_definition_nr;
             
             %%% Extract activity traces
@@ -52,23 +51,25 @@ for iFile=1:nFiles
             
             %% Extract stimulus relevant information
             %session_data.bitCodes.MWorks_bitCodes=[];
-            try
-                session_data.get_scim_bitCodes()
-                session_data.get_MWorks_bitCodes()
-                session_data.find_offset()
-                session_data.get_MWorks_bitCodes()
-                session_data.get_exp_type()
-                session_data.get_MWorks_stimulus_info()
-                session_data.create_stim_matrix()
-                %session_data.Experiment_info.stim_matrix
-                session_data.save_data()
-            catch
-                E=lasterror;
-                disp(E.message)
-                disp('This file was not analysed properly')
-                %rethrow(lasterror)
+            if ismac==1 % don't try this stuff on the server, use step1b first
+                try
+                    session_data.get_scim_bitCodes()
+                    session_data.get_MWorks_bitCodes()
+                    session_data.find_offset()
+                    session_data.get_MWorks_bitCodes()
+                    session_data.get_exp_type()
+                    session_data.get_MWorks_stimulus_info()
+                    session_data.create_stim_matrix()
+                    %session_data.Experiment_info.stim_matrix
+                    session_data.save_data()
+                catch
+                    E=lasterror;
+                    disp(E.message)
+                    disp('This file was not analysed properly')
+                    %rethrow(lasterror)
+                end
             end
-           
+            
         else
             %step03_ROI_GUI()
             die
