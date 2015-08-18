@@ -450,10 +450,10 @@ classdef imaging_dataset < handle
                     if self.bitCodes.max_val>.99
                         self.bitCodes.offset=loc-length(A)+1;
                     else                        
-                        offset_temp=loc-length(A)+1;
-                        [B(offset_temp:offset_temp+length(A)-1) A]
-                        error('no good match found')
-                        self.bitCodes.offset=[];
+                        offset_temp=loc-length(A)+1
+                        [(1:length(A))' B(offset_temp:offset_temp+length(A)-1) A]
+                        warning('no good match found')
+                        self.bitCodes.offset=offset_temp;
                     end
                     
                     self.elapsed=toc;
