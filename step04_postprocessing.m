@@ -66,7 +66,7 @@ for iFile=1:nFiles
                 E=lasterror;
                 disp(E.message)
                 disp('This file was not analysed properly')
-                rethrow(lasterror)
+                %rethrow(lasterror)
             end
            
         else
