@@ -6,11 +6,12 @@ header_script
 
 files=scandir(data_folder,'tif');
 nFiles=length(files);
-%if nFiles==0
-%     % only valid if we don't need the tiffs for e.g. trace extraction
-%     files=scandir(fullfile(data_folder,'data_analysis'),'mat');
-%     nFiles=length(files);
-%end
+if nFiles==0
+    % In case we moved the raw files to a subfolder to allow those to be
+    % selectively unsynced
+     files=scandir(fullfile(data_folder,'tif_files'),'tif');
+     nFiles=length(files);
+end
 %%
 %%% After all preprocessing, compile session overview file so we can run
 %%% manual ROI definition
