@@ -85,6 +85,17 @@ classdef imaging_dataset < handle
             self.save_name=fullfile(self.folder_info.save_folder,[self.folder_info.raw_name '.mat']);
         end
         
+                %%% In case we need to change the root_folder to raw files
+        function rebase_tif(varargin)
+            self=varargin{1};
+            if nargin>=2
+                new_folder=varargin{2};
+            else
+                error('Rebase_tif() needs folder to be used as root...')
+            end
+            self.file_name=fullfile(new_folder,[self.folder_info.raw_name ',tif']);            
+        end
+        
         
         %%% Extract info from movie
         function get_mov_info(varargin)
