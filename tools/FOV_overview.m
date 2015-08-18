@@ -147,6 +147,7 @@ colormap(green)
 if 0
     %%
     save_name=exp_name;
+    save_name=strrep(save_name,'/','_');
     print(save_name,'-dpng')
     
     im=real(calc_gamma(STITCH.data,STITCH.gamma_val));
