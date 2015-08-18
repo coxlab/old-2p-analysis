@@ -6,6 +6,11 @@ header_script
 
 files=scandir(data_folder,'tif');
 nFiles=length(files);
+%if nFiles==0
+%     % only valid if we don't need the tiffs for e.g. trace extraction
+%     files=scandir(fullfile(data_folder,'data_analysis'),'mat');
+%     nFiles=length(files);
+%end
 %%
 %%% After all preprocessing, compile session overview file so we can run
 %%% manual ROI definition
@@ -48,7 +53,10 @@ for iFile=1:nFiles
                 %session_data.Experiment_info.stim_matrix
                 session_data.save_data()
             catch
+                E=lasterror;
+                disp(E.message)
                 disp('This file was not analysed properly')
+                rethrow(lasterror)
             end
            
         else
