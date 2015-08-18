@@ -24,16 +24,17 @@ end
 
 %ROI_definition_nr=1; % use auto ROIs
 
-for iFile=1:nFiles
-    if tif_in_sub_folder==1
-        rebase_tif(data_folder_new)
-    end
+for iFile=1:nFiles    
     
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name)
     save_name=strrep(save_name,'tif','mat');
     load(save_name,'session_data') % reload after step03, probably needs to be separate script
     %if session_data.is_static_FOV()&&~isempty(fieldnames(session_data.ROI_definitions))
     %ROI_definition_nr=2;
+    
+    if tif_in_sub_folder==1
+        session_data.rebase_tif(data_folder_new)
+    end
     
     if session_data.is_static_FOV==1
         session_data.ROI_definition_nr=ROI_definition_nr;
