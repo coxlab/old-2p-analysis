@@ -41,7 +41,7 @@ for iFile=1:nFiles
         session_data.ROI_definition_nr=ROI_definition_nr;
         if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
             
-            session_data.ROI_definition_nr=ROI_definition_nr;
+            %session_data.ROI_definition_nr=ROI_definition_nr;
             
             %%% Extract activity traces
             %session_data.reset_trace_matrix() % allows to recalculate the traces
