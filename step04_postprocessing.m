@@ -9,8 +9,8 @@ nFiles=length(files);
 if nFiles==0
     % In case we moved the raw files to a subfolder to allow those to be
     % selectively unsynced
-    data_folder=fullfile(data_folder,'tif_files');
-    files=scandir(data_folder,'tif');
+    data_folder_new=fullfile(data_folder,'tif_files');
+    files=scandir(data_folder_new,'tif');
     nFiles=length(files);
 end
 %%
