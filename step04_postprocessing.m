@@ -6,12 +6,14 @@ header_script
 
 files=scandir(data_folder,'tif');
 nFiles=length(files);
+tif_in_sub_folder=0;
 if nFiles==0
     % In case we moved the raw files to a subfolder to allow those to be
     % selectively unsynced
     data_folder_new=fullfile(data_folder,'tif_files');
     files=scandir(data_folder_new,'tif');
     nFiles=length(files);
+    tif_in_sub_folder=1;
 end
 %%
 %%% After all preprocessing, compile session overview file so we can run
@@ -23,6 +25,10 @@ end
 %ROI_definition_nr=1; % use auto ROIs
 
 for iFile=1:nFiles
+    if tif_in_sub_folder==1
+        rebase_tif(data_folder_new)
+    end
+    
     save_name=fullfile(data_folder,'data_analysis',files(iFile).name)
     save_name=strrep(save_name,'tif','mat');
     load(save_name,'session_data') % reload after step03, probably needs to be separate script
