@@ -97,16 +97,22 @@ fprintf('Current working folder is : %s\n',data_folder)
 if use_custom_ROI_defs==1
     switch user_name
         case 'benvermaercke'
-            ROI_definition_nr=2; % 2
+            ROI_definition_nr=2;
+        case 'ben'
+            ROI_definition_nr=2; % on the server
         case 'juliana'
             ROI_definition_nr=3;
-            %case '' % template for other named users
-            %    handles.ROI_definition_nr=4;
+            
+        case 'julianarhee' % on the server
+            ROI_definition_nr=3;
         case 'coxlab-2p\labuser'
             ROI_definition_nr=2;
-        otherwise
-            ROI_definition_nr=1;
             
+        %case '' % template for other named users
+            %    handles.ROI_definition_nr=4;
+            
+        otherwise
+            ROI_definition_nr=1;            
     end
 else % store in
     ROI_definition_nr=1;
