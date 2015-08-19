@@ -37,6 +37,16 @@ switch exp_name
         
         load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH05_20150814.mat')
         window_center=Calibration.window.center_coords;
+    case '2015-08-18_AH06'
+        iFile=1;
+        load_format='2015-08-18_AH06_%03d.mat';
+        load_name=fullfile(data_folder,'data_analysis',sprintf(load_format,iFile));
+        MIP_folder=fullfile(data_folder,'data_analysis','substacks');
+        pixel_size_micron=[500 680]./[191 512];
+        session_vector=[3 6];
+        
+        load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH06_20150818.mat')
+        window_center=Calibration.window.center_coords;
     otherwise
         die
 end
@@ -82,7 +92,7 @@ end
 
 %% Parse out coords to fill up giant image in micron space (1 pixel is 1 micron)
 coords_list=cat(1,coords.rect);
-switch 2
+switch 1
     case 1
         offset=-min(coords_list(:,1:2));
         coords_list_pos=coords_list+repmat(offset,nFiles,2);
@@ -146,8 +156,9 @@ colormap(green)
 
 if 0
     %%
+    im_folder='/Users/benvermaercke/CoxLab/MotionGUI/Images';
     save_name=exp_name;
-    save_name=strrep(save_name,'/','_');
+    save_name=fullfile(im_folder,strrep(save_name,'/','_'));
     print(save_name,'-dpng')
     
     im=real(calc_gamma(STITCH.data,STITCH.gamma_val));
