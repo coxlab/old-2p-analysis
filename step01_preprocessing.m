@@ -79,7 +79,7 @@ for iFile=1:nFiles
                 colormap(green)
             end
             
-            %session_data.reset_motion_correction();
+            %session_data.reset_motion_correction();            
             session_data.do_motion_correction()
             session_data.find_motion_frames(2)
             session_data.save_data()
