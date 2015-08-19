@@ -16,6 +16,7 @@ classdef imaging_dataset < handle
         MIP_max=struct('data',[],'gamma_val',[]);
         MIP_std=struct('data',[],'gamma_val',[]);
         MIP_cc_local=struct('data',[],'gamma_val',[]);
+        MIP_kurtosis=struct('data',[],'gamma_val',[]);
         
         Experiment_info=struct('exp_type',[],'exp_name','','stim_duration',[],'stimulus_data',struct('timestamp',[]));
         
@@ -523,25 +524,36 @@ classdef imaging_dataset < handle
             else
                 apply_motion_correction=0;
             end
-            N=length(idx);
-            info=imfinfo(self.file_name); % never save info, is huge
-            g_frames=zeros([self.mov_info.Height-1 self.mov_info.Width N],'gpuArray');
-            for iFrame=1:N
-                frame=double(imread(self.file_name,idx(iFrame),'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
-                if apply_motion_correction==1
-                    offset_ij=self.motion_correction.shift_matrix(iFrame,[4 5]);
-                    frame=offsetIm(frame,offset_ij(1),offset_ij(2),0);
-                else
-                    % do nothing
+            
+            try
+                TF=existsOnGPU(g_frames); % 0 if deleted, 1 if exists
+            catch
+                TF=0; % never existed
+            end
+            if TF==1
+                nFrames=size(g_frames,3);
+                fprintf('%d frames are already loaded to GPU...\n',nFrames)
+            else
+                N=length(idx);
+                info=imfinfo(self.file_name); % never save info, is huge
+                g_frames=zeros([self.mov_info.Height-1 self.mov_info.Width N],'gpuArray');
+                for iFrame=1:N
+                    frame=double(imread(self.file_name,idx(iFrame),'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
+                    if apply_motion_correction==1
+                        offset_ij=self.motion_correction.shift_matrix(iFrame,[4 5]);
+                        frame=offsetIm(frame,offset_ij(1),offset_ij(2),0);
+                    else
+                        % do nothing
+                    end
+                    if size(frame,3)==3
+                        frame=rgb2gray(frame/256);
+                        %frame=frame(:,:,1);
+                    end
+                    g_frames(:,:,iFrame)=frame;
                 end
-                if size(frame,3)==3
-                    frame=rgb2gray(frame/256);
-                    %frame=frame(:,:,1);
-                end
-                g_frames(:,:,iFrame)=frame;
             end
         end
-        
+                        
         function find_blank_frames(varargin)
             %%% Check for unusually dark frames, laser power not turned up
             %%% yet.
