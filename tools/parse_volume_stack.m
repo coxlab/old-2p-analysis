@@ -55,7 +55,7 @@ if exist(file_name,'file')==2
     A=diff(z_depth)>0;
     %A=imopen(A,[0 1 0]);
     A=medfilt1(double(A),3);
-    trajectory_parts=bwlabel(A);   
+    trajectory_parts=bwlabel(A);
     %trajectory_parts=parse_conditions(A)
     %max_frames=min(trajectory_parts(:,4));
     %nTrajectories=size(trajectory_parts,1);
@@ -63,11 +63,11 @@ if exist(file_name,'file')==2
     trajectories=unique(trajectory_parts);
     nTrajectories=max(trajectories);
     
-%     plot(zscore(z_depth))
-%     hold on
-%     plot(zscore(diff(z_depth)))
-%     plot(zscore(A))
-%     hold off
+    %     plot(zscore(z_depth))
+    %     hold on
+    %     plot(zscore(diff(z_depth)))
+    %     plot(zscore(A))
+    %     hold off
     %%
     xy=zeros(nTrajectories,2);
     for iTrack=1:nTrajectories
@@ -90,8 +90,11 @@ if exist(file_name,'file')==2
             session_data.export_movie(tif_name,frames_avg)
         end
     end
-    %session_data.imshow(frames)
-    plot(xy(:,1),xy(:,2),'o-')
+    
+    if ismac
+        %session_data.imshow(frames)
+        plot(xy(:,1),xy(:,2),'o-')
+    end
     
     %[max_vals,min_vals]=localMaxMin(z_depth)
 end
