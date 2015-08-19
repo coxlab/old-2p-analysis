@@ -529,7 +529,9 @@ classdef imaging_dataset < handle
                 TF=existsOnGPU(g_frames); % 0 if deleted, 1 if exists
             catch
                 TF=0; % never existed
+                disp('g_frames not found on GPU')
             end
+                        
             if TF==1
                 nFrames=size(g_frames,3);
                 fprintf('%d frames are already loaded to GPU...\n',nFrames)
@@ -560,14 +562,14 @@ classdef imaging_dataset < handle
             tic
             self=varargin{1};
             if isempty(self.mov_info.mean_lum)
-                info=imfinfo(self.file_name); % never save info, is huge
-                
-                self.mov_info.mean_lum=zeros(self.mov_info.nFrames,1);
-                for iFrame=1:self.mov_info.nFrames
-                    frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
-                    self.mov_info.mean_lum(iFrame,1)=mean(frame(:));
-                end
-                
+                %info=imfinfo(self.file_name); % never save info, is huge                
+                %self.mov_info.mean_lum=zeros(self.mov_info.nFrames,1);
+                %for iFrame=1:self.mov_info.nFrames
+                %    frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
+                %    self.mov_info.mean_lum(iFrame,1)=mean(frame(:));
+                %end
+                frames=self.get_frames();
+                self.mov_info.mean_lum=squeeze(mean(frames,3));                
                 self.mov_info.blank_frames=false(size(self.mov_info.mean_lum));
                 
                 % Search for longer periods that might cause previous condition to fail
@@ -902,10 +904,11 @@ classdef imaging_dataset < handle
                 fprintf('Finding best reference image...')
                 
                 %%% Get frames
-                g_frames=gpuArray(self.get_frames(1:30));
+                %g_frames=gpuArray(self.get_frames(1:30));
+                g_frames=self.get_frames_GPU(1);
                 
-                start_frame=find(self.mov_info.blank_frames==0,1,'first'); % find first non-blank frame
-                end_frame=self.mov_info.nFrames;
+                start_frame=find(self.mov_info.blank_frames==0,1,'first') % find first non-blank frame
+                end_frame=self.mov_info.nFrames
                 
                 %%% space 30 blocks of 30 linearly across the stack (or 1s)
                 A=floor(linspace(start_frame,end_frame-block_size,nBlocks));
@@ -915,9 +918,11 @@ classdef imaging_dataset < handle
                 g_reference_image_candidates=zeros([size(g_frames,1) size(g_frames,2) nBlocks],'gpuArray');
                 for iBlock=1:nBlocks
                     idx=M(iBlock,1):M(iBlock,2);
-                    g_reference_image_candidates(:,:,iBlock)=mean(g_frames(:,:,idx),3);
+                    %g_reference_image_candidates(:,:,iBlock)=mean(g_frames(:,:,idx),3);
+                    g_reference_image_candidates(:,:,iBlock)=mean(self.get_frames_GPU(idx),3);
                 end
                 
+                die
                 % space 100 single frames linearly across the stack
                 A=floor(linspace(start_frame,end_frame,nSamples));
                 g_sample_images=g_frames(:,:,A);
@@ -984,8 +989,10 @@ classdef imaging_dataset < handle
                     fprintf(str)
                 end
                 shift_matrix=zeros(self.mov_info.nFrames,6);
+                frames=self.get_frames();
                 for iFrame=1:self.mov_info.nFrames
-                    cur_frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
+                    %cur_frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
+                    cur_frame=frames(:,:,iFrame);
                     if size(cur_frame,3)==3
                         cur_frame=rgb2gray(cur_frame/256);
                     end
@@ -1000,7 +1007,9 @@ classdef imaging_dataset < handle
                     [CC_max,offset]=im_align(cur_frame,ref);
                     
                     %%% Calc phase shift
-                    [r,c]=PCdemo(cur_frame,ref);
+                    %[r,c]=PCdemo(cur_frame,ref);
+                    r=-1;
+                    c=-1;
                     %[iFrame c r]
                     shift_matrix(iFrame,:)=[iFrame c r offset CC_max];
                     
