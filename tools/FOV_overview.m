@@ -43,7 +43,7 @@ switch exp_name
         load_name=fullfile(data_folder,'data_analysis',sprintf(load_format,iFile));
         MIP_folder=fullfile(data_folder,'data_analysis','substacks');
         pixel_size_micron=[500 680]./[191 512];
-        session_vector=[3 6];
+        session_vector=[3 6 10];
         
         load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH06_20150818.mat')
         window_center=Calibration.window.center_coords;
@@ -92,7 +92,7 @@ end
 
 %% Parse out coords to fill up giant image in micron space (1 pixel is 1 micron)
 coords_list=cat(1,coords.rect);
-switch 1
+switch 2
     case 1
         offset=-min(coords_list(:,1:2));
         coords_list_pos=coords_list+repmat(offset,nFiles,2);
@@ -163,7 +163,7 @@ if 0
     
     im=real(calc_gamma(STITCH.data,STITCH.gamma_val));
     im=im/max(im(:))*256;
-    %im=imresize(im,.1);
+    im=imresize(im,.1);
     im=uint8(im);
     im=flipud(im);
     im=cat(3,im*0,im,im*0);
