@@ -51,12 +51,13 @@ switch 0
         %% 1024x300 sessions
         %exp_name='2015-08-03_AH02_init'; % no scim bitcodes...
         %exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes!
-        exp_name='2015-08-06_AH02';
+        %exp_name='2015-08-06_AH02';
         %exp_name='2015-08-07_AH03';
         %exp_name='2015-08-10_AH02/resaved';
         %exp_name='2015-08-10_AH03';
         %exp_name='2015-08-14_AH03';
         %exp_name='2015-08-14_AH05';
+        exp_name='2015-08-18_AH06';
         
         %exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
         
