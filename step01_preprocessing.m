@@ -40,7 +40,10 @@ for iFile=1:nFiles
         session_data.get_scim_data()
         session_data.read_flyback()
         %session_data.get_FOV_info(.85)
-        session_data.get_FOV_info([500 680]./[191 512])
+        zoom_factor=session_data.mov_info.state.acq.zoomFactor;
+        % for zoom=2, the FOV size in micron is 500 by 680
+        % for session with other zoom, we scale linearly
+        session_data.get_FOV_info([500 680]./[191 512]*2/zoom_factor)
         
         
         %%% Detect invalid frames
