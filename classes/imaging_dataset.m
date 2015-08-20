@@ -18,7 +18,7 @@ classdef imaging_dataset < handle
         MIP_cc_local=struct('data',[],'gamma_val',[]);
         MIP_kurtosis=struct('data',[],'gamma_val',[]);
         
-        Experiment_info=struct('exp_type',[],'exp_name','','stim_duration',[],'stimulus_data',struct('timestamp',[]));
+        Experiment_info=struct('exp_type',[],'exp_name','','stim_duration',[],'stimulus_data',struct('timestamp',[]),'stim_matrix',[]);
         
         ROI_definitions=struct('ROI',struct(...
             'ROI_nr',[],'base_coord',[],'nCoords',[],'coords',[],...
