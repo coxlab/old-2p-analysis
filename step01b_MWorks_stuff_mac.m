@@ -11,7 +11,6 @@ for iFile=1:nFiles
     load(load_name,'session_data')
     try
         session_data.rebase(data_root)
-        ROI_definition_nr
         session_data.ROI_definition_nr=ROI_definition_nr;
         session_data.get_scim_bitCodes()
         session_data.get_MWorks_bitCodes()
