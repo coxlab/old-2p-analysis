@@ -3,18 +3,21 @@ clc
 
 header_script
 
-
-files=scandir(data_folder,'tif');
+files=scandir(fullfile(data_folder,'data_analysis'),'mat');
 nFiles=length(files);
-tif_in_sub_folder=0;
-if nFiles==0
-    % In case we moved the raw files to a subfolder to allow those to be
-    % selectively unsynced
-    data_folder_new=fullfile(data_folder,'tif_files');
-    files=scandir(data_folder_new,'tif');
-    nFiles=length(files);
-    tif_in_sub_folder=1;
-end
+
+% 
+% files=scandir(data_folder,'tif');
+% nFiles=length(files);
+% tif_in_sub_folder=0;
+% if nFiles==0
+%     % In case we moved the raw files to a subfolder to allow those to be
+%     % selectively unsynced
+%     data_folder_new=fullfile(data_folder,'tif_files');
+%     files=scandir(data_folder_new,'tif');
+%     nFiles=length(files);
+%     tif_in_sub_folder=1;
+% end
 %%
 %%% After all preprocessing, compile session overview file so we can run
 %%% manual ROI definition
@@ -26,17 +29,23 @@ end
 
 for iFile=1:nFiles
     
-    save_name=fullfile(data_folder,'data_analysis',files(iFile).name)
-    save_name=strrep(save_name,'tif','mat');
-    load(save_name,'session_data') % reload after step03, probably needs to be separate script
+    %save_name=fullfile(data_folder,'data_analysis',files(iFile).name)
+    %save_name=strrep(save_name,'tif','mat');
+    load_name=fullfile(data_folder,'data_analysis',files(iFile).name);
+    load(load_name,'session_data') % reload after step03, probably needs to be separate script
     %if session_data.is_static_FOV()&&~isempty(fieldnames(session_data.ROI_definitions))
     %ROI_definition_nr=2;
     
+    %%% Make sure paths are relative to our current Dropbox location
     session_data.rebase(data_root)
-    if tif_in_sub_folder==1
-        session_data.rebase_tif(data_folder_new)
+    if isdir(data_folder)
+        session_data.rebase_tif(data_folder)
+    elseif isdir(fullfile(data_folder,'tif_files'))
+        session_data.rebase_tif(fullfile(data_folder,'tif_files'))
+    else
+        error('Raw tif files not found, need those for ROI extraction...')
     end
-    
+        
     if session_data.is_static_FOV==1
         session_data.ROI_definition_nr=ROI_definition_nr;
         if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
@@ -71,8 +80,9 @@ for iFile=1:nFiles
             end
             
         else
+            error('No custom ROIs defined... Run Step03 first!!!')
             %step03_ROI_GUI()
-            die
+            
         end
     end
 end
