@@ -461,10 +461,14 @@ classdef imaging_dataset < handle
                     [self.bitCodes.max_val,loc]=max(CC);
                     if self.bitCodes.max_val>.99
                         self.bitCodes.offset=loc-length(A)+1;
-                    else                        
+                    else                       
+                        
+                        T=cat(1,self.frame_info(:).timestamp);
+                        plot(diff(T))
+                        
                         offset_temp=loc-length(A)+1
                         [(1:length(A))' B(offset_temp:offset_temp+length(A)-1) A]
-                        warning('no good match found')
+                        error('no good match found')
                         self.bitCodes.offset=offset_temp;
                     end
                     
