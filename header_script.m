@@ -17,6 +17,7 @@ end
 % define data folder
 data_root=fullfile(root_folder,'2p-data');
 mworks_folder=fullfile(root_folder,'Analysis/Scripting/Matlab');
+dataset_root=fullfile(root_folder,'2p-datasets');
 
 % Add code for MWK analysis scripts
 addpath(genpath(mworks_folder))
@@ -55,11 +56,11 @@ switch 0
         %exp_name='2015-08-07_AH03';
         %exp_name='2015-08-10_AH02/resaved';
         %exp_name='2015-08-10_AH03';
-        %exp_name='2015-08-14_AH03';
+        exp_name='2015-08-14_AH03';
         %exp_name='2015-08-14_AH05';
         %exp_name='2015-08-18_AH06';
         %exp_name='2015-08-19_AH02';
-        exp_name='2015-08-19_AH03';
+        %exp_name='2015-08-19_AH03';
         
         %exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
         
@@ -86,6 +87,8 @@ end
 %cd(root_folder)
 
 % suppress output so we can run in -nojvm mode
+animal_ID=exp_name(12:15);
+session_date=datevec(exp_name(1:11));
 plot_it=0;
 save_it=1;
 use_GPU=0;
