@@ -569,7 +569,7 @@ classdef imaging_dataset < handle
                 %    self.mov_info.mean_lum(iFrame,1)=mean(frame(:));
                 %end
                 frames=self.get_frames();
-                self.mov_info.mean_lum=squeeze(mean(frames,3));                
+                self.mov_info.mean_lum=squeeze(mean(mean(frames,1),2));
                 self.mov_info.blank_frames=false(size(self.mov_info.mean_lum));
                 
                 % Search for longer periods that might cause previous condition to fail
