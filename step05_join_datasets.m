@@ -98,7 +98,7 @@ for iClust=1:nClusters
         %% Then join them
         dataset=S.join_data_sessions();
         dataset.animal_ID=animal_ID;
-        dataset.session_date=session_date;
+        dataset.session_date=S(1).mov_info.mov_start_time; % use datevec to convert to numbers
         dataset.cluster_nr=iClust;
         dataset.session_vector=session_vector;
         dataset.nSessions=length(session_vector);
