@@ -27,9 +27,11 @@ else
         handles.ROI_properties.ROI_nr=ROI.ROI_nr;
         handles.ROI_properties.X_center=ROI.center_coords(1);
         handles.ROI_properties.Y_center=ROI.center_coords(2);
-        handles.ROI_properties.Long_axis=ROI.ellipse_properties.long_axis;
-        handles.ROI_properties.Short_axis=ROI.ellipse_properties.short_axis;
-        handles.ROI_properties.Radius=mean([ROI.ellipse_properties.long_axis ROI.ellipse_properties.short_axis]);
+        if isfield(handles,'ellipse_properties')
+            handles.ROI_properties.Long_axis=ROI.ellipse_properties.long_axis;
+            handles.ROI_properties.Short_axis=ROI.ellipse_properties.short_axis;
+            handles.ROI_properties.Radius=mean([ROI.ellipse_properties.long_axis ROI.ellipse_properties.short_axis]);
+        end
         
         %%% Show detail
         if 1
