@@ -36,6 +36,8 @@ switch 0
         
         %exp_name='2015-03-05_AF11'; % example session 12Hz
         %exp_name='2015-03-05_AF11_compare';
+        %exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
+        
         %exp_name='2015-04-07_AF11'; % example session 3Hz
         %exp_name='2015-04-07_AF11_compare'; 
         %exp_name='2015-04-10_AF11';
@@ -49,21 +51,33 @@ switch 0
         %exp_name='2015-07-21_AG02';
         %exp_name='2015-07-22_AG02';
         
+        
+        
         %% 1024x300 sessions
         %exp_name='2015-08-03_AH02_init'; % no scim bitcodes...
-        %exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes!
-        %exp_name='2015-08-06_AH02';
-        %exp_name='2015-08-07_AH03';
-        %exp_name='2015-08-10_AH02/resaved';
-        %exp_name='2015-08-10_AH03';
-        % exp_name='2015-08-14_AH03';
-        %exp_name='2015-08-14_AH05';
-        %exp_name='2015-08-18_AH06';
-        %exp_name='2015-08-19_AH02';
-        %exp_name='2015-08-19_AH03';
-        exp_name='2015-08-20_AH05';
         
-        %exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
+        %exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes by resaving in ImageJ
+        %exp_name='2015-08-06_AH02';        
+        %exp_name='2015-08-10_AH02/resaved';
+        %exp_name='2015-08-19_AH02'; % need ROIs
+        
+        
+        %exp_name='2015-08-07_AH03';
+        % exp_name='2015-08-10_AH03';
+        % exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up
+        %exp_name='2015-08-19_AH03'; % need. ROIs
+        exp_name='2015-08-21_AH03'; % funky eyedrift up
+        
+        %exp_name='2015-08-14_AH05'; % need ROIs
+        %exp_name='2015-08-20_AH05'; % need ROIs
+        
+        %exp_name='2015-08-18_AH06'; % fix bit Codes
+        
+        
+        
+        
+        
+        
         
         
         % Julie's data
