@@ -1,5 +1,6 @@
 classdef imaging_datasets < handle
     properties
+        session_name='';
         animal_ID='';
         session_date=[];
         session_nr=[];
