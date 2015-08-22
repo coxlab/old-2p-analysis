@@ -28,9 +28,7 @@ if isfield(handles,'ROI_temp')
             %%% Fit ellipse if possible, if not, keep poly
             
             if ROI_temp.nCoords>5
-                [ellipse_properties,ellipse_coords]=fit_ellipse(ROI_temp.coords(:,1),ROI_temp.coords(:,2),[]);
-                ellipse_coords=ellipse_coords';
-                
+                                
                 if handles.usePoly==1
                     poly_coords=ROI_temp.coords;
                     avg_coords=repmat(mean(poly_coords),size(poly_coords,1),1);
@@ -44,7 +42,12 @@ if isfield(handles,'ROI_temp')
                     poly_coords=cat(1,poly_coords,poly_coords(1,:));
                     %set(handles.subplots(2).p(2),'xData',poly_coords(:,1),'yData',poly_coords(:,2))
                     ellipse_coords=poly_coords;
+                    offset=avg_coords(1,:)-window_size/2;
                 else
+                    [ellipse_properties,ellipse_coords]=fit_ellipse(ROI_temp.coords(:,1),ROI_temp.coords(:,2),[]);
+                    ellipse_coords=ellipse_coords';
+                    offset=[ellipse_properties.X0_in ellipse_properties.Y0_in]-window_size/2;
+                    ROI_temp.ellipse_properties=ellipse_properties;
                     %set(handles.subplots(2).p(2),'xData',ellipse_coords(:,1),'yData',ellipse_coords(:,2))
                 end
                 
@@ -55,9 +58,9 @@ if isfield(handles,'ROI_temp')
                 
                 set(handles.subplots(1).p(2),'xData',coords_MIP(:,1),'yData',coords_MIP(:,2),'color','c')
                 
-                offset=[ellipse_properties.X0_in ellipse_properties.Y0_in]-window_size/2;
                 
-                ROI_temp.ellipse_properties=ellipse_properties;
+                
+                
                 ROI_temp.ellipse_coords=ellipse_coords;
                 ROI_temp.ellipse_coords_centered=ellipse_coords-repmat(offset,size(ellipse_coords,1),1);
                 
