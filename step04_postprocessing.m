@@ -38,7 +38,7 @@ for iFile=1:nFiles
     
     %%% Make sure paths are relative to our current Dropbox location
     session_data.rebase(data_root)
-    if isdir(data_folder)&&~isempty(scandir(data_folder,'tiff'))        
+    if isdir(data_folder)&&~isempty(scandir(data_folder,'tif'))
         session_data.rebase_tif(data_folder)
     elseif isdir(fullfile(data_folder,'tif_files'))
         session_data.rebase_tif(fullfile(data_folder,'tif_files'))
