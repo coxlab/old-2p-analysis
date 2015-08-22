@@ -96,8 +96,14 @@ for iClust=1:nClusters
         disp('> Number of extracted traces matches the number of ROIs')
         
         %% Then join them
+        exp_name_str=exp_name;
+        exp_name_str=strrep(exp_name_str,'/','_');
+        
         dataset=S.join_data_sessions();
-        dataset.animal_ID=animal_ID;
+        
+        %%% Add more features
+        dataset.session_name=exp_name_str;
+        dataset.animal_ID=animal_ID;        
         dataset.session_date=S(1).mov_info.mov_start_time; % use datevec to convert to numbers
         dataset.cluster_nr=iClust;
         dataset.session_vector=session_vector;
@@ -106,9 +112,7 @@ for iClust=1:nClusters
         dataset.frame_rate=S(1).mov_info.frame_rate;
         %valid_datasets(iClust)=1;
         
-        if save_it==1
-            exp_name_str=exp_name;
-            exp_name_str=strrep(exp_name_str,'/','_');
+        if save_it==1            
             save_name=fullfile(dataset_folder,sprintf([exp_name_str '_FOV%02d.mat'],iClust));
             savec(save_name)
             save(save_name,'dataset')
