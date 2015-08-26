@@ -33,6 +33,11 @@ if exist(load_name,'file')==2
     size(g_M)
     toc
     
+    %% make preselection based on std per pixel
+    STD=std(g_M);
+    hist(gather(STD),length(STD)/20)
+    sel_activity=STD>prctile(STD,80);
+    imshow(reshape(sel_activity,nRows,nCols),[])
     
     %%
     if ismac
@@ -40,18 +45,24 @@ if exist(load_name,'file')==2
         subplot(122)
         %session_data.imshow(reshape(mean(g_M),nRows,nCols))
         session_data.imshow(g_M)
+    else
+        
     end
     
     %% corr
-    size(g_M)
-    CC=corr(g_M);
+    g_ACT=g_M(:,sel_activity);
+    CC=corr(g_ACT);
     CC(between(gather(CC),[-1 1]*.4))=0;
-    %A=reshape(mean(CC),nRows,nCols);
+    CC_avg=mean(CC);
+    CC_full=zeros(nRows*nCols,1,'gpuArray');
+    CC_full(sel_activity)=CC_avg;
+    A=reshape(CC_full,nRows,nCols);
     if ismac
         imshow(abs(A),[])
     end
     
     %%
+    
     im_save=abs(gather(A));
     im_save=im_save-min(im_save(:));
     im_save=im_save/max(im_save(:))*256;
