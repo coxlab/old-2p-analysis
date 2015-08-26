@@ -13,7 +13,7 @@ if exist(load_name,'file')==2
     
     if ismac
         %% crop frames
-        frames=frames(100:150,180:240,:);
+        %frames=frames(100:150,180:240,:);
     end
     
     nRows=size(frames,1);
@@ -36,7 +36,7 @@ if exist(load_name,'file')==2
     %% make preselection based on std per pixel
     STD=std(g_M);
     hist(gather(STD),length(STD)/20)
-    sel_activity=STD>prctile(STD,80);
+    sel_activity=STD>prctile(STD,90);
     imshow(reshape(sel_activity,nRows,nCols),[])
     
     %%
@@ -51,6 +51,7 @@ if exist(load_name,'file')==2
     
     %% corr
     g_ACT=g_M(:,sel_activity);
+    size(g_ACT)
     CC=corr(g_ACT);
     CC(between(gather(CC),[-1 1]*.4))=0;
     CC_avg=mean(CC);
