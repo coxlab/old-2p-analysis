@@ -70,7 +70,7 @@ if exist(load_name,'file')==2
     im_save=abs(gather(A));
     im_save=im_save-min(im_save(:));
     im_save=im_save/max(im_save(:))*256;
-    imwrite(uint8(im_save),'test.png')
+    imwrite(uint8(im_save),fullfile(data_folder,'test.png'))
     
     die
     
