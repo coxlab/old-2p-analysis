@@ -35,9 +35,12 @@ if exist(load_name,'file')==2
     
     %% make preselection based on std per pixel
     STD=std(g_M);
-    hist(gather(STD),length(STD)/20)
+    
     sel_activity=STD>prctile(STD,90);
-    imshow(reshape(sel_activity,nRows,nCols),[])
+    if ismac
+        hist(gather(STD),length(STD)/20)
+        imshow(reshape(sel_activity,nRows,nCols),[])
+    end
     
     %%
     if ismac
