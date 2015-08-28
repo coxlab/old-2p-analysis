@@ -25,9 +25,9 @@ switch exp_name
         iFile=1;
         pixel_size_micron=[500 680]./[191 512];
     case '082715 SR101 vessels imaging'
-        iFile=1;start_index=1;
-        %iFile=2;start_index=25;
-        %iFile=3;start_index=49;
+        %iFile=1;start_index=1;
+        iFile=2;start_index=21;
+        %iFile=3;start_index=43;
         pixel_size_micron=[500 680]./[191 512];
     otherwise
         iFile=1;
@@ -92,7 +92,7 @@ if exist(file_name,'file')==2
             frames=session_data.get_frames(idx);
             tif_name=fullfile(session_data.folder_info.save_folder,'substacks',sprintf('substack_%03d.tif',start_index-1+iTrack));
             savec(tif_name)
-            session_data.export_movie(tif_name,frames)
+            %session_data.export_movie(tif_name,frames)
             
             %%% save avg projection
             frames_avg=imresize(mean(frames,3),[191*2 512]);
