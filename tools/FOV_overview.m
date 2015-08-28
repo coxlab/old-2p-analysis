@@ -47,6 +47,16 @@ switch exp_name
         
         load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH06_20150818.mat')
         window_center=Calibration.window.center_coords;
+    case '2015-08-26_AH06'
+        iFile=1;
+        load_format='2015-08-26_AH06_%03d.mat';
+        load_name=fullfile(data_folder,'data_analysis',sprintf(load_format,iFile));
+        MIP_folder=fullfile(data_folder,'data_analysis','substacks','session01');
+        pixel_size_micron=[500 680]./[191 512];
+        session_vector=[3 6 10];
+        
+        load('/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH06_20150826_v2.mat')
+        window_center=Calibration.window.center_coords;
     otherwise
         die
 end
