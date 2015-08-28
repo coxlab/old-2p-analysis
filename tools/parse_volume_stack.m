@@ -25,7 +25,7 @@ switch exp_name
         iFile=1;
         pixel_size_micron=[500 680]./[191 512];
     case '082715 SR101 vessels imaging'
-        iFile=1;
+        iFile=2;
         pixel_size_micron=[500 680]./[191 512];
     otherwise
         iFile=1;
