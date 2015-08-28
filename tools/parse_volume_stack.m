@@ -90,7 +90,7 @@ if exist(file_name,'file')==2
             frames=session_data.get_frames(idx);
             tif_name=fullfile(session_data.folder_info.save_folder,'substacks',sprintf('substack_%03d.tif',iTrack));
             savec(tif_name)
-            %session_data.export_movie(tif_name,frames)
+            session_data.export_movie(tif_name,frames)
             
             %%% save avg projection
             frames_avg=imresize(mean(frames,3),[191*2 512]);
