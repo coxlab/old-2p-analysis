@@ -24,6 +24,9 @@ switch exp_name
     case '2015-08-27_AH04'
         iFile=1;
         pixel_size_micron=[500 680]./[191 512];
+    case '082715 SR101 vessels imaging'
+        iFile=1;
+        pixel_size_micron=[500 680]./[191 512];
     otherwise
         iFile=1;
         die
