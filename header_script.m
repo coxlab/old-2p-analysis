@@ -24,7 +24,9 @@ addpath(genpath(mworks_folder))
 path_dir=fileparts(mfilename('fullpath'));
 addpath(genpath(path_dir))
 
+red=[linspace(0,1,256)' zeros(256,1) zeros(256,1)];
 green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
+
 
 % either set data_folder in code or use uigetdir
 switch 0
