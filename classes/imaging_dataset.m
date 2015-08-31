@@ -463,11 +463,23 @@ classdef imaging_dataset < handle
                         self.bitCodes.offset=loc-length(A)+1;
                     else                       
                         
-                        T=cat(1,self.frame_info(:).timestamp);
-                        plot(diff(T))
+                        T_scim=cat(1,self.frame_info(:).timestamp);
+                        
                         
                         offset_temp=loc-length(A)+1
-                        [(1:length(A))' B(offset_temp:offset_temp+length(A)-1) A]
+                        T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
+                        
+                        diff(T_scim)
+                        diff(T_MWorks)
+                        
+                        
+                        D_scim=diff(T_scim);
+                        subplot(211)
+                        %plot((1:length(D_scim))/6.2,D_scim)
+                        plot(D_scim)
+                        subplot(212)
+                        plot(diff(T_MWorks))
+                        %[(1:length(A))' B(offset_temp:offset_temp+length(A)-1) A]
                         error('no good match found')
                         self.bitCodes.offset=offset_temp;
                     end
@@ -502,6 +514,7 @@ classdef imaging_dataset < handle
             frames=zeros([self.mov_info.Height-1 self.mov_info.Width N]);
             for iFrame=1:N
                 frame=double(imread(self.file_name,idx(iFrame),'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
+                %flyback=double(imread(self.file_name,idx(iFrame),'info',info,'PixelRegion',{[self.mov_info.Height self.mov_info.Height],[1 self.mov_info.Width]}))
                 if apply_motion_correction==1
                     offset_ij=self.motion_correction.shift_matrix(iFrame,[4 5]);
                     frame=offsetIm(frame,offset_ij(1),offset_ij(2),0);
@@ -1503,7 +1516,7 @@ classdef imaging_dataset < handle
                 end
             end
             Z=linkage(center_coords,'average');
-            C=cluster(Z,'cutoff',min_dist,'Criterion','distance');            
+            C=cluster(Z,'cutoff',min_dist,'Criterion','distance');
             
             % renumber clusters
             cluster_vector=unique(C,'stable');
