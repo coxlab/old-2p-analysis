@@ -31,69 +31,71 @@ green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
 % either set data_folder in code or use uigetdir
 switch 0
     case 0 % hardcoded
-        % Ben data
-        %exp_name='2015-03-03_AF03-light_awake';
-        %exp_name='2015-03-04_AF11';
-        %exp_name='2015-03-05_AF03';
-        
-        %exp_name='2015-03-05_AF11'; % example session 12Hz
-        %exp_name='2015-03-05_AF11_compare';
-        %exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
-        
-        %exp_name='2015-04-07_AF11'; % example session 3Hz
-        %exp_name='2015-04-07_AF11_compare'; 
-        %exp_name='2015-04-10_AF11';
-        
-        %exp_name='2015-04-10_AF11_exp';
-        %exp_name='2015-04-15_AF11'; % retinomapping
-        %exp_name='2015-04-16_AF11';
-        
-        %exp_name='2015-07-17_AG02_awake';
-        %exp_name='2015-07-20_AG02';
-        %exp_name='2015-07-21_AG02';
-        %exp_name='2015-07-22_AG02';
-        
-        
-        
-        %% 1024x300 sessions
-        %exp_name='2015-08-03_AH02_init'; % no scim bitcodes...
-        
-        %exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes by resaving in ImageJ
-        %exp_name='2015-08-06_AH02';        
-        %exp_name='2015-08-10_AH02/resaved';
-        %exp_name='2015-08-19_AH02'; % need ROIs
-        
-        
-        %exp_name='2015-08-07_AH03';
-        %exp_name='2015-08-10_AH03';
-        % exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up
-        %exp_name='2015-08-19_AH03'; 
-        %exp_name='2015-08-21_AH03'; % funky eyedrift up
-        
-        %exp_name='2015-08-14_AH05'; % need ROIs
-        %exp_name='2015-08-20_AH05'; % need ROIs
-        
-        %exp_name='2015-08-18_AH06'; % fix bit Codes
-        %exp_name='2015-08-26_AH06'; % 
-        
-        exp_name='082715 SR101 vessels imaging'; % Ahbi vessels
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        % Julie's data
-        %exp_name='20150502_jrat3/Session02';
-        %exp_name='20150502_jrat3/Session03-05';
-        %exp_name='20150502_jrat3/Session06-10';
-        %exp_name='20150502_jrat3/Session11-16';
-        %exp_name='20150502_jrat3/Session17-22';
-        %exp_name='20150502_jrat3/Session23-25';
-        
+        if ~exist('exp_name','var')
+            % Ben data
+            %exp_name='2015-03-03_AF03-light_awake';
+            %exp_name='2015-03-04_AF11';
+            %exp_name='2015-03-05_AF03';
+            
+            %exp_name='2015-03-05_AF11'; % example session 12Hz
+            %exp_name='2015-03-05_AF11_compare';
+            %exp_name='2015-03-05_AF11/resaved'; % recovered scim bitcodes!
+            
+            %exp_name='2015-04-07_AF11'; % example session 3Hz
+            %exp_name='2015-04-07_AF11_compare';
+            %exp_name='2015-04-10_AF11';
+            
+            %exp_name='2015-04-10_AF11_exp';
+            %exp_name='2015-04-15_AF11'; % retinomapping
+            %exp_name='2015-04-16_AF11';
+            
+            %exp_name='2015-07-17_AG02_awake';
+            %exp_name='2015-07-20_AG02';
+            %exp_name='2015-07-21_AG02';
+            %exp_name='2015-07-22_AG02';
+            
+            
+            
+            %% 1024x300 sessions
+            %exp_name='2015-08-03_AH02_init'; % no scim bitcodes...
+            
+            %exp_name='2015-08-03_AH02_init/resaved'; % recovered scim bitcodes by resaving in ImageJ
+            %exp_name='2015-08-06_AH02';
+            %exp_name='2015-08-10_AH02/resaved';
+            %exp_name='2015-08-19_AH02'; % need ROIs
+            
+            
+            %exp_name='2015-08-07_AH03';
+            %exp_name='2015-08-10_AH03';
+            % exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up
+            %exp_name='2015-08-19_AH03';
+            %exp_name='2015-08-21_AH03'; % funky eyedrift up
+            
+            %exp_name='2015-08-14_AH05'; % need ROIs
+            %exp_name='2015-08-20_AH05'; % need ROIs
+            
+            exp_name='2015-08-18_AH06'; % fix bit Codes
+            %exp_name='2015-08-26_AH06'; % red session mRuby2
+            
+            %exp_name='082715 SR101 vessels imaging'; % Ahbi vessels
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            % Julie's data
+            %exp_name='20150502_jrat3/Session02';
+            %exp_name='20150502_jrat3/Session03-05';
+            %exp_name='20150502_jrat3/Session06-10';
+            %exp_name='20150502_jrat3/Session11-16';
+            %exp_name='20150502_jrat3/Session17-22';
+            %exp_name='20150502_jrat3/Session23-25';
+            
+        end
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
         if isdir(data_folder)==0
@@ -135,11 +137,11 @@ if use_custom_ROI_defs==1
         case 'coxlab-2p\labuser'
             ROI_definition_nr=2;
             
-        %case '' % template for other named users
+            %case '' % template for other named users
             %    handles.ROI_definition_nr=4;
             
         otherwise
-            ROI_definition_nr=1;            
+            ROI_definition_nr=1;
     end
 else % store in
     ROI_definition_nr=1;
