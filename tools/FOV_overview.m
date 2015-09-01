@@ -44,6 +44,14 @@ switch exp_name
         calibration_file_name='AH06_20150826_v2.mat';
         pixel_size_micron=[500 680]./[191 512];
         session_vector=[];
+    case '2015-09-01_AJ01' % red session
+        iFile_vector=[1 2];
+        color=2;
+        load_format=[exp_name '_%03d.mat'];
+        calibration_file_name='AH06_20150826_v2.mat';
+        pixel_size_micron=[500 680]./[191 512];
+        session_vector=[];
+        
     case '082715 SR101 vessels imaging'
         iFile_vector=1:3;
         color=2;
