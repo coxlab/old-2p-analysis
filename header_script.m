@@ -8,10 +8,10 @@ if isunix==1
         [~, user_name] = system('whoami');user_name=user_name(1:end-1);
         root_folder=fullfile('/home/',user_name,'/Dropbox (coxlab)/'); % temp location
     end
-else % 2p
+else % 2p windows
     [~, user_name] = system('whoami');user_name=user_name(1:end-1);
     %root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
-    root_folder='D:\Dropbox (coxlab)';
+    root_folder='D:\Dropbox (coxlab)'; % seagate external drive
 end
 
 % define data folder
@@ -71,9 +71,11 @@ switch 0
             %exp_name='2015-08-19_AH03';
             %exp_name='2015-08-21_AH03'; % funky eyedrift up
             
-            exp_name='2015-08-14_AH05'; % need ROIs
+            %exp_name='2015-08-14_AH05'; % need ROIs
             %exp_name='2015-08-20_AH05'; % need ROIs
             %exp_name='2015-09-01_AH05'; % need ROIs
+            exp_name='2015-09-02_AH05'; % need ROIs
+            
             
             %exp_name='2015-08-18_AH06'; % fix bit Codes
             %exp_name='2015-08-26_AH06'; % red session mRuby2
@@ -91,6 +93,7 @@ switch 0
             %exp_name='20150502_jrat3/Session11-16';
             %exp_name='20150502_jrat3/Session17-22';
             %exp_name='20150502_jrat3/Session23-25';
+            %exp_name='20150502_JR0013';
             
         end
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
