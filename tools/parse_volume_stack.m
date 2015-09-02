@@ -3,7 +3,8 @@ clc
 
 header_script
 
-write_substacks=1;
+write_MIPs=1;
+write_substacks=0;
 start_index=1;
 switch exp_name
     case '2015-08-10_AH02/resaved'
@@ -21,13 +22,25 @@ switch exp_name
     case '2015-08-26_AH06'
         iFile=2;
         pixel_size_micron=[500 680]./[191 512];
-    case '2015-08-27_AH04'
+    case '2015-09-01_AJ01'
+        switch 2
+            case 1
+                iFile=3;
+                pixel_size_micron=[500 680]./[191 512];
+            case 2 % in case we want to stitch 1 and 2 using FIJI
+                iFile=2;start_index=29;
+                pixel_size_micron=[500 680]./[191 512];
+        end
+        
+    case '2015-09-01_AH05'
         iFile=1;
         pixel_size_micron=[500 680]./[191 512];
+        
     case '082715 SR101 vessels imaging'
-        %iFile=1;start_index=1;
-        %iFile=2;start_index=22;
-        iFile=3;start_index=43;
+        %iFile=1;start_index=1; session_vector=1:21;
+        %iFile=2;start_index=21; session_vector=2:15;
+        iFile=3;start_index=35; session_vector=2:22;
+        
         pixel_size_micron=[500 680]./[191 512];
     otherwise
         iFile=1;
@@ -74,6 +87,10 @@ if exist(file_name,'file')==2
     trajectories=unique(trajectory_parts);
     nTrajectories=max(trajectories);
     
+    if ~exist('session_vector','var')
+        session_vector=1:nTrajectories;
+    end
+    
     %     plot(zscore(z_depth))
     %     hold on
     %     plot(zscore(diff(z_depth)))
@@ -82,31 +99,47 @@ if exist(file_name,'file')==2
     %%
     xy=zeros(nTrajectories,2);
     for iTrack=1:nTrajectories
-        sel=trajectory_parts==iTrack;
-        idx=find(sel);
-        xy(iTrack,:)=M(idx(1),1:2)/1000;
-        
-        idx([1 end])'
-        if write_substacks==1
-            %%% write to tif stack
-            frames=session_data.get_frames(idx);
-            tif_name=fullfile(session_data.folder_info.save_folder,'substacks',sprintf('substack_%03d.tif',start_index-1+iTrack));
-            savec(tif_name)
-            %session_data.export_movie(tif_name,frames)
+        if ismember(iTrack,session_vector)
+            sel=trajectory_parts==iTrack;
+            idx=find(sel);
+            xy(iTrack,:)=M(idx(1),1:2)/1000;
             
-            %%% save avg projection
-            frames_avg=imresize(mean(frames,3),[191*2 512]);
-            savec(tif_name)
-            tif_name=fullfile(session_data.folder_info.save_folder,'substacks',sprintf('MIP_%03d.tif',start_index-1+iTrack));
-            session_data.export_movie(tif_name,frames_avg)
+            
+            save_folder=fullfile(session_data.folder_info.save_folder,'substacks',sprintf('session%02d',iFile));
+            frames=session_data.get_frames(idx);
+                
+            %idx([1 end])'
+            if write_substacks==1                                
+                %%% write to tif stack                
+                tif_name=fullfile(save_folder,sprintf('substack_%03d.tif',start_index-1+iTrack));
+                savec(tif_name)
+                session_data.export_movie(tif_name,frames)
+            end
+            
+            if write_MIPs==1
+                %%% save avg projection
+                frames_avg=imresize(mean(frames,3),[191*2 512]);
+                tif_name=fullfile(save_folder,sprintf('MIP_%03d.tif',start_index-1+iTrack));
+                savec(tif_name)
+                session_data.export_movie(tif_name,frames_avg)
+            end
+        else
+            fprintf('Skipping track %d\n',iTrack)
         end
     end
     
+    %%
     if ismac
         %session_data.imshow(frames)
         plot(xy(:,1),xy(:,2),'o-')
+        %start_index=35
+        [(1:size(xy,1))' (1:size(xy,1))'-1+start_index xy]
+    else
+        [(1:size(xy,1))' xy]
     end
     
     %[max_vals,min_vals]=localMaxMin(z_depth)
 end
+
+%%% Run create_backgroundImage_from_volumeStack.m after this 
 
