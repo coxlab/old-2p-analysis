@@ -2,15 +2,16 @@ clear all
 clc
 
 % run parse_volume_stack.m first
-% should work for vessel stitches as well
+% works for vessel stitches as well
+% make sure to add new specifications for each new session (load_format,calibration_file_name,etc.)
 
-%exp_name='2015-08-10_AH03';
-exp_name='082715 SR101 vessels imaging';
 header_script
 
-
-color=1;
+no_bg=2; % if 1, crop image, if 2 fit in 13x13mm space
+color=1; % 1=R 2=G 3=B
 offset_correction=[0 0];
+save_BG_im=1;
+
 switch exp_name
     case '2015-08-10_AH02/resaved'
         iFile_vector=22;
@@ -27,10 +28,16 @@ switch exp_name
         offset_correction=[.5 -.4 0];
     case '2015-08-14_AH05'
         iFile_vector=2;
-        load_format='2015-08-14_AH05_%03d.mat';
-        calibration_file_name='AH05_20150814.mat';
+        %load_format='2015-08-14_AH05_%03d.mat';
+        %calibration_file_name='AH05_20150814.mat';
+        %session_vector=[3 8];
+    case '2015-09-01_AH05'
+        iFile_vector=1;
         pixel_size_micron=[500 680]./[191 512];
-        session_vector=[3 8];
+        load_format='2015-09-01_AH05_%03d.mat';
+        calibration_file_name='AH05_20150901.mat';
+        session_vector=[3];
+        
     case '2015-08-18_AH06'
         iFile_vector=1;
         load_format='2015-08-18_AH06_%03d.mat';
@@ -45,10 +52,11 @@ switch exp_name
         pixel_size_micron=[500 680]./[191 512];
         session_vector=[];
     case '2015-09-01_AJ01' % red session
-        iFile_vector=[1 2];
+        %iFile_vector=[1 2];
+        iFile_vector=3;
         color=2;
         load_format=[exp_name '_%03d.mat'];
-        calibration_file_name='AH06_20150826_v2.mat';
+        calibration_file_name='AJ01_20150901.mat';
         pixel_size_micron=[500 680]./[191 512];
         session_vector=[];
         
@@ -75,11 +83,11 @@ STITCH.gamma_val=.3;
 for iFile_index=1:length(iFile_vector)
     iFile=iFile_vector(iFile_index);
     load_name=fullfile(data_folder,'data_analysis',sprintf(load_format,iFile));
-    if length(iFile_vector)==1
-        MIP_folder=fullfile(data_folder,'data_analysis','substacks');
-    else
-        MIP_folder=fullfile(data_folder,'data_analysis','substacks',sprintf('session%02d',iFile));
-    end
+    %if length(iFile_vector)==1
+    %    MIP_folder=fullfile(data_folder,'data_analysis','substacks');
+    %else
+    MIP_folder=fullfile(data_folder,'data_analysis','substacks',sprintf('session%02d',iFile));
+    %end
     
     %%% Revive session data for the stack session
     if exist(load_name,'file')
@@ -125,7 +133,7 @@ for iFile_index=1:length(iFile_vector)
     window_center=Calibration.window.center_coords;
     
     coords_list=cat(1,coords.rect);
-    switch 2
+    switch no_bg
         case 1
             offset=-min(coords_list(:,1:2));
             coords_list_pos=coords_list+repmat(offset,nFiles,2);
@@ -147,6 +155,11 @@ for iFile_index=1:length(iFile_vector)
     end
 end
 
+%% crop STITCH
+if no_bg==1
+    STITCH.data=(STITCH.data(1:dim(1),1:dim(2)));
+end
+
 %%
 session_data.imshow(STITCH,[],333)
 hold on
@@ -159,10 +172,10 @@ if color==2
     colormap(red)
 end
 
-if 0
+if save_BG_im==1
     %%
     full_size=1;
-    if full_size==0
+    if full_size==0 
         im_folder='/Users/benvermaercke/CoxLab/MotionGUI/Images';
     else
         im_folder='/Users/benvermaercke/CoxLab/MotionGUI/Images/Full_size';
@@ -180,16 +193,19 @@ if 0
     im=uint8(im);
     im=flipud(im);
     switch color
-        case 1
+        case 1 % save data in red channel
             im=cat(3,im*0,im,im*0);
-        case 2
+        case 2 % save data in green channel
             im=cat(3,im,im*0,im*0);
+        case 3 % save data in blue channel
+            im=cat(3,im*0,im*0,im);
     end
     imwrite(im,[save_name '_im.png'])
 end
 
 %% load data sessions and plot them on top
 nSessions=length(session_vector);
+data=struct('center',[],'MIP',[]);
 if nSessions==0
 else
     STITCH_add=STITCH;
@@ -201,7 +217,7 @@ else
         %data(iSession).rect=CenterRectOnPoint([0 0 session_data.FOV_info.center([2 1])],session_data.FOV_info.center(2)-offset(2),session_data.FOV_info.center(1)-offset(1));
         %data(iSession).MIP=imresize(session_data.MIP_avg.data,[382 512]);
         data(iSession).MIP=imresize(session_data.MIP_avg.data,[502 680]);
-        S(iSession)=session_data;
+        %S(iSession)=session_data;
         
         c=data(iSession).center;
         dim=size(data(iSession).MIP);
@@ -217,7 +233,8 @@ else
     axis xy
     hold on
     plot(center_coords(:,1),center_coords(:,2),'m*')
-    hold off    
+    hold off 
+    axis equal
 end
 
 
