@@ -49,7 +49,12 @@ handles.green=green;
 handles.window_size=[40 40];
 
 %%% Set up GUI
-handles.figure1=figure(999);
+if nargin>=1&&~isempty(varargin{1})
+    figure_nr=varargin{1};
+else
+    figure_nr=999;
+end
+handles.figure1=figure(figure_nr);
 clf
 set(handles.figure1,'units','normalized','position',[0.60 0.25 0.35 0.5],'resize','on','menubar','none','NumberTitle','Off','Name','ROI-King: ROI extraction from 2p data')
 mainPanel=uipanel(handles.figure1,'units','normalized','position',[.01 .01 .98 .98]);
@@ -85,7 +90,10 @@ set(handles.MIP_selector,'value',3)
 %%% Prepare image placeholder for detail blow-up
 blank_im=zeros(handles.window_size);
 handles.subplots(2).fig=subplot(1,2,2,'Parent',graphPanel);
-handles.subplots(2).h(1)=imshow(blank_im);
+%handles.subplots(2).h(1)=imshow(blank_im);
+handles.subplots(2).h(1)=imagesc(blank_im);
+handles.subplots(2).ax=get(handles.subplots(2).h(1),'parent');
+axis off
 handles.subplots(2).blank_im=blank_im;
 hold on
 handles.subplots(2).p(1)=plot(-1,-1,'r*'); % marker
@@ -114,7 +122,8 @@ handles.ROI_properties_table_name='ROI_properties';
 set(handles.ROI_properties_table,'ColumnName',{'Parameter' 'Value'},'ColumnWidth',{150 200},'ColumnEditable',[false true],'ColumnFormat',{'char' ''},'RowName',[],'CellEditCallback',{@readTable,handles.ROI_properties_table_name})
 
 %%% Import ROIs from other file
-uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.1 .3 .3 .2],'string','Import ROIs','callback',@importROI)
+uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.1 .3 .3 .2],'string','Import ROIs','callback',{@importROI,1})
+uicontrol(allROIPanel,'Style','pushbutton','units','normalized','position',[.1 .1 .3 .2],'string','Auto ROIs','callback',{@importROI,2})
 handles.auto_align=uicontrol(allROIPanel,'Style','checkbox','units','normalized','position',[.1 .55 .15 .2],'string','Align');
 
 % All ROI move buttons

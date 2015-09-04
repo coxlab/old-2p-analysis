@@ -26,7 +26,7 @@ nSessions=length(data_sessions);
 
 %%
 t0=clock;
-for iSess=1:nSessions
+for iSess=nSessions
     [folder,file_name]=fileparts(data_sessions(iSess).file_name);
     try
         loadName=fullfile(folder,'data_analysis',[file_name '.mat']);        
@@ -39,6 +39,7 @@ for iSess=1:nSessions
         load(loadName,'session_data');
     end
     
+    fprintf('Processing file: %s...\n',loadName)
     info=imfinfo(tifName);
     nFrames=session_data.data(2);
     rows=session_data.data(4);
@@ -62,8 +63,8 @@ for iSess=1:nSessions
             % will create boundary issues
             offset=-motion_correction.shift_matrix(iFrame,4:5);
             if any(offset~=0)
-                %frame=offsetIm(frame,offset(1),offset(2),0);
-                frame=offsetIm(frame,offset(2),offset(1),mean(frame(:)));
+                frame=offsetIm(frame,offset(1),offset(2),0);
+                %frame=offsetIm(frame,offset(2),offset(1),mean(frame(:)));
             else
                 % as long as offsets are both zero, use uncorrected version
             end
@@ -95,6 +96,11 @@ for iSess=1:nSessions
         session_data.MIP_cc_local.data=CrossCorrImage(frames);
         session_data.MIP_cc_local.gamma_val=.6;
     end
+    
+    %%% implement Kurtosis map, first smooth with 2px gaussian, then
+    %%% compute pixel-wise Kurtosis (peakedness of the distribution, high
+    %%% Kurtosis would be associated with more transients).
+    
     fprintf('took %3.2f seconds.\n',toc)
     
     if 0

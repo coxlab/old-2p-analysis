@@ -72,7 +72,7 @@ t0=clock;
 file_info=struct;
 field_names={'Index','nFrames','Width','Height','FrameRate','StartTime','std(X)','std(Y)','std(Z)','DataType'};
 for iFile=1:nFiles
-    file_name=fullfile(data_folder,files(iFile).name);
+    file_name=fullfile(data_folder,files(iFile).name)
     info=imfinfo(file_name);
     
     %%% Get basic info about movie
@@ -271,7 +271,7 @@ if 0
     T1='06-Mar-2015 15:55:00'
     T2='06-Mar-2015 15:56:00'
     minute=datenum(T2)-datenum(T1);
-    minute*60*24 % 1440 conversion factor from now() units
+    minute*60*24 % 1440 conversion factor from now() units/ since datenum is in units of days
 end
 
 %%
@@ -316,18 +316,19 @@ tag_name='#stimDisplayUpdate';
 [MW_events,nEvents,event_code]=get_events_by_name(mwk_file_name,tag_name,event_codec);
 
 %%% Get exptype
-tag_name='ExpType';   
+tag_name='ExpType';
 [expType_events,nExpTypeEvents,event_code]=get_events_by_name(mwk_file_name,tag_name,event_codec);
-ExpType=mode(cat(1,expType_events.data));
-
-
-if ExpType==2
-    %%% Read condition events
-    tag_name='condition';
-    [condition_events,nCondEvents,event_code]=get_events_by_name(mwk_file_name,tag_name,event_codec);
+if isempty(expType_events)
+else
+    ExpType=mode(cat(1,expType_events.data));
+    
+    if ExpType==2
+        %%% Read condition events
+        tag_name='condition';
+        [condition_events,nCondEvents,event_code]=get_events_by_name(mwk_file_name,tag_name,event_codec);
+    end
 end
 fprintf('Loading MWorks events took %3.2f seconds.\n',toc)
-
 
 if 0 % testing codes
     %% Show all codec numbers plus name
@@ -972,7 +973,6 @@ if save_it
     saveName=fullfile(save_folder,'data_analysis','session_overview.mat');
     savec(saveName)
     save(saveName,'data_sessions')
-    
     
     %% Save individual sessions: will destroy existing files e.g. motion correction, ROI_definitions
     t0=clock;

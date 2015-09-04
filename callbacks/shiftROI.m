@@ -41,8 +41,13 @@ end
 
 
 %%% Check if coords are still valid after the shift
-Height=handles.session_data.data(4);
-Width=handles.session_data.data(3);
+if isfield(handles.session_data,'data')
+    Height=handles.session_data.data(4);
+    Width=handles.session_data.data(3);
+else
+    Height=handles.session_data.mov_info.Height;
+    Width=handles.session_data.mov_info.Width;
+end
 remove_vector=zeros(nROI,1);
 for iROI=1:nROI
     ROI_rect=ROI(iROI).ROI_rect;    

@@ -17,7 +17,7 @@ clc
 %%%     consider also adding stim averaged data
 
 header_script
-%save_it=1;
+%save_it=0;
 
 loadName=fullfile(data_folder,'data_analysis','session_overview.mat');
 load(loadName,'data_sessions','FOV_matching')
@@ -68,7 +68,7 @@ for iClust=1:nClusters
     STIM_ALL=[];
     RESP_ALL=[];
     RESP_ALL_oopsi=[];
-    
+        
     timescale_all=[];
     cur_time=0;
     for iSess=1:nSessions
@@ -150,7 +150,10 @@ for iClust=1:nClusters
     dataset.cell_numbers_ranked=cell_numbers_ranked;
     dataset.FOV_info=session_data.FOV_info;
     dataset.MIP=session_data.MIP_std;
-    dataset.ROI_definitions=session_data.ROI_definitions;
+        
+    %dataset.ROI_definitions(ROI_definition_nr).ROI=session_data.ROI_definitions(ROI_definition_nr).ROI(cell_selection);
+    dataset.ROI_definitions(ROI_definition_nr).ROI=get_ROI_definitions(session_data,ROI_definition_nr);
+    
     dataset.nROI=nROI;
     
     %%% Save data
@@ -167,5 +170,5 @@ for iClust=1:nClusters
             save(saveName,'dataset')
         end
         fprintf('Saved dataset to %s.\n',saveName)
-    end
+    end    
 end

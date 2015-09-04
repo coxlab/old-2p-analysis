@@ -7,8 +7,13 @@ if isfield(handles,'session_data')
     session_data=handles.session_data;
     
     %%% Get general movie properties
-    Width=session_data.data(3);
-    Height=session_data.data(4);
+    if isfield(session_data,'data')
+        Width=session_data.data(3);
+        Height=session_data.data(4);
+    else
+        Width=session_data.mov_info.Width;
+        Height=session_data.mov_info.Height;
+    end
     
     %%% Read point user click on
     current_point=get(handles.subplots(1).fig,'CurrentPoint');
@@ -40,6 +45,7 @@ if isfield(handles,'session_data')
             %%% Apply slight blur to get rid of pixelation
             switch 2
                 case 0
+                    disp('Showing unprocessed detail')
                 case 1
                     G_size=[3 3];
                     G=bellCurve2(1,G_size/2+1,[1 1],G_size,0);

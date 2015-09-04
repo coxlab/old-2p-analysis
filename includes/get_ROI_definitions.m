@@ -1,6 +1,6 @@
 function varargout=get_ROI_definitions(varargin)
 
-session_data=varargin{1};
+self=varargin{1};
 
 %%% Newer data format allows for multiple ROI_definitions, second input
 %%% argument can define which is selected. Default 1, value is set in
@@ -8,21 +8,33 @@ session_data=varargin{1};
 if nargin>=2&&~isempty(varargin{2})   
     ROI_definition_nr=varargin{2};
 else
-    ROI_definition_nr=1;
+    ROI_definition_nr=self.ROI_definition_nr;
 end
 
-if isfield(session_data,'ROI_definitions')
-    if isfield(session_data.ROI_definitions,'ROI_nr')
+if isfield(self,'ROI_definitions')
+    if isfield(self.ROI_definitions,'ROI_nr')
         %disp('Reading old data format')
-        ROIs=session_data.ROI_definitions;
+        ROIs=self.ROI_definitions;
     end
     
-    if isfield(session_data.ROI_definitions,'ROI')
+    if isfield(self.ROI_definitions,'ROI')
         %disp('Reading new data format')
-        ROIs=session_data.ROI_definitions(ROI_definition_nr).ROI;
+        ROIs=self.ROI_definitions(ROI_definition_nr).ROI;
     end
     
     varargout{1}=ROIs;
+elseif isprop(self,'ROI_definitions')
+    if isfield(self.ROI_definitions,'ROI')
+        ROIs=self.ROI_definitions(ROI_definition_nr).ROI;
+        
+        if ~isempty(ROIs(1).ROI_nr)
+            varargout{1}=ROIs;
+        else
+            varargout{1}=[];
+        end
+    else
+        varargout{1}=[];
+    end    
 else
     error('No ROIs field found...')
 end
