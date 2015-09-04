@@ -3,13 +3,24 @@ clc
 
 header_script
 
+
+if ismac
+    use_GPU=0;
+else
+    use_GPU=1;
+end
 load_name=fullfile(data_folder,'data_analysis','2015-08-21_AH03_017.mat');
 
 if exist(load_name,'file')==2
     load(load_name)
     
     %%
-    frames=session_data.get_frames_GPU(351:400);
+    frame_selection=1:1800;
+    if use_GPU==1
+        frames=session_data.get_frames_GPU(frame_selection);
+    else
+        frames=session_data.get_frames(frame_selection);
+    end
     
     if ismac
         %% crop frames
@@ -21,8 +32,8 @@ if exist(load_name,'file')==2
     
     if ismac
         %%
-        subplot(121)
-        session_data.imshow(mean(frames,3))
+        %subplot(121)
+        %session_data.imshow(mean(frames,3))
     end
     
     %% reshape data, so we have time in rows and pixel in columns
@@ -36,18 +47,22 @@ if exist(load_name,'file')==2
     %% make preselection based on std per pixel
     STD=std(g_M);
     
-    sel_activity=STD>prctile(STD,90);
+    %sel_activity=STD>prctile(STD,95);
+    sel_activity=STD>3e3;
     if ismac
-        hist(gather(STD),length(STD)/20)
-        imshow(reshape(sel_activity,nRows,nCols),[])
+        %%
+        %hist(gather(STD),length(STD)/20)
+        figure(444)
+        subplot(121)
+        session_data.imshow(reshape(sel_activity,nRows,nCols),.7)
     end
     
     %%
     if ismac
         %%
-        subplot(122)
+        %subplot(122)
         %session_data.imshow(reshape(mean(g_M),nRows,nCols))
-        session_data.imshow(g_M)
+        %session_data.imshow(g_M)
     else
         
     end
@@ -56,23 +71,38 @@ if exist(load_name,'file')==2
     g_ACT=g_M(:,sel_activity);
     size(g_ACT)
     CC=corr(g_ACT);
-    CC(between(gather(CC),[-1 1]*.4))=0;
+    %CC(between(gather(CC),[-1 1]*.3))=0;
     CC_avg=mean(CC);
-    CC_full=zeros(nRows*nCols,1,'gpuArray');
+    if use_GPU==1
+        CC_full=zeros(nRows*nCols,1,'gpuArray');
+    else
+        CC_full=zeros(nRows*nCols,1);
+    end
     CC_full(sel_activity)=CC_avg;
     A=reshape(CC_full,nRows,nCols);
+    
+    g_ACT_CORR=g_ACT(:,CC_avg>.01);
+    size(g_ACT_CORR)
     if ismac
-        imshow(abs(A),[])
+        %imshow(abs(A),[])
     end
     
     %%
-    
-    im_save=abs(gather(A));
+    if use_GPU==1
+        im_save=abs(gather(A));
+    else
+        im_save=abs(A);
+    end
     im_save=im_save-min(im_save(:));
     im_save=im_save/max(im_save(:))*256;
     save_name=fullfile(data_folder,'test.png');
     imwrite(uint8(im_save),save_name)
     
+    if ismac
+        %%
+        subplot(122)
+        session_data.imshow(im_save)
+    end
     die
     
     %% create distance matrix
@@ -128,7 +158,7 @@ if exist(load_name,'file')==2
         %dendrogram(Z)
         
         %% ICA
-        [ica_comps,A,W]=fastica(gather(g_M'));
+        [ica_comps,A,W]=fastica(gather(g_ACT_CORR'));
         imshow(W,[])
         
     end
