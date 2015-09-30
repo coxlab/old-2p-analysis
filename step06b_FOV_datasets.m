@@ -3,7 +3,7 @@ clc
 
 header_script
 
-animal_ID='AH05';
+animal_ID='AH03';
 
 offset_correction=[0 0];
 switch animal_ID
@@ -13,7 +13,7 @@ switch animal_ID
     case 'AH03'
         calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH03_20150807.mat';
         im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-08-10_AH03_im.png';
-        offset_correction=[-.4 .5];        
+        offset_correction=[-.4 .5];
     case 'AH05'
         calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH05_20150901.mat';
         im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-09-01_AH05_im.png';
