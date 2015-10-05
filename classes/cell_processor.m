@@ -140,7 +140,22 @@ classdef cell_processor < handle
                 self.TH=1;
             end
             
-            self.RF_map_TH=self.RF_map>self.TH;
+            self.RF_map_TH=self.RF_map_norm>self.TH;            
+            
+            %%% Check if RF is continuous            
+            RP=regionprops(flipud(self.RF_map_TH),{'Area','Centroid'});
+            nAreas=length(RP);
+            switch nAreas
+                case 0
+                    % ignore
+                case 1
+                    % all good
+                otherwise
+                    % choose first, if same, or largest area                    
+                    [~,loc]=max(cat(1,RP.Area)); % new behavior: if tie, first value is returned by default!
+                    self.RF_map_TH=flipud(bwselect(flipud(self.RF_map_TH),RP(loc).Centroid(1),RP(loc).Centroid(2),4));
+                    fprintf('Selected position %d (%3.1f,%3.1f) from %d separate areas (size=%d)\n',[loc RP(loc).Centroid nAreas RP(loc).Area])                                        
+            end            
         end
         
         
@@ -222,7 +237,11 @@ classdef cell_processor < handle
             self=varargin{1};
             
             if self.nResponsive_positions>1
-                pairs=possibleComparisons(self.nResponsive_positions);
+                if self.nResponsive_positions==2
+                    pairs=[1 2];
+                else
+                    pairs=possibleComparisons(self.nResponsive_positions);
+                end
                 nPairs=size(pairs,1);
                 
                 angular_similarity_vector=zeros(nPairs,1);
