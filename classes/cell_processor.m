@@ -16,6 +16,7 @@ classdef cell_processor < handle
         FOV_info=struct;
         
         cell_id=[];
+        cell_info=[];
         
         trace=[];
         nTrials=[];
@@ -47,6 +48,9 @@ classdef cell_processor < handle
         
         stim_response_per_position=struct('condition_nr',[],'stim_ID_vector',[],'response',[])
         sparseness_per_position=[];
+        
+        invariance_comparison=[];
+        invariance_matrix=[];
         invariance_avg=[];
     end
     
@@ -59,6 +63,8 @@ classdef cell_processor < handle
             self.session_date=dataset.session_date;
             self.exp_name=dataset.exp_name;
             self.exp_type=dataset.exp_type;
+            self.FOV_info=dataset.FOV_info;
+            self.cell_info=dataset.ROI_definitions(self.cell_id);
         end
         
         function build_condition_matrix(varargin)
@@ -189,7 +195,8 @@ classdef cell_processor < handle
             self.stim_response_all=pivotTable(RM,self.stimulus_col_nr,'mean',self.response_col_nr);
             
             %% find significant positions
-            position_nr_vector=find(self.RF_map_TH(:)==1);
+            map=flipud(self.RF_map_TH); % flip map to get correct condition nrs
+            position_nr_vector=find(map(:)==1);
             if ~isempty(position_nr_vector)
                 %% over all responsive positions
                 RM_responsive_positions=RM(ismember(RM(:,self.position_col_nr),position_nr_vector),:);
@@ -243,7 +250,7 @@ classdef cell_processor < handle
                     pairs=possibleComparisons(self.nResponsive_positions);
                 end
                 nPairs=size(pairs,1);
-                
+                                
                 angular_similarity_vector=zeros(nPairs,1);
                 for iPair=1:nPairs
                     pair=pairs(iPair,:);
@@ -262,10 +269,13 @@ classdef cell_processor < handle
                     angular_similarity=1 - acos( sum(A_common.*B_common) / (norm(A_common)*norm(B_common)) )/pi*2;
                     if isnan(angular_similarity)
                         angular_similarity=0;
-                    end
+                    end                    
                     angular_similarity_vector(iPair)=angular_similarity;
                     %r=corr([R1(ismember(X1,common)) R2(ismember(X2,common))]);
-                end
+                    self.invariance_comparison(iPair,:)=[self.stim_response_per_position(pair(1)).condition_nr self.stim_response_per_position(pair(2)).condition_nr];
+                end                
+                
+                self.invariance_matrix=squareform(angular_similarity_vector);
                 self.invariance_avg=mean(angular_similarity_vector);
             end
         end
