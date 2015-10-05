@@ -22,7 +22,7 @@ dataset_folder=fullfile(dataset_root,animal_ID);
 
 dataset_files=scandir(dataset_folder,'mat');
 
-for iFile=1%:nFiles
+for iFile=3%1:nFiles
     load_name=fullfile(dataset_folder,dataset_files(iFile).name);
     if exist(load_name,'file')
         load(load_name,'dataset')
@@ -47,14 +47,11 @@ for iFile=1%:nFiles
             
             %cell_data(iROI).show_RF_map(cell_data(iROI).RF_map_TH)
             
-            %%
+            %%            
             cell_data(iROI).do_stimSelect_analysis()
             cell_data(iROI).get_sparseness()
             cell_data(iROI).calc_invariance()
-            
-            %nTrials=size(condition_matrix,1);
-            
-            
+           
             
             %             %% apply randomization procedure to account for noise
             %             nPerm=100;
@@ -138,7 +135,21 @@ for iFile=1%:nFiles
             %             set(gca,'cLim',[-.5 2])
             %
         end
-        %%
-        cat(1,cell_data.invariance_avg)
+        
+        if 0
+            %%
+            subplot(121)
+            INV=cat(1,cell_data.invariance_avg);
+            hist(INV)
+            
+            %%
+            subplot(122)
+            RF_all=cat(3,cell_data.RF_map_TH);
+            imagesc(mean(RF_all,3))
+            colormap parula
+            axis equal
+            axis tight
+            axis xy
+        end
     end
 end
