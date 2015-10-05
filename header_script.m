@@ -10,8 +10,13 @@ if isunix==1
     end
 else % 2p windows
     [~, user_name] = system('whoami');user_name=user_name(1:end-1);
-    %root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
-    root_folder='D:\Dropbox (coxlab)'; % seagate external drive
+    switch user_name
+        case 'ben-pc\lbp'
+            root_folder='C:\Users\LBP\Dropbox (coxlab)';
+        otherwise
+            %root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
+            root_folder='D:\Dropbox (coxlab)'; % seagate external drive
+    end
 end
 
 % define data folder
