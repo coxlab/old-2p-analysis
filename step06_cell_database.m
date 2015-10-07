@@ -109,11 +109,11 @@ for iFile=1:nFiles
                 axis tight
                 axis xy
             case 2
-                window_center=[cell_data(1).offset*resize_factor];
+                window_center=cell_data(1).offset*resize_factor;
                 FOV_center_abs=(window_center+cell_data(1).FOV_info.center*resize_factor) - offset_correction*100;
                 plot(window_center(1),window_center(2),'wo')
                 plot(FOV_center_abs(1),FOV_center_abs(2),'ms')
-                aperture=2e3*resize_factor;
+                aperture=2.5e3*resize_factor;
                 set(gca,'Xlim',[window_center(1)-aperture window_center(2)+aperture],'Ylim',[window_center(1)-aperture window_center(2)+aperture])
                 drawnow
         end
