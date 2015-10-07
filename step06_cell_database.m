@@ -3,6 +3,8 @@ clc
 
 header_script
 animal_ID='AH03';
+plot_it=0;
+save_data=1;
 
 offset_correction=[0 0];
 switch animal_ID
@@ -10,20 +12,48 @@ switch animal_ID
         calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH02_20150803.mat';
         im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-08-10_AH02_resaved_im.png';
     case 'AH03'
-        calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH03_20150807.mat';
-        im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-08-10_AH03_im.png';
-        offset_correction=[-.4 .5];
+        if ispc
+            calibration_file_name='C:\Users\LBP\Documents\GitHub\MotionGUI\Calibrations\AH03_20150807.mat';
+            im_name='C:\Users\LBP\Documents\GitHub\MotionGUI\Images\2015-08-10_AH03_im.png';
+        else
+            calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH03_20150807.mat';
+            im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-08-10_AH03_im.png';
+        end
+        %offset_correction=[-.4 .5];
     case 'AH05'
         calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH05_20150901.mat';
         im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-09-01_AH05_im.png';
 end
 
 dataset_folder=fullfile(dataset_root,animal_ID);
-
 dataset_files=scandir(dataset_folder,'mat');
+nFiles=length(dataset_files);
 
-for iFile=3%1:nFiles
+
+switch plot_it
+    case 0
+    case 1
+    case 2
+        resize_factor=.1;
+        BG=double(imread(im_name))/256;
+        %BG=imresize(BG,resize_factor);
+        BG=flipud(BG);
+        figure(333)
+        clf
+        imshow(BG,[])
+        colormap(green)
+        hold on
+        axis equal
+        axis xy
+        drawnow
+    otherwise
+end
+
+%%
+t0=clock;
+for iFile=1:nFiles
     load_name=fullfile(dataset_folder,dataset_files(iFile).name);
+    save_name=fullfile(dataset_folder,'cell_data_files',['cell_data_' dataset_files(iFile).name]);
     if exist(load_name,'file')
         load(load_name,'dataset')
         
@@ -35,6 +65,9 @@ for iFile=3%1:nFiles
             %%% Create a cell object based on the cell_data class, to hold
             %%% all data and perform all subsequent analyses.
             cell_data(iROI)=cell_processor(iROI,dataset);
+            
+            cell_data(iROI).set_coordinate_frame(calibration_file_name,offset_correction)
+            
             %%% Build condition matrix
             cell_data(iROI).build_condition_matrix(dataset.STIM)
             trace=dataset.RESP(:,iROI);
@@ -47,109 +80,48 @@ for iFile=3%1:nFiles
             
             %cell_data(iROI).show_RF_map(cell_data(iROI).RF_map_TH)
             
-            %%            
+            %%
             cell_data(iROI).do_stimSelect_analysis()
             cell_data(iROI).get_sparseness()
             cell_data(iROI).calc_invariance()
-           
             
-            %             %% apply randomization procedure to account for noise
-            %             nPerm=100;
-            %             for iPerm=1:nPerm
-            %                 random_trace=trace(randperm(length(trace)));
-            %
-            %                 trials_shuffled=struct;
-            %                 for iTrial=1:nTrials
-            %                     trial_data=condition_matrix(iTrial,:);
-            %
-            %                     %trace(trial_data(2):trial_data(3))
-            %
-            %                     trials_shuffled(iTrial).trial_nr=iTrial;
-            %                     trials_shuffled(iTrial).condition_nr=trial_data(5);
-            %                     trials_shuffled(iTrial).stim_nr=trial_data(6);
-            %                     trials_shuffled(iTrial).pos_nr=trial_data(7);
-            %                     trials_shuffled(iTrial).frames=trial_data(2)+1:trial_data(3)+3;
-            %                     trials_shuffled(iTrial).nFrames=length(trials_shuffled(iTrial).frames);
-            %                     trials_shuffled(iTrial).response=random_trace(trials_shuffled(iTrial).frames);
-            %                     trials_shuffled(iTrial).response_avg=mean(trials_shuffled(iTrial).response);
-            %                     trials_shuffled(iTrial).response_std=std(trials_shuffled(iTrial).response);
-            %                 end
-            %                 B=[cat(1,trials_shuffled.trial_nr) cat(1,trials_shuffled.condition_nr) cat(1,trials_shuffled.stim_nr) cat(1,trials.pos_nr) cat(1,trials_shuffled.response_avg) cat(1,trials_shuffled.response_std)];
-            %                 results=[pivotTable(B,var,'mean',var) pivotTable(B,var,'mean',5) pivotTable(B,var,'std',5)];
-            %                 RF_shuffled=reshape(results(:,2),4,8);
-            %
-            %                 mu_vector(iPerm)=mean(RF_shuffled(:));
-            %                 sigma_vector(iPerm)=std(RF_shuffled(:));
-            %             end
-            %
-            %             %%
-            %             RF_norm=(RF-mean(mu_vector))/mean(sigma_vector);
-            %             TH=1;
-            %             RF_thresh=RF>TH;
-            
-            %             %% find best position
-            %             [m,best_pos]=max(RF(:))
-            %
-            %             %% check stim selectivity there
-            %             var=3;
-            %             S=A(A(:,4)==best_pos,:);
-            %             results=[pivotTable(S,var,'mean',var) pivotTable(S,var,'length',var) pivotTable(S,var,'mean',5) pivotTable(S,var,'std',5)];
-            %
-            %             %% find best stimulus
-            %             [m,best_stim]=max(results(:,3))
-            %             [sorted,order]=sort(results(:,3),'descend')
-            %             %best_stim=[2]
-            %             best_stim=order(1);
-            %
-            %             %%
-            %             P=A(ismember(A(:,3),best_stim),:);
-            %             var=4;
-            %             results=[pivotTable(P,var,'mean',var) pivotTable(P,var,'length',var) pivotTable(P,var,'mean',5) pivotTable(P,var,'std',5)];
-            %             results_padded=zeros(32,4);
-            %             for iPos=1:32
-            %                 sel=results(:,1)==iPos;
-            %                 if any(sel)
-            %                     results_padded(iPos,:)=results(sel,:);
-            %                 else
-            %                     results_padded(iPos,:)=[iPos 0 0 0];
-            %                 end
-            %             end
-            %
-            %             RF_best_stim=reshape(results_padded(:,3),4,8);
-            %
-            %             %% store data
-            %
-            %             cell_data.trace=trace;
-            %             cell_data.condition_matrix=condition_matrix;
-            %             cell_data.trials=trials;
-            %             %%
-            %             %figure
-            %             %bar(A(:,5))
-            %             %axis([0 11 -4 5])
-            %
-            %             imagesc(RF_best_stim)
-            %             axis xy
-            %
-            %             R=sort(RF(:),'descend');
-            %             %plot(R)
-            %             set(gca,'cLim',[-.5 2])
-            %
+            %% special methods
+            % find full map for most responsive stimulus, or any stim if
+            % argument is provided
+            cell_data(iROI).calc_invariance_single_stimulus()
+        end
+                        
+        %% evaluation
+        switch plot_it
+            case 0
+            case 1
+                %%
+                subplot(121)
+                INV=cat(1,cell_data.invariance_avg);
+                hist(INV)
+                
+                %%
+                subplot(122)
+                RF_all=cat(3,cell_data.RF_map_TH);
+                imagesc(mean(RF_all,3))
+                colormap parula
+                axis equal
+                axis tight
+                axis xy
+            case 2
+                window_center=[cell_data(1).offset*resize_factor];
+                FOV_center_abs=(window_center+cell_data(1).FOV_info.center*resize_factor) - offset_correction*100;
+                plot(window_center(1),window_center(2),'wo')
+                plot(FOV_center_abs(1),FOV_center_abs(2),'ms')
+                aperture=2e3*resize_factor;
+                set(gca,'Xlim',[window_center(1)-aperture window_center(2)+aperture],'Ylim',[window_center(1)-aperture window_center(2)+aperture])
+                drawnow
         end
         
-        if 0
-            %%
-            subplot(121)
-            INV=cat(1,cell_data.invariance_avg);
-            hist(INV)
-            
-            %%
-            subplot(122)
-            RF_all=cat(3,cell_data.RF_map_TH);
-            imagesc(mean(RF_all,3))
-            colormap parula
-            axis equal
-            axis tight
-            axis xy
+        %%
+        if save_data==1 %% overwrite without warning
+            save(save_name,'cell_data')
         end
     end
+    progress(iFile,nFiles,t0)
 end
