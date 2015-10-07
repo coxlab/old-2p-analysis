@@ -18,6 +18,8 @@ classdef cell_processor < handle
         cell_id=[];
         cell_info=[];
         
+        offset=[];
+        
         trace=[];
         nTrials=[];
         condition_matrix=[];
@@ -52,10 +54,13 @@ classdef cell_processor < handle
         invariance_comparison=[];
         invariance_matrix=[];
         invariance_avg=[];
+        
+        most_responsive_shape=[];
+        most_responsive_map=[];
     end
     
     methods
-        function self=cell_processor(varargin)
+        function self=cell_processor(varargin) %% constructor
             %%% Give
             self.cell_id=varargin{1};
             dataset=varargin{2};
@@ -65,6 +70,24 @@ classdef cell_processor < handle
             self.exp_type=dataset.exp_type;
             self.FOV_info=dataset.FOV_info;
             self.cell_info=dataset.ROI_definitions(self.cell_id);
+        end
+        
+        function set_coordinate_frame(varargin)
+            % Open calibration file and extract center of window.
+            % This will give us the transformation values to get 
+            % individual ROIs and FOVs plotted in the same window space.
+            % offset will be the most important output of this method
+                        
+            self=varargin{1};
+            calibration_file_name=varargin{2};
+            if nargin>=3&&~isempty(varargin{3})
+                offset_correction=varargin{3};
+            else
+                offset_correction=[0 0];
+            end
+            
+            load(calibration_file_name,'Calibration')
+            self.offset=(Calibration.window.center_coords+offset_correction)*1e3; % return offset in micron
         end
         
         function build_condition_matrix(varargin)
@@ -197,7 +220,9 @@ classdef cell_processor < handle
             %% find significant positions
             map=flipud(self.RF_map_TH); % flip map to get correct condition nrs
             position_nr_vector=find(map(:)==1);
-            if ~isempty(position_nr_vector)
+            if isempty(position_nr_vector)
+                self.nResponsive_positions=0;
+            else
                 %% over all responsive positions
                 RM_responsive_positions=RM(ismember(RM(:,self.position_col_nr),position_nr_vector),:);
                 self.stim_ID_resp=pivotTable(RM_responsive_positions,self.stimulus_col_nr,'mean',self.stimulus_col_nr);
@@ -243,7 +268,7 @@ classdef cell_processor < handle
             % Rust and DiCarlo 2012
             self=varargin{1};
             
-            if self.nResponsive_positions>1
+            if self.nResponsive_positions>1 % need at least 2 positions
                 if self.nResponsive_positions==2
                     pairs=[1 2];
                 else
@@ -280,6 +305,29 @@ classdef cell_processor < handle
             end
         end
         
+        function calc_invariance_single_stimulus(varargin)
+            self=varargin{1};                                   
+            if nargin>=2
+                stim_nr=varargin{2};
+            else
+                %% find most responsive stim
+                [~,stim_nr]=max(self.stim_response_resp);
+            end
+            
+            if self.nResponsive_positions>0
+                [RM,TR]=self.calc_response_matrix();
+                sel=cat(1,TR.stim_nr)==stim_nr;
+                RM=RM(sel,:);
+                
+                %% over all positions
+                map_vector=zeros(32,1);
+                position_ID=pivotTable(RM,self.position_col_nr,'mean',self.position_col_nr);
+                resp_per_position=pivotTable(RM,self.position_col_nr,'mean',self.response_col_nr);
+                map_vector(position_ID)=resp_per_position;
+                self.most_responsive_shape=stim_nr;
+                self.most_responsive_map=reshape(map_vector,4,8);
+            end
+        end
         
         %         function g(varargin)
         %             self=varargin{1};
