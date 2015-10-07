@@ -122,6 +122,7 @@ for iFile=1:nFiles
         if save_data==1 %% overwrite without warning
             save(save_name,'cell_data')
         end
+        clear cell_data
     end
     progress(iFile,nFiles,t0)
 end
