@@ -90,6 +90,27 @@ classdef cell_processor < handle
             self.offset=(Calibration.window.center_coords+offset_correction)*1e3; % return offset in micron
         end
         
+        function varargout=get_cell_location(varargin)
+            self=varargin{1};
+            
+            if isempty(self.offset)
+            else
+                % Get center of window in absolute coords
+                window_center=self.offset;
+                
+                % Get center of FOV relative to window center
+                FOV_center=self.FOV_info.center;
+                
+                % Get position of cell relative to FOV origin (upper left corner FOV)
+                cell_location_FOV_px=[-self.FOV_info.size_px(1) self.FOV_info.size_px(2)]/2+self.cell_info.base_coord;
+                cell_location_FOV_um=cell_location_FOV_px.*fliplr(self.FOV_info.pixel_size_micron);
+                
+                location_abs=window_center+FOV_center+cell_location_FOV_um; % absolute location in micron
+               
+                varargout{1}=location_abs;
+            end
+        end
+        
         function build_condition_matrix(varargin)
             self=varargin{1};
             STIM=varargin{2};
