@@ -134,6 +134,9 @@ if use_custom_ROI_defs==1
             ROI_definition_nr=2;
         case 'ben'
             ROI_definition_nr=2; % on the server
+        case 'ben-pc\lbp'
+            ROI_definition_nr=2; % KUL workstation
+            
         case 'juliana'
             ROI_definition_nr=3;
             
