@@ -212,6 +212,8 @@ classdef cell_processor < handle
                     % ignore
                 case 1
                     % all good
+                    self.RF_center=RP.Centroid;
+                    self.RF_size=RP.Area;
                 otherwise
                     % choose first, if same, or largest area                    
                     [~,loc]=max(cat(1,RP.Area)); % new behavior: if tie, first value is returned by default!
