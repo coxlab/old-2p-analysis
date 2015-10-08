@@ -17,6 +17,7 @@ classdef cell_processor < handle
         
         cell_id=[];
         cell_info=[];
+        cell_location_FOV_um=[];
         
         offset=[];
         
@@ -37,6 +38,8 @@ classdef cell_processor < handle
         
         TH=[];
         RF_map_TH=[];
+        RF_center=[];
+        RF_size=[];
         
         %RF_results=struct;
         stim_ID_all=[];
@@ -99,15 +102,24 @@ classdef cell_processor < handle
                 window_center=self.offset;
                 
                 % Get center of FOV relative to window center
-                FOV_center=self.FOV_info.center;
+                FOV_center=window_center+self.FOV_info.center;
                 
                 % Get position of cell relative to FOV origin (upper left corner FOV)
-                cell_location_FOV_px=[-self.FOV_info.size_px(1) self.FOV_info.size_px(2)]/2+self.cell_info.base_coord;
-                cell_location_FOV_um=cell_location_FOV_px.*fliplr(self.FOV_info.pixel_size_micron);
+                %upper_left=FOV_center+([-self.FOV_info.size_px(1) self.FOV_info.size_px(2)]/2).*fliplr(self.FOV_info.pixel_size_micron);
+                upper_left=FOV_center+([-self.FOV_info.size_um(1) self.FOV_info.size_um(2)]/2);
+                %cell_location_FOV_px=upper_left+self.cell_info.base_coord;
+                %cell_location_FOV_um=cell_location_FOV_px.*fliplr(self.FOV_info.pixel_size_micron);
+                self.cell_location_FOV_um=upper_left+self.cell_info.base_coord.*fliplr(self.FOV_info.pixel_size_micron).*[1 -1];
                 
-                location_abs=window_center+FOV_center+cell_location_FOV_um; % absolute location in micron
-               
-                varargout{1}=location_abs;
+                if nargout==0
+                    self.cell_info.FOV_center=FOV_center;
+                    self.cell_info.upper_left=upper_left; % may not be accurate
+                    %self.cell_info.cell_location_FOV_um=cell_location_FOV_um;                                        
+                else
+                    varargout{1}=self.cell_location_FOV_um;
+                    varargout{2}=upper_left;
+                    varargout{3}=FOV_center;
+                end
             end
         end
         
@@ -204,6 +216,8 @@ classdef cell_processor < handle
                     % choose first, if same, or largest area                    
                     [~,loc]=max(cat(1,RP.Area)); % new behavior: if tie, first value is returned by default!
                     self.RF_map_TH=flipud(bwselect(flipud(self.RF_map_TH),RP(loc).Centroid(1),RP(loc).Centroid(2),4));
+                    self.RF_center=RP(loc).Centroid;
+                    self.RF_size=RP(loc).Area;
                     fprintf('Selected position %d (%3.1f,%3.1f) from %d separate areas (size=%d)\n',[loc RP(loc).Centroid nAreas RP(loc).Area])                                        
             end            
         end
