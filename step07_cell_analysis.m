@@ -9,7 +9,7 @@ dataset_folder=fullfile(dataset_root,animal_ID,'cell_data_files');
 dataset_files=scandir(dataset_folder,'mat');
 nFiles=length(dataset_files);
 
-
+%%
 im_name='C:\Users\LBP\Documents\GitHub\MotionGUI\Images\2015-08-10_AH03_im.png';
 resize_factor=.1;
 BG=double(imread(im_name))/256;
@@ -50,24 +50,38 @@ nCells=length(cell_data);
 %     cell_data(iCell).do_threshold(2)
 % end
 %%
-cell_locations=cell_data.cell_location_FOV_um;
+FOV_mapping=getMapping({cell_data.session_date});
+cell_locations=cat(1,cell_data.cell_location_FOV_um);
 responsive_cells=cat(1,cell_data.nResponsive_positions);
 RF_center=cat(1,cell_data.RF_center);
 AZ=RF_center(:,1);
 EL=RF_center(:,2);
 RF_sizes=cat(1,cell_data.RF_size);
-sel=responsive_cells>0;
+
+switch 2
+    case 1
+        sel=responsive_cells>0&EL==4;
+    case 2        
+        sel=FOV_mapping==1;        
+        figure(334)
+        MAP_avg=mean(cat(3,cell_data(sel).RF_map_TH),3);
+        imagesc(flipud(MAP_avg))
+        xlabel('Periphery <=> Center')
+end
 
 tabulate(sel)
 
-%%
+%%%
+figure(333)
 %plot(cell_data(1).offset(1)*resize_factor,cell_data(1).offset(2)*resize_factor,'rs')
 
 %plot(FOV_centers(:,1)*resize_factor,FOV_centers(:,2)*resize_factor,'yo')
 %plot(upper_left(:,1)*resize_factor,upper_left(:,2)*resize_factor,'rs')
 plot(cell_locations(:,1)*resize_factor,cell_locations(:,2)*resize_factor,'k.')
-plot(cell_locations(sel,1)*resize_factor,cell_locations(sel,2)*resize_factor,'.')
+plot(cell_locations(sel,1)*resize_factor,cell_locations(sel,2)*resize_factor,'r.')
 
 %axis([-350 350 -250 250])
 axis xy
 %hold off
+
+%% FOV_mapping
