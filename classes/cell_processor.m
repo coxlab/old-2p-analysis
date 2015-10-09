@@ -210,7 +210,7 @@ classdef cell_processor < handle
             switch nAreas
                 case 0
                     % ignore
-                    self.RF_center=NaN;
+                    self.RF_center=[NaN NaN];
                     self.RF_size=NaN;
                 case 1
                     % all good
