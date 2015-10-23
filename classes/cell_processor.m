@@ -38,27 +38,27 @@ classdef cell_processor < handle
         
         TH=[];
         RF_map_TH=[];
-        RF_center=[];
-        RF_size=[];
+        RF_center=[NaN NaN];
+        RF_size=NaN;
         
         %RF_results=struct;
         stim_ID_all=[];
         stim_response_all=[];
         sparseness_all=[];
         
-        nResponsive_positions=[];
+        nResponsive_positions=NaN;
         stim_ID_resp=[];
         stim_response_resp=[];
-        sparseness_avg=[];
+        sparseness_avg=NaN;
         
         stim_response_per_position=struct('condition_nr',[],'stim_ID_vector',[],'response',[])
         sparseness_per_position=[];
         
         invariance_comparison=[];
         invariance_matrix=[];
-        invariance_avg=[];
+        invariance_avg=NaN;
         
-        most_responsive_shape=[];
+        most_responsive_shape=NaN;
         most_responsive_map=[];
     end
     
@@ -341,6 +341,8 @@ classdef cell_processor < handle
                 
                 self.invariance_matrix=squareform(angular_similarity_vector);
                 self.invariance_avg=mean(angular_similarity_vector);
+            else
+                self.invariance_avg=NaN;
             end
         end
         
