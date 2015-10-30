@@ -73,8 +73,10 @@ for iFile=1:nFiles
             
             %%% Build condition matrix
             cell_data(iROI).build_condition_matrix(dataset.STIM)
-            trace=dataset.RESP(:,iROI);
+            %trace=dataset.RESP(:,iROI);
+            trace=dataset.SPIKE(:,iROI);
             cell_data(iROI).add_trace(trace)
+            
             
             cell_data(iROI).do_RF_analysis()
             cell_data(iROI).do_RF_analysis_shuffled()
