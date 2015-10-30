@@ -70,17 +70,17 @@ for iFile=1:nFiles
             
             cell_data(iROI).set_coordinate_frame(calibration_file_name,offset_correction)
             cell_data(iROI).get_cell_location()
+            cell_data(iROI).get_cell_size()
             
             %%% Build condition matrix
             cell_data(iROI).build_condition_matrix(dataset.STIM)
             %trace=dataset.RESP(:,iROI);
             trace=dataset.SPIKE(:,iROI);
-            cell_data(iROI).add_trace(trace)
+            cell_data(iROI).add_trace(trace)            
             
-            
+            %%% Get RF field maps and do stats
             cell_data(iROI).do_RF_analysis()
-            cell_data(iROI).do_RF_analysis_shuffled()
-            %%
+            cell_data(iROI).do_RF_analysis_shuffled()            
             cell_data(iROI).do_threshold(TH)
             
             %cell_data(iROI).show_RF_map(cell_data(iROI).RF_map_TH)
