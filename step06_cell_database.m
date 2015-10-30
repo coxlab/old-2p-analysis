@@ -6,7 +6,7 @@ animal_ID='AH03';
 plot_it=0;
 save_data=1;
 
-TH=2;
+TH=2; % for z-scored values=nr of standard deviations from the mean
 
 offset_correction=[0 0];
 switch animal_ID
@@ -31,11 +31,11 @@ dataset_folder=fullfile(dataset_root,animal_ID);
 dataset_files=scandir(dataset_folder,'mat');
 nFiles=length(dataset_files);
 
-
 switch plot_it
     case 0
     case 1
     case 2
+        %%
         resize_factor=.1;
         BG=double(imread(im_name))/256;
         %BG=imresize(BG,resize_factor);
@@ -113,7 +113,9 @@ for iFile=1:nFiles
                 axis equal
                 axis tight
                 axis xy
+                drawnow
             case 2
+                %%                
                 window_center=cell_data(1).offset*resize_factor;
                 FOV_center_abs=(window_center+cell_data(1).FOV_info.center*resize_factor) - offset_correction*100;
                 plot(window_center(1),window_center(2),'wo')
