@@ -62,7 +62,7 @@ switch 2
     case 1
         sel=responsive_cells>0&EL==4;
     case 2        
-        sel=FOV_mapping==1;        
+        sel=FOV_mapping==7;        
         figure(334)
         MAP_avg=mean(cat(3,cell_data(sel).RF_map_TH),3);
         imagesc(flipud(MAP_avg))
