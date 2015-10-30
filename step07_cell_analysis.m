@@ -15,6 +15,7 @@ else
     im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-08-10_AH03_im.png';
 end
 
+%%
 resize_factor=.1;
 BG=double(imread(im_name))/256;
 %BG=imresize(BG,resize_factor);
@@ -24,8 +25,11 @@ clf
 imshow(BG,[])
 colormap(green)
 hold on
+p(1)=plot(0,0,'k.');
+p(2)=plot(0,0,'r.');
 axis equal
 axis xy
+axis([400 1000 400 1000])
 drawnow
 
 
@@ -66,11 +70,12 @@ RF_center=cat(1,cell_data.RF_center);
 AZ=RF_center(:,1);
 EL=RF_center(:,2);
 RF_sizes=cat(1,cell_data.RF_size);
+cell_size=cat(1,cell_data.cell_size);
 
 sparseness_avg=cat(1,cell_data.sparseness_avg);
 invariance_avg=cat(1,cell_data.invariance_avg);
 
-switch 4
+switch 10
     case 1
         sel=responsive_cells>0;
     case 2        
@@ -80,24 +85,39 @@ switch 4
         imagesc(flipud(MAP_avg))
         xlabel('Periphery <=> Center')
     case 3
-        sel=sparseness_avg>.9;
+        sel=AZ<=2;
     case 4
+        sel=EL<=2;
+    case 5
+        sel=RF_sizes>2;
+    case 6
+        sel=cell_size>30*10;
+    case 7
+        sel=sparseness_avg>.3;
+    case 8
         sel=invariance_avg>.1;
+        
+    case 10 % combos
+        sel1=responsive_cells>0&cell_size>8*10;
+        sel2=sel1==1&AZ<=1;
 end
 
-
-tabulate(sel)
+tabulate(sel2(sel1))
 
 %%%
-figure(333)
+%figure(333)
 %plot(cell_data(1).offset(1)*resize_factor,cell_data(1).offset(2)*resize_factor,'rs')
 
 %plot(FOV_centers(:,1)*resize_factor,FOV_centers(:,2)*resize_factor,'yo')
 %plot(upper_left(:,1)*resize_factor,upper_left(:,2)*resize_factor,'rs')
-plot(cell_locations(:,1)*resize_factor,cell_locations(:,2)*resize_factor,'k.')
-plot(cell_locations(sel,1)*resize_factor,cell_locations(sel,2)*resize_factor,'r.')
+%plot(cell_locations(:,1)*resize_factor,cell_locations(:,2)*resize_factor,'ks')
 
+%plot(cell_locations(sel1,1)*resize_factor,cell_locations(sel1,2)*resize_factor,'k.')
+%plot(cell_locations(sel2,1)*resize_factor,cell_locations(sel2,2)*resize_factor,'r.')
+
+
+set(p(1),'xData',cell_locations(sel1,1)*resize_factor,'yData',cell_locations(sel1,2)*resize_factor)
+set(p(2),'xData',cell_locations(sel2,1)*resize_factor,'yData',cell_locations(sel2,2)*resize_factor)
 %axis([-350 350 -250 250])
-axis xy
 %hold off
 
