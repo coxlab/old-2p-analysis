@@ -18,6 +18,7 @@ classdef cell_processor < handle
         cell_id=[];
         cell_info=[];
         cell_location_FOV_um=[];
+        cell_size=[];
         
         offset=[];
         
@@ -121,6 +122,11 @@ classdef cell_processor < handle
                     varargout{3}=FOV_center;
                 end
             end
+        end
+        
+        function get_cell_size(varargin)
+            self=varargin{1};
+            self.cell_size=sum(self.cell_info.mask_soma(:))*prod(self.FOV_info.pixel_size_micron); % in micron
         end
         
         function build_condition_matrix(varargin)
