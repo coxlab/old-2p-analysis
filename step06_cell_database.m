@@ -6,7 +6,7 @@ animal_ID='AH03';
 plot_it=0;
 save_data=1;
 
-TH=2; % for z-scored values=nr of standard deviations from the mean
+TH=2.5; % for z-scored values=nr of standard deviations from the mean
 
 offset_correction=[0 0];
 switch animal_ID
