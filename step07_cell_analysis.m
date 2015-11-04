@@ -75,32 +75,41 @@ cell_size=cat(1,cell_data.cell_size);
 sparseness_avg=cat(1,cell_data.sparseness_avg);
 invariance_avg=cat(1,cell_data.invariance_avg);
 
-switch 10
+sel1=responsive_cells>0&cell_size>1*10;
+switch 3
     case 1
-        sel=responsive_cells>0;
+        sel2=responsive_cells>0;
     case 2        
-        sel=FOV_mapping==7;        
+        sel2=sel1==1&FOV_mapping==7;        
         figure(334)
-        MAP_avg=mean(cat(3,cell_data(sel).RF_map_TH),3);
+        MAP_avg=mean(cat(3,cell_data(sel2).RF_map_TH),3);
         imagesc(flipud(MAP_avg))
         xlabel('Periphery <=> Center')
     case 3
-        sel=AZ<=2;
+        sel2=sel1==1&AZ<=2;
     case 4
-        sel=EL<=2;
+        sel2=sel1==1&EL<=2;
     case 5
-        sel=RF_sizes>2;
+        sel2=sel1==1&RF_sizes>2;
     case 6
-        sel=cell_size>30*10;
+        sel2=sel1==1&cell_size>30*10;
     case 7
-        sel=sparseness_avg>.3;
+        sel2=sel1==1&sparseness_avg>3/10;
     case 8
-        sel=invariance_avg>.1;
+        sel2=sel1==1&invariance_avg>2/10;
         
-    case 10 % combos
-        sel1=responsive_cells>0&cell_size>8*10;
+        % combos
+    case 10 
+        %sel1=responsive_cells>0&cell_size>20*10;
         sel2=sel1==1&AZ<=1;
+    case 11 
+        %sel1=responsive_cells>0&cell_size>12*10;
+        sel2=sel1==1&AZ>=5;
+    case 12
+        %sel1=responsive_cells>0&cell_size>12*10;
+        sel2=sel1==1&EL>=4;        
 end
+
 
 tabulate(sel2(sel1))
 
@@ -121,3 +130,4 @@ set(p(2),'xData',cell_locations(sel2,1)*resize_factor,'yData',cell_locations(sel
 %axis([-350 350 -250 250])
 %hold off
 
+%% plot the percentage of neuron within a certain area, relative to scambled values
