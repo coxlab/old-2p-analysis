@@ -8,13 +8,16 @@ switch key_event.Key
     case 'shift'
         handles.modifiers(1)=1;
     case 'control'
-        handles.modifiers(2)=1;
+        if ispc
+            handles.modifiers(4)=1;
+        else
+            handles.modifiers(2)=1;
+        end
     case 'alt'
         handles.modifiers(3)=1;
     case '0'  % command
         handles.modifiers(4)=1;
-        
-        
+   
         % shortcuts
     case 'return'
         switch handles.status
