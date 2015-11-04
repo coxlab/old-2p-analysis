@@ -71,7 +71,7 @@ set(handles.figure1,'WindowKeyPressFcn',@keyDownFcn)
 set(handles.figure1,'WindowKeyReleaseFcn',@keyUpFcn)
 set(handles.figure1,'WindowScrollWheelFcn',@scrollFcn)
 
-handles.modifiers=zeros(3,1);
+handles.modifiers=zeros(4,1);
 handles.MIP_type=0;
 handles.MIP_gamma_val=1;
 handles.detail_gamma_val=1;
