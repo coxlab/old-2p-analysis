@@ -47,7 +47,7 @@ for iFile=1:nFiles
     end
         
     if session_data.is_static_FOV==1
-        session_data.ROI_definition_nr=ROI_definition_nr;
+        session_data.ROI_definition_nr=ROI_definition_nr;        
         if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
             
             %session_data.ROI_definition_nr=ROI_definition_nr;
