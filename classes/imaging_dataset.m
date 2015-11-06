@@ -660,89 +660,46 @@ classdef imaging_dataset < handle
         function get_exp_type(varargin)
             self=varargin{1};
             
-            if ismac
-                exp_type=[];
-                exp_name='';
+            exp_type=[];
+            exp_name='';
+            
+            %%% Try first to read from the MWorks variable exptype directly
+            tag_name='ExpType';
+            expType_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+            if ~isempty(expType_events)
+                exp_type=mode(cat(1,expType_events.data));
                 
-                %%% Try first to read from the MWorks variable exptype directly
-                tag_name='ExpType';
-                expType_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                tag_name='ExpName_short';
+                expName_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
                 if ~isempty(expType_events)
-                    exp_type=mode(cat(1,expType_events.data));
-                    
-                    tag_name='ExpName_short';
-                    expName_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
-                    if ~isempty(expType_events)
-                        exp_name=expName_events(1).data;
-                    else
-                        exp_name_vector={'RSVP','Retinomapping'};
-                        exp_name=exp_name_vector{exp_type};
-                    end
+                    exp_name=expName_events(1).data;
                 else
-                    %%% Fallback is to look for the existance of specific tags
-                    %%% unique to either experiment
-                    tag_names={self.bitCodes.event_codec.tagname}';
-                    tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
-                    if ~isempty(tag_nr)
-                        exp_type=1; % RSVP
-                        exp_name='RSVP';
-                    end
-                    tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
-                    if ~isempty(tag_nr)
-                        exp_type=2; % Retinomapping
-                        exp_name='Retinomapping';
-                    end
-                    
-                    if isempty(exp_type)
-                        disp('Unable to determine experiment type...')
-                    end
+                    exp_name_vector={'RSVP','Retinomapping'};
+                    exp_name=exp_name_vector{exp_type};
+                end
+            else
+                %%% Fallback is to look for the existance of specific tags
+                %%% unique to either experiment
+                tag_names={self.bitCodes.event_codec.tagname}';
+                tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
+                if ~isempty(tag_nr)
+                    exp_type=1; % RSVP
+                    exp_name='RSVP';
+                end
+                tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
+                if ~isempty(tag_nr)
+                    exp_type=2; % Retinomapping
+                    exp_name='Retinomapping';
                 end
                 
-                self.Experiment_info.exp_type=exp_type;
-                self.Experiment_info.exp_name=exp_name;
-                self.updated=1;
-            else % for windows and linux
-                exp_type=[];
-                exp_name='';
-                
-                %%% Try first to read from the MWorks variable exptype directly
-                tag_name='ExpType';
-                expType_events=get_events_by_name_xplatform(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
-                if ~isempty(expType_events)
-                    exp_type=mode(cat(1,expType_events.data));
-                    
-                    tag_name='ExpName_short';
-                    expName_events=get_events_by_name_xplatform(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
-                    if ~isempty(expType_events)
-                        exp_name=expName_events(1).data;
-                    else
-                        exp_name_vector={'RSVP','Retinomapping'};
-                        exp_name=exp_name_vector{exp_type};
-                    end
-                else
-                    %%% Fallback is to look for the existance of specific tags
-                    %%% unique to either experiment
-                    tag_names={self.bitCodes.event_codec.tagname}';
-                    tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
-                    if ~isempty(tag_nr)
-                        exp_type=1; % RSVP
-                        exp_name='RSVP';
-                    end
-                    tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
-                    if ~isempty(tag_nr)
-                        exp_type=2; % Retinomapping
-                        exp_name='Retinomapping';
-                    end
-                    
-                    if isempty(exp_type)
-                        disp('Unable to determine experiment type...')
-                    end
+                if isempty(exp_type)
+                    disp('Unable to determine experiment type...')
                 end
-                
-                self.Experiment_info.exp_type=exp_type;
-                self.Experiment_info.exp_name=exp_name;
-                self.updated=1;                
             end
+            
+            self.Experiment_info.exp_type=exp_type;
+            self.Experiment_info.exp_name=exp_name;
+            self.updated=1;
         end
         
         function get_MWorks_stimulus_info(varargin)
