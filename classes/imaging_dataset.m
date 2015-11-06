@@ -86,7 +86,7 @@ classdef imaging_dataset < handle
             self.save_name=fullfile(self.folder_info.save_folder,[self.folder_info.raw_name '.mat']);
         end
         
-                %%% In case we need to change the root_folder to raw files
+        %%% In case we need to change the root_folder to raw files
         function rebase_tif(varargin)
             self=varargin{1};
             if nargin>=2
@@ -94,7 +94,7 @@ classdef imaging_dataset < handle
             else
                 error('Rebase_tif() needs folder to be used as root...')
             end
-            self.file_name=fullfile(new_folder,[self.folder_info.raw_name '.tif']);            
+            self.file_name=fullfile(new_folder,[self.folder_info.raw_name '.tif']);
         end
         
         
@@ -466,17 +466,17 @@ classdef imaging_dataset < handle
                         load(mat_file_name,'codecs','event_code_strings','event_code_selection','events')
                     else
                         error('No converted .mwk file found for this session...')
-                    end                    
+                    end
                     
                     event_codec=codecs.codec;
-                                                            
+                    
                     %%% Get stim update events
                     tag_name='#stimDisplayUpdate';
-                    [~,b]=ismember(tag_name,event_code_strings);                                                                                                   
-                    event_selection=cat(1,events.event_code)==event_code_selection(b);                                        
+                    [~,b]=ismember(tag_name,event_code_strings);
+                    event_selection=cat(1,events.event_code)==event_code_selection(b);
                     MW_events=events(event_selection);
                     nEvents=length(MW_events);
-                                        
+                    
                     MW_bitCodes=zeros(nEvents,3);
                     for iEvent=1:nEvents
                         event=MW_events(iEvent);
@@ -520,10 +520,10 @@ classdef imaging_dataset < handle
                     [self.bitCodes.max_val,loc]=max(CC);
                     if self.bitCodes.max_val>.99
                         self.bitCodes.offset=loc-length(A)+1;
-                    else                       
+                    else
                         
                         T_scim=cat(1,self.frame_info(:).timestamp);
-                                                
+                        
                         offset_temp=loc-length(A)+1
                         T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
                         
@@ -606,7 +606,7 @@ classdef imaging_dataset < handle
                 TF=0; % never existed
                 disp('g_frames not found on GPU')
             end
-                        
+            
             if TF==1
                 nFrames=size(g_frames,3);
                 fprintf('%d frames are already loaded to GPU...\n',nFrames)
@@ -630,14 +630,14 @@ classdef imaging_dataset < handle
                 end
             end
         end
-                        
+        
         function find_blank_frames(varargin)
             %%% Check for unusually dark frames, laser power not turned up
             %%% yet.
             tic
             self=varargin{1};
             if isempty(self.mov_info.mean_lum)
-                %info=imfinfo(self.file_name); % never save info, is huge                
+                %info=imfinfo(self.file_name); % never save info, is huge
                 %self.mov_info.mean_lum=zeros(self.mov_info.nFrames,1);
                 %for iFrame=1:self.mov_info.nFrames
                 %    frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
@@ -1585,7 +1585,7 @@ classdef imaging_dataset < handle
                 clusters(sel)=iC;
             end
             clusters(valid_FOV==0)=NaN;
-            %cluster_numbers=1:size(C,1);            
+            %cluster_numbers=1:size(C,1);
             cluster_vector=unique(clusters(~isnan(clusters)));
             nClusters=length(unique(clusters(~isnan(clusters))));
         end
@@ -1952,7 +1952,7 @@ classdef imaging_dataset < handle
                 ROI=CenterRectOnPoint(FOV_rect,center(1),center(2))/1000;
                 %name=session_data.folder_info.raw_name;
                 %name=strrep(name,'_',' ');
-                                
+                
                 circle([0 0],2,100,'r-',2);
                 plotRect(ROI,'k');
                 text(ROI(1)+.05,ROI(2)+.25,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))
