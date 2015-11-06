@@ -395,71 +395,24 @@ classdef imaging_dataset < handle
             tic
             self=varargin{1};
             
-            if ismac
-                if isempty(self.bitCodes.MWorks_bitCodes)
-                    if nargin>=2
-                        F=varargin{2};
-                    else % if none specified, use first mwk file found in data_folder
-                        %F='2015-07-17_AG02.mwk';
-                        files=scandir(self.folder_info.data_folder,'.mwk');
-                        if isempty(files)
-                            error('No .mwk file found in folder')
-                        else
-                            F=files(1).name;
-                        end
+            if isempty(self.bitCodes.MWorks_bitCodes)
+                if nargin>=2
+                    F=varargin{2};
+                else % if none specified, use first mwk file found in data_folder
+                    files=scandir(self.folder_info.data_folder,'.mwk');
+                    if isempty(files)
+                        error('No .mwk file found in folder')
+                    else
+                        F=files(1).name;
                     end
-                    mwk_file_name=fullfile(self.folder_info.data_folder,F);
+                end
+                mwk_file_name=fullfile(self.folder_info.data_folder,F);
+                
+                if ismac
                     %disp('Reading MWK file...')
                     A=getCodecs(mwk_file_name);
                     event_codec=A.codec;
-                    
-                    %%% Get stim update events
-                    tag_name='#stimDisplayUpdate';
-                    [MW_events,nEvents]=get_events_by_name(mwk_file_name,tag_name,event_codec);
-                    
-                    MW_bitCodes=zeros(nEvents,3);
-                    for iEvent=1:nEvents
-                        event=MW_events(iEvent);
-                        register=1;
-                        if length(event.data)==3
-                            bitCode=event.data{3}.bit_code;
-                        elseif length(event.data)==2
-                            bitCode=event.data{2}.bit_code;
-                        else
-                            % ignore
-                            register=0;
-                        end
-                        if register==1
-                            MW_bitCodes(iEvent,:)=[double(event.time_us)/1e6 double(bitCode) [0;diff(double(event.time_us)/1e6)]];
-                        end
-                    end
-                    
-                    self.bitCodes.MWorks_bitCodes=MW_bitCodes;
-                    self.bitCodes.mwk_file_name=mwk_file_name;
-                    self.bitCodes.event_codec=event_codec;
-                    
-                    self.elapsed=toc;
-                    self.last_action='get_MWorks_bitCodes';
-                    self.updated=1;
                 else
-                    disp('Using existing MWorks_bitCodes...')
-                end
-            else
-                if isempty(self.bitCodes.MWorks_bitCodes)
-                    if nargin>=2
-                        F=varargin{2};
-                    else % if none specified, use first mwk file found in data_folder                        
-                        files=scandir(self.folder_info.data_folder,'.mwk');
-                        if isempty(files)
-                            error('No .mwk file found in folder')
-                        else
-                            F=files(1).name;
-                        end
-                    end
-                    mwk_file_name=fullfile(self.folder_info.data_folder,F);
-                    
-                    %%% here we shake things up
-                    % read from matfile if exists
                     mat_file_name=strrep(mwk_file_name,'.mwk','.mat');
                     if exist(mat_file_name,'file')==2
                         load(mat_file_name,'codecs','event_code_strings','event_code_selection','events')
@@ -468,42 +421,39 @@ classdef imaging_dataset < handle
                     end
                     
                     event_codec=codecs.codec;
-                    
-                    %%% Get stim update events
-                    tag_name='#stimDisplayUpdate';
-                    [~,b]=ismember(tag_name,event_code_strings);
-                    event_selection=cat(1,events.event_code)==event_code_selection(b);
-                    MW_events=events(event_selection);
-                    nEvents=length(MW_events);
-                    
-                    MW_bitCodes=zeros(nEvents,3);
-                    for iEvent=1:nEvents
-                        event=MW_events(iEvent);
-                        register=1;
-                        if length(event.data)==3
-                            bitCode=event.data{3}.bit_code;
-                        elseif length(event.data)==2
-                            bitCode=event.data{2}.bit_code;
-                        else
-                            % ignore
-                            register=0;
-                        end
-                        if register==1
-                            MW_bitCodes(iEvent,:)=[double(event.time_us)/1e6 double(bitCode) [0;diff(double(event.time_us)/1e6)]];
-                        end
+                end
+                
+                %%% Get stim update events
+                tag_name='#stimDisplayUpdate';
+                [MW_events,nEvents]=get_events_by_name(mwk_file_name,tag_name);
+                
+                MW_bitCodes=zeros(nEvents,3);
+                for iEvent=1:nEvents
+                    event=MW_events(iEvent);
+                    register=1;
+                    if length(event.data)==3
+                        bitCode=event.data{3}.bit_code;
+                    elseif length(event.data)==2
+                        bitCode=event.data{2}.bit_code;
+                    else
+                        % ignore
+                        register=0;
                     end
-                    
-                    self.bitCodes.MWorks_bitCodes=MW_bitCodes;
-                    self.bitCodes.mwk_file_name=mwk_file_name;                    
-                    self.bitCodes.event_codec=event_codec;
-                    
-                    self.elapsed=toc;
-                    self.last_action='get_MWorks_bitCodes';
-                    self.updated=1;
-                else
-                    disp('Using existing MWorks_bitCodes...')
-                end                
-            end            
+                    if register==1
+                        MW_bitCodes(iEvent,:)=[double(event.time_us)/1e6 double(bitCode) [0;diff(double(event.time_us)/1e6)]];
+                    end
+                end
+                
+                self.bitCodes.MWorks_bitCodes=MW_bitCodes;
+                self.bitCodes.mwk_file_name=mwk_file_name;
+                self.bitCodes.event_codec=event_codec;
+                
+                self.elapsed=toc;
+                self.last_action='get_MWorks_bitCodes';
+                self.updated=1;
+            else
+                disp('Using existing MWorks_bitCodes...')
+            end
         end
         
         function find_offset(varargin)
