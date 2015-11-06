@@ -511,8 +511,10 @@ classdef imaging_dataset < handle
         
         function find_offset(varargin)
             tic
-            if ismac
-                self=varargin{1};
+            self=varargin{1};
+            if isempty(self.bitCodes.MWorks_bitCodes)
+                error('Bitcodes have to be extracted first using the get_MWorks_bitCodes method...')
+            else                
                 if isempty(self.bitCodes.offset)
                     A=self.bitCodes.scim_bitCodes(:,2);
                     B=self.bitCodes.MWorks_bitCodes(:,2);
@@ -520,10 +522,8 @@ classdef imaging_dataset < handle
                     [self.bitCodes.max_val,loc]=max(CC);
                     if self.bitCodes.max_val>.99
                         self.bitCodes.offset=loc-length(A)+1;
-                    else
-                        
-                        T_scim=cat(1,self.frame_info(:).timestamp);
-                        
+                    else                        
+                        T_scim=cat(1,self.frame_info(:).timestamp);                        
                         offset_temp=loc-length(A)+1
                         T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
                         
@@ -548,8 +548,6 @@ classdef imaging_dataset < handle
                 else
                     disp('Using existing offset...')
                 end
-            else
-                
             end
         end
         
