@@ -707,12 +707,12 @@ classdef imaging_dataset < handle
                 
                 %%% Try first to read from the MWorks variable exptype directly
                 tag_name='ExpType';
-                expType_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                expType_events=get_events_by_name_xplatform(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
                 if ~isempty(expType_events)
                     exp_type=mode(cat(1,expType_events.data));
                     
                     tag_name='ExpName_short';
-                    expName_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                    expName_events=get_events_by_name_xplatform(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
                     if ~isempty(expType_events)
                         exp_name=expName_events(1).data;
                     else
