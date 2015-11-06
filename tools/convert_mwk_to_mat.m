@@ -14,7 +14,38 @@ clear all
 clc
 
 if ismac
-    
+    data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data';
+    mwk_file_name_list=rdir([data_folder '/**/**.mwk']);
+    nFiles=length(mwk_file_name_list);
+    for iFile=1:nFiles
+        mwk_file_name=mwk_file_name_list(iFile).name
+        
+        ok=1;
+        if length(strfind(mwk_file_name,'.mwk'))==2
+            mwk_file_name=fileparts(mwk_file_name);
+        else
+            ok=0;
+        end
+        if ok==1
+            mat_file_name=strrep(mwk_file_name,'mwk','mat');
+            
+            if ~exist('mat_file_name','file')
+                codecs=getCodecs(mwk_file_name);
+                
+                tag_names={codecs.codec.tagname}';
+                codes=[codecs.codec.code]';
+                
+                event_code_strings={'#stimDisplayUpdate','ExpType','ExpName_short','stm_pos_x','show_vertical_bar'};
+                [a,b]=ismember(event_code_strings,tag_names);
+                b(b==0)=[];
+                event_code_selection=codes(b);
+                
+                events=getEvents(mwk_file_name,event_code_selection);
+                
+                save(mat_file_name,'codecs','event_code_strings','event_code_selection','events')
+            end
+        end
+    end
 else
     disp('Currently, this script only run on mac systems given that the mex file needed to read the .mwk file is only compiled for mac')
 end
