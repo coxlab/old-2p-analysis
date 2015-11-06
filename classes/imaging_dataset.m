@@ -448,8 +448,7 @@ classdef imaging_dataset < handle
                 if isempty(self.bitCodes.MWorks_bitCodes)
                     if nargin>=2
                         F=varargin{2};
-                    else % if none specified, use first mwk file found in data_folder
-                        %F='2015-07-17_AG02.mwk';
+                    else % if none specified, use first mwk file found in data_folder                        
                         files=scandir(self.folder_info.data_folder,'.mwk');
                         if isempty(files)
                             error('No .mwk file found in folder')
@@ -495,7 +494,7 @@ classdef imaging_dataset < handle
                     end
                     
                     self.bitCodes.MWorks_bitCodes=MW_bitCodes;
-                    self.bitCodes.mwk_file_name=mwk_file_name;
+                    self.bitCodes.mwk_file_name=mwk_file_name;                    
                     self.bitCodes.event_codec=event_codec;
                     
                     self.elapsed=toc;
@@ -503,10 +502,8 @@ classdef imaging_dataset < handle
                     self.updated=1;
                 else
                     disp('Using existing MWorks_bitCodes...')
-                end
-                
-            end
-            
+                end                
+            end            
         end
         
         function find_offset(varargin)
@@ -704,8 +701,47 @@ classdef imaging_dataset < handle
                 self.Experiment_info.exp_type=exp_type;
                 self.Experiment_info.exp_name=exp_name;
                 self.updated=1;
-            else
-                % no option
+            else % for windows and linux
+                exp_type=[];
+                exp_name='';
+                
+                %%% Try first to read from the MWorks variable exptype directly
+                tag_name='ExpType';
+                expType_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                if ~isempty(expType_events)
+                    exp_type=mode(cat(1,expType_events.data));
+                    
+                    tag_name='ExpName_short';
+                    expName_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                    if ~isempty(expType_events)
+                        exp_name=expName_events(1).data;
+                    else
+                        exp_name_vector={'RSVP','Retinomapping'};
+                        exp_name=exp_name_vector{exp_type};
+                    end
+                else
+                    %%% Fallback is to look for the existance of specific tags
+                    %%% unique to either experiment
+                    tag_names={self.bitCodes.event_codec.tagname}';
+                    tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
+                    if ~isempty(tag_nr)
+                        exp_type=1; % RSVP
+                        exp_name='RSVP';
+                    end
+                    tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
+                    if ~isempty(tag_nr)
+                        exp_type=2; % Retinomapping
+                        exp_name='Retinomapping';
+                    end
+                    
+                    if isempty(exp_type)
+                        disp('Unable to determine experiment type...')
+                    end
+                end
+                
+                self.Experiment_info.exp_type=exp_type;
+                self.Experiment_info.exp_name=exp_name;
+                self.updated=1;                
             end
         end
         
