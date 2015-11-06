@@ -8,7 +8,7 @@
 %%% if just folder en not file is provided as input.
 
 %%% We are in the process of trying to compile the mwfeval function for
-%%% windows and linux, no luck so far...
+%%% windows and linux, no luck so far... code seems to be outdated
 
 clear all
 clc
