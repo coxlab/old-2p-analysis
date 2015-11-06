@@ -14,36 +14,46 @@ clear all
 clc
 
 if ismac
+    overwrite_existing=0;
     data_folder='/Users/benvermaercke/Dropbox (coxlab)/2p-data';
     mwk_file_name_list=rdir([data_folder '/**/**.mwk']);
     nFiles=length(mwk_file_name_list);
     for iFile=1:nFiles
-        mwk_file_name=mwk_file_name_list(iFile).name
+        mwk_file_name=mwk_file_name_list(iFile).name;
+        
+        disp(['Processing: ' mwk_file_name])
         
         ok=1;
         if length(strfind(mwk_file_name,'.mwk'))==2
             mwk_file_name=fileparts(mwk_file_name);
-        else
+        elseif length(strfind(mwk_file_name,'.mwk'))>2
+            % skip when mwk is already processed more than once
             ok=0;
         end
-        if ok==1
-            mat_file_name=strrep(mwk_file_name,'mwk','mat');
+        
+        mat_file_name=strrep(mwk_file_name,'mwk','mat');
+        if overwrite_existing==0&&exist(mat_file_name,'file')
+            % skip when mat file exists
+            ok=0;
+        end
+        
+        if ok==1                        
+            codecs=getCodecs(mwk_file_name);
             
-            if ~exist('mat_file_name','file')
-                codecs=getCodecs(mwk_file_name);
-                
-                tag_names={codecs.codec.tagname}';
-                codes=[codecs.codec.code]';
-                
-                event_code_strings={'#stimDisplayUpdate','ExpType','ExpName_short','stm_pos_x','show_vertical_bar'};
-                [a,b]=ismember(event_code_strings,tag_names);
-                b(b==0)=[];
-                event_code_selection=codes(b);
-                
-                events=getEvents(mwk_file_name,event_code_selection);
-                
-                save(mat_file_name,'codecs','event_code_strings','event_code_selection','events')
-            end
+            tag_names={codecs.codec.tagname}';
+            codes=[codecs.codec.code]';
+            
+            event_code_strings={'#stimDisplayUpdate','ExpType','ExpName_short','stm_pos_x','show_vertical_bar'};
+            [a,b]=ismember(event_code_strings,tag_names);
+            b(b==0)=[];
+            event_code_selection=codes(b);
+            
+            events=getEvents(mwk_file_name,event_code_selection);
+            
+            save(mat_file_name,'codecs','event_code_strings','event_code_selection','events')
+            disp(['Saved to : ' mat_file_name])
+        else
+            disp('Skipped...')
         end
     end
 else
