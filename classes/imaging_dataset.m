@@ -1507,7 +1507,7 @@ classdef imaging_dataset < handle
                 load_name=fullfile(folder,files(iFile).name);
                 load(load_name,'session_data')
                 
-                if session_data.is_static_FOV()
+                if session_data.is_static_FOV()&&session_data.mov_info.nFrames>300
                     center_coords(iFile,:)=session_data.FOV_info.coords;
                     valid_FOV(iFile)=1;
                 else
