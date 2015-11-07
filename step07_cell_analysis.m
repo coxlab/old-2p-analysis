@@ -3,7 +3,7 @@ clc
 
 header_script
 
-animal_ID='AH03';
+animal_ID='AH05';
 
 dataset_folder=fullfile(dataset_root,animal_ID,'cell_data_files');
 dataset_files=scandir(dataset_folder,'mat');
