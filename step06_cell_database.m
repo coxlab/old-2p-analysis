@@ -2,7 +2,7 @@ clear all
 clc
 
 header_script
-animal_ID='AH03';
+animal_ID='AH05';
 plot_it=0;
 save_data=1;
 
@@ -127,6 +127,7 @@ for iFile=1:nFiles
         
         %%
         if save_data==1 %% overwrite without warning
+            savec(save_name)
             save(save_name,'cell_data')
         end
         clear cell_data
