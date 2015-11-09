@@ -1372,6 +1372,11 @@ classdef imaging_dataset < handle
             fprintf('Loading frames... ')
             %self.file_name
             frames=self.get_frames([],1); % get all frames, apply motion correction
+            F=frames(:);
+            H=size(frames,1);
+            W=size(frames,2);
+            N=size(frames,3);
+            
             %nFrames=size(frames,3);
             fprintf('took: %3.1fs\n',toc);
             
@@ -1383,24 +1388,65 @@ classdef imaging_dataset < handle
                 rect=ROIs(iROI).ROI_rect;
                 %%% Allow selection of ROI close to border, pad with zeros
                 %%% if over!
-                vol=frames(rect(2):rect(4),rect(1):rect(3),:);
-                mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
-                res=vol.*mask;
-                ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
-                %squeeze(mean(mean(res,1),2))
+                switch 2
+                    case 1
+                        tic
+                        vol=frames(rect(2):rect(4),rect(1):rect(3),:);
+                        mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
+                        
+                        %squeeze(mean(mean(res,1),2))
+                        
+                        %figure()
+                        %subplot(221)
+                        %self.imshow(mean(vol,3))
+                        %subplot(222)
+                        %self.imshow(mean(res,3))                        
+                        %subplot(223)
+                        %self.imshow(mean(res,3))
+                        toc
+                    case 2
+                        tic
+                        % create and store outside contour of soma
+                        % upon extraction, fill this and get indices in
+                        % whole image space
+                        % crop indices outside of image
+                        % repeat indices for nFrames
+                        % extract pixels
+                        % reshape and average per image plane
+                        
+                        %vol=frames(rect(2):rect(4),rect(1):rect(3),:);
+                        w=size(ROIs(iROI).mask_soma,1)/2;
+                        
+                        % get indices in image space
+                        [x,y]=find(ROIs(iROI).mask_soma);
+                        x=x+round(ROIs(iROI).center_coords(1)-w);
+                        y=y+round(ROIs(iROI).center_coords(2)-w);
+                        
+                        % crop indices
+                        x(x<0)=0;x(x>W)=W;
+                        y(y<0)=0;y(y>H)=H;
+                        
+                        % vectorize
+                        indices=y*W+x;
+                        A=zeros(W*H,1);
+                        A(indices)=1;
+                        
+                        % repeat
+                        I=repmat(A,N,1);
+                        
+                        % extract pixels
+                        pixels=F(I==1);
+                        
+                        % reshape and average
+                        response=reshape(pixels,[],N);
+                        
+                        % write to data
+                        ROIs(iROI).timeseries_soma=mean(response)';
+                        toc
+                end
                 
-                %figure()
-                %subplot(221)
-                %self.imshow(mean(vol,3))
-                %subplot(222)
-                %self.imshow(mean(res,3))
-                
-                
-                mask=repmat(ROIs(iROI).mask_neuropil,1,1,size(vol,3));
-                res=vol.*mask;
-                ROIs(iROI).time_series_neuropil=squeeze(mean(mean(res,1),2));
-                %subplot(223)
-                %self.imshow(mean(res,3))
             end
             fprintf('took: %3.1fs\n',toc);
         end
