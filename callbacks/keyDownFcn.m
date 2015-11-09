@@ -38,6 +38,8 @@ switch key_event.Key
                         ROI_temp.ROI_nr=new_nr;
                         handles.nROI=handles.nROI+1;
                         
+                        %%% Replace this section with one that allows for
+                        %%% selections outside of the frame.
                         try
                             %%% Cut out centered ROI and apply region selections
                             T=handles.MIP(ROI_temp.ROI_rect(2):ROI_temp.ROI_rect(4),ROI_temp.ROI_rect(1):ROI_temp.ROI_rect(3));
