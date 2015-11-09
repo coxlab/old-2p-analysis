@@ -33,19 +33,12 @@ if isfield(handles,'session_data')
         selectROI(H,find(in_polygon_vector==1))
     else
         % otherwise, start creation of new ROI
-        handles.status=1;
-        ext=handles.window_size(1)/2;
+        handles.status=1;        
         x=coord(2);
         y=coord(1);
-        if between(x,[ext Height-ext])&&between(y,[ext Width-ext])
-            %%% Select corresponding part of MIP
-            detail=handles.MIP(x-ext+1:x+ext,y-ext+1:y+ext);
-        else
-            %%% Allow for selections outside of the frame.
-            detail=rand(handles.window_size);
-            %detail=handles.MIP(x-ext+1:x+ext,y-ext+1:y+ext);
-        end
         
+        %%% Get section of size handles.window_size out of MIP image
+        detail=crop_selection(handles.MIP,[x y],handles.window_size);        
         handles.detail_gamma_val=1;
         
         %%% Apply slight blur to get rid of pixelation
