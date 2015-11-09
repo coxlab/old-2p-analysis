@@ -36,8 +36,8 @@ else
     end    
     
     %im_rect=[0 0 size(im)];
-    src_rect=CenterRectOnPoint(patch_rect,coords(1),coords(2))
-    border_size=SizeOfRect(src_rect)/2 % get size of patch
+    src_rect=CenterRectOnPoint(patch_rect,coords(1),coords(2));
+    border_size=SizeOfRect(src_rect)/2; % get size of patch
     
     % increase size of source image, to allow selection outside
     im_with_border=centerOnRect(im,size(im)+border_size*2,0);    
