@@ -39,6 +39,8 @@ if isfield(handles,'session_data')
         
         %%% Get section of size handles.window_size out of MIP image
         detail=crop_selection(handles.MIP,[x y],handles.window_size);        
+        cropped_area=detail==0;
+        detail(cropped_area==1)=mean(detail(cropped_area==0));
         handles.detail_gamma_val=1;
         
         %%% Apply slight blur to get rid of pixelation
@@ -56,6 +58,8 @@ if isfield(handles,'session_data')
                 F=fft2(detail-DC);
                 detail=real(ifft2(fftshift(fftshift(F).*FFT_mask)))+DC;
         end
+        detail(cropped_area==1)=mean(detail(:));
+        
         switch 2
             case 1
                 %%% Save
