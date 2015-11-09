@@ -82,6 +82,7 @@ if isfield(handles,'session_data')
             set(handles.subplots(2).p(1),'xData',[],'yData',[])
             set(handles.subplots(2).p(2),'xData',[],'yData',[])
         else
+            %%% Allow for selections outside of the frame.
             
         end
         guidata(H,handles)
