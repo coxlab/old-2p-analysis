@@ -42,8 +42,11 @@ switch key_event.Key
                         %%% selections outside of the frame.
                         try
                             %%% Cut out centered ROI and apply region selections
-                            T=handles.MIP(ROI_temp.ROI_rect(2):ROI_temp.ROI_rect(4),ROI_temp.ROI_rect(1):ROI_temp.ROI_rect(3));
+                            %T=handles.MIP(ROI_temp.ROI_rect(2):ROI_temp.ROI_rect(4),ROI_temp.ROI_rect(1):ROI_temp.ROI_rect(3));                            
+                            T=crop_selection(handles.MIP,fliplr(round(ROI_temp.center_coords)),handles.window_size);
                         catch
+                            A=lasterror;
+                            disp(A.message)
                             error('Centered coordinates fall outside of image...')
                         end
                         
