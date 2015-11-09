@@ -61,6 +61,7 @@ for iFile=1:nFiles
             %% Extract stimulus relevant information
             %session_data.bitCodes.MWorks_bitCodes=[];
             if ismac==1 % don't try this stuff on the server, use step1b first
+                %%
                 try
                     session_data.get_scim_bitCodes()
                     session_data.get_MWorks_bitCodes()

@@ -43,7 +43,7 @@ if ismac
             tag_names={codecs.codec.tagname}';
             codes=[codecs.codec.code]';
             
-            event_code_strings={'#stimDisplayUpdate','ExpType','ExpName_short','stm_pos_x','show_vertical_bar'};
+            event_code_strings={'#stimDisplayUpdate','ExpType','ExpName_short','stm_pos_x','show_vertical_bar','DistractorPresentation_Time','DistractorIdleTime'};
             [a,b]=ismember(event_code_strings,tag_names);
             b(b==0)=[];
             event_code_selection=codes(b);

@@ -33,6 +33,9 @@ function step03_ROI_GUI(varargin)
 % BV20150518: allow ROI definitions made by different people, specific
 % ROI_definitions struct based on username
 
+% 2do:
+% - allow ROI definition closer to the border
+% - extract other ROIs from neuropil area
 
 %%% Add subfolders
 path_dir=fileparts(mfilename('fullpath'));

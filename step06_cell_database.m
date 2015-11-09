@@ -2,7 +2,7 @@ clear all
 clc
 
 header_script
-animal_ID='AH03';
+animal_ID='AH05';
 plot_it=0;
 save_data=1;
 
@@ -23,8 +23,13 @@ switch animal_ID
         end
         %offset_correction=[-.4 .5];
     case 'AH05'
-        calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH05_20150901.mat';
-        im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-09-01_AH05_im.png';
+        if ispc
+            calibration_file_name='C:\Users\LBP\Documents\GitHub\MotionGUI\Calibrations\AH05_20150901.mat';
+            im_name='C:\Users\LBP\Documents\GitHub\MotionGUI\Images\2015-09-01_AH05_im.png';
+        else
+            calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH05_20150901.mat';
+            im_name='/Users/benvermaercke/CoxLab/MotionGUI/Images/2015-09-01_AH05_im.png';
+        end
 end
 
 dataset_folder=fullfile(dataset_root,animal_ID);
@@ -127,6 +132,7 @@ for iFile=1:nFiles
         
         %%
         if save_data==1 %% overwrite without warning
+            savec(save_name)
             save(save_name,'cell_data')
         end
         clear cell_data
