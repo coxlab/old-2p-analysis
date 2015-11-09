@@ -1381,6 +1381,8 @@ classdef imaging_dataset < handle
             fprintf('Extracting %d ROIs data... ',nROI)
             for iROI=1:nROI
                 rect=ROIs(iROI).ROI_rect;
+                %%% Allow selection of ROI close to border, pad with zeros
+                %%% if over!
                 vol=frames(rect(2):rect(4),rect(1):rect(3),:);
                 mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
                 res=vol.*mask;
