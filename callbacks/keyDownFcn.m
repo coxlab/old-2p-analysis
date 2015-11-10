@@ -76,7 +76,8 @@ switch key_event.Key
                         %%% Save to main ROI structure
                         ROI_temp.mask_soma=mask_soma;
                         ROI_temp.mask_neuropil=mask_neuropil;
-                        handles.ROI(handles.nROI)=ROI_temp;
+                        ROI_temp.timeseries_neuropil=[];
+                        handles.ROI(handles.nROI)=ROI_temp;                        
                         handles.ROI_selector=handles.nROI; % make this ROI the selected one
                         
                         %%% Clear data, ready for next ROI
@@ -126,6 +127,7 @@ switch key_event.Key
                 %%% Save to main ROI structure
                 ROI_temp.mask_soma=mask_soma;
                 ROI_temp.mask_neuropil=mask_neuropil;
+                ROI_temp.timeseries_neuropil=[];
                 handles.ROI(handles.ROI_selector)=ROI_temp;
                 
                 %%% Clear data, ready for next ROI
