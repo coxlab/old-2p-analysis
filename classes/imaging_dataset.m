@@ -1525,8 +1525,6 @@ classdef imaging_dataset < handle
                         % now replicated the selection plane to a matching
                         % 3D matrix
                         
-                        iROI
-                        
                         rect_soma=self.ROI_matrix(iROI).rect_soma;
                         mask_soma=self.ROI_matrix(iROI).mask_soma;
                         rect_neuropil=self.ROI_matrix(iROI).rect_neuropil;
@@ -1541,8 +1539,6 @@ classdef imaging_dataset < handle
                         ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));                                                                                                
                         
                         %%% Get time series for soma pixels
-                        rect_neuropil
-                        
                         indices_X=rect_neuropil(2):rect_neuropil(2)+rect_neuropil(4)-1;
                         indices_Y=rect_neuropil(1):rect_neuropil(1)+rect_neuropil(3)-1;
                         vol=frames(indices_X,indices_Y,:);
@@ -1581,8 +1577,6 @@ classdef imaging_dataset < handle
                 
                 if any(blank_frames)
                     F_raw(blank_frames)=mean(F_raw(~blank_frames));
-                    size(F_neuropil)
-                    size(blank_frames)
                     F_neuropil(blank_frames)=mean(F_neuropil(~blank_frames));
                 end
                 
