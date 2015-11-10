@@ -176,7 +176,7 @@ for iFile=1:nFiles
         
         % show on background image
         mask=poly2mask(ROI.coords_MIP(:,1),ROI.coords_MIP(:,2),dataset.FOV_info.size_px(2),dataset.FOV_info.size_px(1));
-        mask=flipud(imresize(mask,[FOV_rect(4) FOV_rect(3)]));        
+        mask=flipud(imresize(mask,[FOV_rect(4) FOV_rect(3)]));
         patch=im(coords(2)+1:coords(4),coords(1)+1:coords(3),:);
         
         if isnan(value)
