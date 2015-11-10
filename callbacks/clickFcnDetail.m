@@ -21,9 +21,11 @@ if isfield(handles,'ROI_temp')
                 ROI_temp.nCoords=ROI_temp.nCoords+1;
                 ROI_temp.coords(ROI_temp.nCoords,:)=[x y];
             elseif handles.modifiers(1)==1
-                %%% remove last
-                ROI_temp.coords(ROI_temp.nCoords,:)=[];
-                ROI_temp.nCoords=ROI_temp.nCoords-1;
+                if ROI_temp.nCoords>0
+                    %%% remove last added
+                    ROI_temp.coords(ROI_temp.nCoords,:)=[];
+                    ROI_temp.nCoords=ROI_temp.nCoords-1;
+                end
             end
             %%% Fit ellipse if possible, if not, keep poly
             
