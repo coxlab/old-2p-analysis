@@ -27,6 +27,8 @@ classdef imaging_dataset < handle
             );
         ROI_definition_nr=[];
         
+        ROI_matrix=struct;
+        
         Activity_traces=struct('activity_matrix',[],...
             'normalization_matrix',[],...
             'spike_matrix',[],...
@@ -1297,6 +1299,67 @@ classdef imaging_dataset < handle
         
         
         %%% Do ROI extraction
+        function create_mask_from_ROI(varargin)
+            self=varargin{1};
+            
+            ROIs=get_ROI_definitions(self);
+            N=length(ROIs);                        
+            
+            %%% loop tru ROIs and create sparse matrix with masks
+            for iROI=1:N
+                FOV_rect_px=self.FOV_info.size_px;                
+                
+                stretch_factor=round(self.FOV_info.pixel_size_micron/min(self.FOV_info.pixel_size_micron));
+                stretch_coords=round(fliplr(self.FOV_info.size_px).*stretch_factor);
+                
+                ROI=ROIs(iROI);
+                
+                %%% Construct mask for soma
+                mask_soma=poly2mask(ROI.coords_MIP(:,1),ROI.coords_MIP(:,2),self.FOV_info.size_px(2),self.FOV_info.size_px(1));
+                
+                %%% Construct mask for neuropil                
+                mask_soma=imresize(mask_soma,stretch_coords,'nearest');                
+                mask_neuropil=bwmorph(mask_soma,'thicken',4)-mask_soma;
+                
+                %%% Resize to original aspect ratio
+                mask_soma=imresize(mask_soma,fliplr(FOV_rect_px),'nearest');
+                mask_neuropil=imresize(mask_neuropil,fliplr(FOV_rect_px),'nearest');
+                
+                %%% Store data
+                self.ROI_matrix(iROI).mask_soma=sparse(mask_soma);
+                self.ROI_matrix(iROI).mask_neuropil=sparse(mask_neuropil);
+                self.ROI_matrix(iROI).data=[iROI ROI.ROI_nr sum(mask_neuropil(:)) sum(mask_soma(:)) sum(mask_neuropil(:))/sum(mask_soma(:))];
+                
+                %%% Add bounding box info
+                P=regionprops(mask_soma,'boundingBox');
+                self.ROI_matrix(iROI).rect_soma=floor(P.BoundingBox);
+                P=regionprops(mask_neuropil,'boundingBox');                
+                self.ROI_matrix(iROI).rect_neuropil=floor(P.BoundingBox);                
+            end   
+                        
+            if 0
+                %% Vizualize using this code
+                mask_soma=combine_sparse_masks(self.ROI_matrix,'mask_soma');
+                mask_neuropil=combine_sparse_masks(self.ROI_matrix,'mask_neuropil');
+
+                figure(132)
+                imshow(imresize(mask_neuropil*.5+mask_soma,stretch_coords,'nearest'),[])
+            end
+        end
+        
+        function clean_neuropil_shell(varargin)
+            % This method removes all pixels from the neuropil shell that
+            % overlap with neighboring cells
+            self=varargin{1};
+            ROIs=get_ROI_definitions(self);
+            N=length(ROIs);
+            mask_soma=combine_sparse_masks(self.ROI_matrix,'mask_soma');
+            for iROI=1:N
+                hole=(self.ROI_matrix(iROI).mask_neuropil+mask_soma) > 1; % find overlapping pixels
+                self.ROI_matrix(iROI).mask_neuropil(hole==1)=0; % reject overlapping pixels
+            end
+        end
+        
         function do_trace_extraction(varargin)
             tic
             self=varargin{1};
@@ -1372,10 +1435,11 @@ classdef imaging_dataset < handle
             fprintf('Loading frames... ')
             %self.file_name
             frames=self.get_frames([],1); % get all frames, apply motion correction
+            %frames=self.get_frames(1:20,1); % get all frames, apply motion correction
             F=frames(:);
             H=size(frames,1);
             W=size(frames,2);
-            N=size(frames,3);
+            nFrames=size(frames,3);
             
             %nFrames=size(frames,3);
             fprintf('took: %3.1fs\n',toc);
@@ -1386,16 +1450,23 @@ classdef imaging_dataset < handle
             fprintf('Extracting %d ROIs data... ',nROI)
             for iROI=1:nROI
                 rect=ROIs(iROI).ROI_rect;
+                               
                 %%% Allow selection of ROI close to border, pad with zeros
                 %%% if over!
-                switch 2
+                switch 3
                     case 1
                         tic
                         vol=frames(rect(2):rect(4),rect(1):rect(3),:);
+                        
+                        %%% Extract soma pixels
                         mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
                         res=vol.*mask;
                         ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
                         
+                        %%% Extract neuropil pixels
+                        mask=repmat(ROIs(iROI).mask_neuropil,1,1,size(vol,3));
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_neuropil=squeeze(mean(mean(res,1),2));
                         %squeeze(mean(mean(res,1),2))
                         
                         %figure()
@@ -1434,17 +1505,59 @@ classdef imaging_dataset < handle
                         A(indices)=1;
                         
                         % repeat
-                        I=repmat(A,N,1);
+                        I=repmat(A,nFrames,1);
                         
                         % extract pixels
                         pixels=F(I==1);
                         
                         % reshape and average
-                        response=reshape(pixels,[],N);
+                        response=reshape(pixels,[],nFrames);
                         
                         % write to data
                         ROIs(iROI).timeseries_soma=mean(response)';
+                        size(mean(response)')
                         toc
+                    case 3
+                        tic
+                        % use newly created sparse matrix as input, 
+                        % create bounding box 
+                        % extract only that from the 3D frames matrix
+                        % now replicated the selection plane to a matching
+                        % 3D matrix
+                        
+                        iROI
+                        
+                        rect_soma=self.ROI_matrix(iROI).rect_soma;
+                        mask_soma=self.ROI_matrix(iROI).mask_soma;
+                        rect_neuropil=self.ROI_matrix(iROI).rect_neuropil;
+                        mask_neuropil=self.ROI_matrix(iROI).mask_neuropil;
+                        
+                        %%% Get time series for soma pixels                        
+                        indices_X=rect_soma(2):rect_soma(2)+rect_soma(4)-1;
+                        indices_Y=rect_soma(1):rect_soma(1)+rect_soma(3)-1;
+                        vol=frames(indices_X,indices_Y,:);                        
+                        mask=repmat(full(mask_soma(indices_X,indices_Y)),1,1,nFrames);
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));                                                                                                
+                        
+                        %%% Get time series for soma pixels
+                        rect_neuropil
+                        
+                        indices_X=rect_neuropil(2):rect_neuropil(2)+rect_neuropil(4)-1;
+                        indices_Y=rect_neuropil(1):rect_neuropil(1)+rect_neuropil(3)-1;
+                        vol=frames(indices_X,indices_Y,:);
+                        mask=repmat(full(mask_neuropil(indices_X,indices_Y)),1,1,nFrames);
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_neuropil=squeeze(mean(mean(res,1),2));
+                        
+                        if 0
+                            %%
+                            figure(123)
+                            imshow(mean(res,3),[])
+                            colormap(self.green)
+                        end
+                        
+                        toc                        
                 end
                 
             end
@@ -1464,10 +1577,12 @@ classdef imaging_dataset < handle
             if extraction_options.neuropil_subtraction.use
                 %%% Step 01: get F
                 F_raw=ROI.timeseries_soma;
-                F_neuropil=ROI.time_series_neuropil;
+                F_neuropil=ROI.timeseries_neuropil;
                 
                 if any(blank_frames)
                     F_raw(blank_frames)=mean(F_raw(~blank_frames));
+                    size(F_neuropil)
+                    size(blank_frames)
                     F_neuropil(blank_frames)=mean(F_neuropil(~blank_frames));
                 end
                 
