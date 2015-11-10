@@ -27,7 +27,7 @@ switch key_event.Key
                 
                 if isfield(handles,'ROI_temp')
                     ROI_temp=handles.ROI_temp;
-                    if ~isempty(ROI_temp.ellipse_coords)
+                    if ~isempty(ROI_temp.ellipse_coords_centered)
                         disp('Adding ROI')
                         
                         if handles.nROI==0
