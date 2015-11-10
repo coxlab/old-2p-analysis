@@ -105,23 +105,25 @@ else
         Height=handles.session_data.mov_info.Height;
         Width=handles.session_data.mov_info.Width;
     end
-    remove_vector=zeros(nROI,1);
-    for iROI=1:nROI
-        ROI_rect=ROI(iROI).ROI_rect;
-        %if any(~between(ROI_rect([1 3]),[1 Height]))&&any(~between(ROI_rect([2 4]),[1 Width]))
-        if any(~between(ROI_rect([1 3]),[1 Width]))||any(~between(ROI_rect([2 4]),[1 Height]))
-            %disp('ROI is invalid after shift, removing')
-            remove_vector(iROI)=1;
-        else
-            %disp('ROI still valid')
+    
+    if 0
+        remove_vector=zeros(nROI,1);
+        for iROI=1:nROI
+            ROI_rect=ROI(iROI).ROI_rect;
+            %if any(~between(ROI_rect([1 3]),[1 Height]))&&any(~between(ROI_rect([2 4]),[1 Width]))
+            if any(~between(ROI_rect([1 3]),[1 Width]))||any(~between(ROI_rect([2 4]),[1 Height]))
+                %disp('ROI is invalid after shift, removing')
+                remove_vector(iROI)=1;
+            else
+                %disp('ROI still valid')
+            end
+        end
+        ROI(remove_vector==1)=[];
+        nRemoved=sum(remove_vector);
+        if nRemoved>0
+            fprintf('Removed %d ROI that became invalid after shift \n',nRemoved)
         end
     end
-    ROI(remove_vector==1)=[];
-    nRemoved=sum(remove_vector);
-    if nRemoved>0
-        fprintf('Removed %d ROI that became invalid after shift \n',nRemoved)
-    end
-    
     
     %%% Import ROIs from other file
     handles.ROI=ROI;
