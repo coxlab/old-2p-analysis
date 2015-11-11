@@ -23,7 +23,7 @@ classdef imaging_dataset < handle
         ROI_definitions=struct('ROI',struct(...
             'ROI_nr',[],'base_coord',[],'nCoords',[],'coords',[],...
             'ellipse_properties',[],'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],...
-            'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[],'time_series_neuropil',[])...
+            'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[])...
             );
         ROI_definition_nr=[];
         
@@ -1242,11 +1242,11 @@ classdef imaging_dataset < handle
                 ROI.mask_neuropil=mask_neuropil;
                 
                 ROI.timeseries_soma=[];
-                ROI.time_series_neuropil=[];
+                %ROI.time_series_neuropil=[];
                 
-                if isfield(self.ROI_definitions(1).ROI,'timeseries_neuropil')
-                    self.ROI_definitions(1).ROI=rmfield(self.ROI_definitions(1).ROI,'timeseries_neuropil');
-                end
+                %if isfield(self.ROI_definitions(1).ROI,'timeseries_neuropil')
+                %    self.ROI_definitions(1).ROI=rmfield(self.ROI_definitions(1).ROI,'timeseries_neuropil');
+                %end
                 %%% Store ROI properties
                 try
                     self.ROI_definitions(1).ROI(iROI)=ROI;
@@ -1272,7 +1272,7 @@ classdef imaging_dataset < handle
             blank_ROI=struct('ROI',struct(...
                 'ROI_nr',[],'base_coord',[],'nCoords',[],'coords',[],...
                 'ellipse_properties',[],'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],...
-                'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[],'time_series_neuropil',[])...
+                'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[])...
                 );
             
         end
