@@ -38,7 +38,7 @@ if isfield(handles,'session_data')
         y=coord(1);
         
         %%% Get section of size handles.window_size out of MIP image
-        detail=crop_selection(handles.MIP,[x y],handles.window_size);        
+        detail=crop_selection(handles.MIP,[x y],handles.window_size);
         cropped_area=detail==0;
         detail(cropped_area==1)=mean(detail(cropped_area==0));
         handles.detail_gamma_val=1;
