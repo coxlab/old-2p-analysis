@@ -76,8 +76,17 @@ switch key_event.Key
                         %%% Save to main ROI structure
                         ROI_temp.mask_soma=mask_soma;
                         ROI_temp.mask_neuropil=mask_neuropil;
-                        ROI_temp.timeseries_neuropil=[];
-                        handles.ROI(handles.nROI)=ROI_temp;                        
+                        
+                        %%% Make sure struct fields match
+                        if isfield(handles.ROI(handles.nROI-1),'timeseries_neuropil')&&~isfield(ROI_temp,'timeseries_neuropil')
+                            ROI_temp.timeseries_neuropil=[];
+                        end
+                        try 
+                            handles.ROI(handles.nROI)=ROI_temp;
+                        catch
+                            handles.ROI(handles.nROI-1)
+                            ROI_temp
+                        end
                         handles.ROI_selector=handles.nROI; % make this ROI the selected one
                         
                         %%% Clear data, ready for next ROI
@@ -113,7 +122,8 @@ switch key_event.Key
                 handles.ROI_selector
                 ROI_temp=handles.ROI_temp;
                 
-                T=handles.MIP(ROI_temp.ROI_rect(2):ROI_temp.ROI_rect(4),ROI_temp.ROI_rect(1):ROI_temp.ROI_rect(3));
+                %T=handles.MIP(ROI_temp.ROI_rect(2):ROI_temp.ROI_rect(4),ROI_temp.ROI_rect(1):ROI_temp.ROI_rect(3));
+                T=crop_selection(handles.MIP,fliplr(round(ROI_temp.center_coords)),handles.window_size);
                 
                 %%% Generate mask to isolate soma pixels
                 mask_soma=poly2mask(ROI_temp.ellipse_coords_centered(:,1),ROI_temp.ellipse_coords_centered(:,2),size(T,1),size(T,2));
@@ -127,8 +137,19 @@ switch key_event.Key
                 %%% Save to main ROI structure
                 ROI_temp.mask_soma=mask_soma;
                 ROI_temp.mask_neuropil=mask_neuropil;
-                ROI_temp.timeseries_neuropil=[];
-                handles.ROI(handles.ROI_selector)=ROI_temp;
+                %ROI_temp.timeseries_neuropil=[];
+                
+                %%% Make sure struct fields match
+                if isfield(handles.ROI(handles.nROI-1),'timeseries_neuropil')&&~isfield(ROI_temp,'timeseries_neuropil')
+                    ROI_temp.timeseries_neuropil=[];
+                end
+                try
+                    handles.ROI(handles.ROI_selector)=ROI_temp;
+                catch
+                    handles.ROI(handles.nROI-1)
+                    ROI_temp
+                end
+                %handles.ROI(handles.ROI_selector)=ROI_temp;
                 
                 %%% Clear data, ready for next ROI
                 handles.ROI_temp=handles.ROI_empty;
