@@ -1517,8 +1517,7 @@ classdef imaging_dataset < handle
                         ROIs(iROI).timeseries_soma=mean(response)';
                         size(mean(response)')
                         toc
-                    case 3
-                        tic
+                    case 3                        
                         % use newly created sparse matrix as input, 
                         % create bounding box 
                         % extract only that from the 3D frames matrix
@@ -1551,9 +1550,7 @@ classdef imaging_dataset < handle
                             figure(123)
                             imshow(mean(res,3),[])
                             colormap(self.green)
-                        end
-                        
-                        toc                        
+                        end                                                
                 end
                 
             end
