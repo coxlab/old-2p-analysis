@@ -23,6 +23,7 @@ switch animal_ID
         end
         %offset_correction=[-.4 .5];
     case 'AH05'
+        offset_correction_conditional=[-.4 .5];
         if ispc
             calibration_file_name='C:\Users\LBP\Documents\GitHub\MotionGUI\Calibrations\AH05_20150901.mat';
             im_name='C:\Users\LBP\Documents\GitHub\MotionGUI\Images\2015-09-01_AH05_im.png';
@@ -72,7 +73,11 @@ for iFile=1:nFiles
             %%% Create a cell object based on the cell_data class, to hold
             %%% all data and perform all subsequent analyses.
             cell_data(iROI)=cell_processor(iROI,dataset);
-            
+            %if load_name
+            %    cell_data(iROI).set_coordinate_frame(calibration_file_name,offset_correction_conditional)
+            %else
+            %cell_data(iROI).set_coordinate_frame(calibration_file_name,offset_correction)
+            %end
             cell_data(iROI).set_coordinate_frame(calibration_file_name,offset_correction)
             cell_data(iROI).get_cell_location()
             cell_data(iROI).get_cell_size()
