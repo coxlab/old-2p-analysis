@@ -2,7 +2,7 @@ clear all
 clc
 
 header_script
-animal_ID='AH05';
+animal_ID='AH03';
 plot_it=0;
 save_data=1;
 
