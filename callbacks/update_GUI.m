@@ -35,8 +35,9 @@ else
         
         %%% Show detail
         if 1
-            %%
-            T=handles.MIP(ROI.ROI_rect(2):ROI.ROI_rect(4),ROI.ROI_rect(1):ROI.ROI_rect(3));
+            %%            
+            %T=handles.MIP(ROI.ROI_rect(2):ROI.ROI_rect(4),ROI.ROI_rect(1):ROI.ROI_rect(3));            
+            T=crop_selection(handles.MIP,fliplr(round(ROI.center_coords)),handles.window_size);
             switch 2
                 case 0
                     % do nothing

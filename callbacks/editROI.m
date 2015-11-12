@@ -8,9 +8,10 @@ handles=guidata(H);
 
 % select part from the MIP based on current ROI coords
 ROI=handles.ROI(handles.ROI_selector);
-ROI_rect=ROI.ROI_rect;
 
-detail=handles.MIP(ROI_rect(2):ROI_rect(4),ROI_rect(1):ROI_rect(3));
+%ROI_rect=ROI.ROI_rect;
+%detail=handles.MIP(ROI_rect(2):ROI_rect(4),ROI_rect(1):ROI_rect(3));
+detail=crop_selection(handles.MIP,fliplr(round(ROI.center_coords)),handles.window_size);
 
 FFT_mask=drawCircle2(size(detail,1)/4,[0 0],size(detail));
 DC=mean(detail(:));

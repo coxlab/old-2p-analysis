@@ -25,6 +25,8 @@ nFiles=length(files);
 % Run step 03
 % Rest of pipeline is sort of same
 
+
+
 %ROI_definition_nr=1; % use auto ROIs
 
 for iFile=1:nFiles
@@ -51,6 +53,12 @@ for iFile=1:nFiles
         if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
             
             %session_data.ROI_definition_nr=ROI_definition_nr;
+            
+            %%% Create sparse ROI regions based on coords_MIP
+            tic
+            session_data.create_mask_from_ROI()
+            session_data.clean_neuropil_shell()
+            toc
             
             %%% Extract activity traces
             %session_data.reset_trace_matrix() % allows to recalculate the traces
