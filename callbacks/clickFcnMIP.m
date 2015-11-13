@@ -6,14 +6,14 @@ if isfield(handles,'session_data')
     
     session_data=handles.session_data;
     
-    %%% Get general movie properties
-    if isfield(session_data,'data')
-        Width=session_data.data(3);
-        Height=session_data.data(4);
-    else
-        Width=session_data.mov_info.Width;
-        Height=session_data.mov_info.Height;
-    end
+%     %%% Get general movie properties
+%     if isfield(session_data,'data')
+%         Width=session_data.data(3);
+%         Height=session_data.data(4);
+%     else
+%         Width=session_data.mov_info.Width;
+%         Height=session_data.mov_info.Height;
+%     end
     
     %%% Read point user click on
     current_point=get(handles.subplots(1).fig,'CurrentPoint');
