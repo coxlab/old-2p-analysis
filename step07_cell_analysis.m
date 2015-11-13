@@ -93,7 +93,8 @@ cell_size=cat(1,cell_data.cell_size);
 sparseness_avg=cat(1,cell_data.sparseness_avg);
 invariance_avg=cat(1,cell_data.invariance_avg);
 
-sel1=responsive_cells>0&cell_size>0*10;
+sel1=responsive_cells>0;
+%sel1=responsive_cells>0&cell_size>10*10;
 switch 3
     case 1
         sel2=responsive_cells>0;
