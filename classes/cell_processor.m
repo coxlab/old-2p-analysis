@@ -310,7 +310,7 @@ classdef cell_processor < handle
         end
         
         function calc_invariance(varargin)
-            % Rust and DiCarlo 2012
+            % Rust and DiCarlo 2012 : single neuron tolerance
             self=varargin{1};
             
             if self.nResponsive_positions>1 % need at least 2 positions
