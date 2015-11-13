@@ -84,6 +84,9 @@ handles.status=0;
 blank_im=zeros(512,512);
 handles.subplots(1).fig=subplot(1,2,1,'Parent',graphPanel);
 handles.subplots(1).h(1)=imshow(blank_im);
+
+handles.nROI_preload=400;
+
 % add gamma value buttons
 uicontrol(graphPanel,'Style','pushbutton','units','normalized','position',[.01 .35 .04 .1],'string','^','callback',{@MIP_gamma,'up'})
 uicontrol(graphPanel,'Style','pushbutton','units','normalized','position',[.01 .25 .04 .1],'string','v','callback',{@MIP_gamma,'down'})
