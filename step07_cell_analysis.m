@@ -79,7 +79,7 @@ nCells=length(cell_data);
 
 FOV_mapping=getMapping({cell_data.session_date});
 cell_locations=cat(1,cell_data.cell_location_FOV_um);
-responsive_cells=cat(1,cell_data.nResponsive_positions);
+responsive_positions=cat(1,cell_data.nResponsive_positions);
 %sel=responsive_cells>0;
 %[sum(sel) length(sel)]
 
@@ -91,15 +91,22 @@ EL=RF_center(:,2);
 RF_sizes=cat(1,cell_data.RF_size);
 cell_size=cat(1,cell_data.cell_size);
 
+%%
 sparseness_avg=cat(1,cell_data.sparseness_avg);
+sparseness_max=NaN(size(sparseness_avg));
+for iCell=1:nCells
+    if cell_data(iCell).nResponsive_positions>0
+        sparseness_max(iCell)=max(cell_data(iCell).sparseness_per_position);
+    end
+end
 invariance_avg=cat(1,cell_data.invariance_avg);
-
+%%
 %sel1=false(nCells,1);
-sel1=responsive_cells>0;
+sel1=responsive_positions>0;
 %sel1=responsive_cells>0&cell_size>10*10;
 switch 3
     case 1
-        sel2=responsive_cells>0;
+        sel2=responsive_positions>0;
     case 2        
         sel2=sel1==1&FOV_mapping==7;        
         figure(334)
@@ -167,36 +174,93 @@ V1_selection=inpolygon(cell_locations(:,1),cell_locations(:,2),V1_coords(:,1),V1
 
 
 %% Receptive field sizes 
-kruskalwallis(RF_sizes,responsive_cells>0&V1_selection)
-% p<1e-4
+% M=[responsive_positions V1_selection RF_sizes];
+% M=M(responsive_positions>0,:);
 
-%% Sparseness, proxy for 
+% disp('receptive field size')
+% p_value=kruskalwallis(M(:,3),1-M(:,2))
+
+M=[responsive_positions 1-V1_selection RF_sizes];
+M=M(responsive_positions>1,:);
+N=size(M,1);
+
+m_V1=mean(M(M(:,2)==0,3));
+m_LM=mean(M(M(:,2)==1,3));
+p_value=kruskalwallis(M(:,3),M(:,2),'off');
+fprintf('RF_sizes (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_value N])
+
+
+% p=0.5077
+
+%% Sparseness, proxy for selectivity
 
 % V1
-sel1=responsive_cells>0&V1_selection==1;
-sel2=sel1==1&sparseness_avg>3/10;
-tabulate(sel2(sel1))
+% sel1=responsive_positions>0&V1_selection==1;
+% sel2=sel1==1&sparseness_avg>3/10;
+% tabulate(sel2(sel1))
+% 
+% % extrastriate
+% sel1=responsive_positions>0&V1_selection==0;
+% sel2=sel1==1&sparseness_avg>3/10;
+% tabulate(sel2(sel1))
 
-% extrastriate
-sel1=responsive_cells>0&V1_selection==0;
-sel2=sel1==1&sparseness_avg>3/10;
-tabulate(sel2(sel1))
-
-%% plot
+% plot
 subplot(211)
-hist(sparseness_avg(responsive_cells>0&V1_selection==1),50)
+hist(sparseness_avg(responsive_positions>0&V1_selection==1),50)
 axis([0 1 0 100])
 subplot(212)
-hist(sparseness_avg(responsive_cells>0&V1_selection==0),50)
+hist(sparseness_avg(responsive_positions>0&V1_selection==0),50)
 axis([0 1 0 100])
 
 
-%%
-A=sparseness_avg(responsive_cells>0&V1_selection==1);
-B=sparseness_avg(responsive_cells>0&V1_selection==0);
-kruskalwallis(sparseness_avg,responsive_cells>0&V1_selection)
-% p=0.1587, no difference in sparseness!
+% stats
+M=[responsive_positions 1-V1_selection sparseness_avg];
+M=M(responsive_positions>1,:);
+N=size(M,1);
+
+m_V1=mean(M(M(:,2)==0,3));
+m_LM=mean(M(M(:,2)==1,3));
+tabulate(M(M(:,2)==0,3)>.3)
+tabulate(M(M(:,2)==1,3)>.3)
+
+p_value=kruskalwallis(M(:,3),M(:,2),'off');
+fprintf('Sparseness avg (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_value N])
 
 
+% p=0.2804, no difference in sparseness!
+
+% stats sparseness_max
+M=[responsive_positions 1-V1_selection sparseness_max];
+M=M(responsive_positions>1,:);
+N=size(M,1);
+
+m_V1=mean(M(M(:,2)==0,3));
+m_LM=mean(M(M(:,2)==1,3));
+tabulate(M(M(:,2)==0,3)>.3)
+tabulate(M(M(:,2)==1,3)>.3)
+
+p_value=kruskalwallis(M(:,3),M(:,2),'off');
+fprintf('Sparseness Max (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_value N])
+
+
+
+
+%% invariance
+M=[responsive_positions 1-V1_selection invariance_avg];
+M=M(responsive_positions>1,:);
+N=size(M,1);
+
+m_V1=mean(M(M(:,2)==0,3));
+m_LM=mean(M(M(:,2)==1,3));
+p_value=kruskalwallis(M(:,3),M(:,2),'off');
+fprintf('Invariance (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_value N])
+
+
+
+%%% Story: 
+% for cells with at least 2 RF positions
+% median RF size is on average bigger (p=0.51)
+% median sparseness at best position is lower (p=0.02)
+% median invariance over positions is higher (p<1e-5)
 
 
