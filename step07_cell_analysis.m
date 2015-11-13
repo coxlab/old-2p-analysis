@@ -44,7 +44,8 @@ imshow(BG,[])
 colormap(green)
 hold on
 p(1)=plot(0,0,'k.');
-p(2)=plot(0,0,'r.');
+p(2)=plot(0,0,'.','color',[1 1 1]*.4);
+p(3)=plot(0,0,'r.');
 axis equal
 axis xy
 axis([400 1000 400 1000])
@@ -93,6 +94,7 @@ cell_size=cat(1,cell_data.cell_size);
 sparseness_avg=cat(1,cell_data.sparseness_avg);
 invariance_avg=cat(1,cell_data.invariance_avg);
 
+%sel1=false(nCells,1);
 sel1=responsive_cells>0;
 %sel1=responsive_cells>0&cell_size>10*10;
 switch 3
@@ -117,6 +119,11 @@ switch 3
     case 8
         sel2=sel1==1&invariance_avg>2/10;
         
+    case 9
+        %V1_coords=[5899 8957 ; 5888 6444 ; 7521 8957];
+        V1_coords=[5790 6160 ; 5790 9140 ; 7770 9140];
+        sel2=inpolygon(cell_locations(:,1),cell_locations(:,2),V1_coords(:,1),V1_coords(:,2));
+        
         % combos
     case 10 
         %sel1=responsive_cells>0&cell_size>20*10;
@@ -129,6 +136,7 @@ switch 3
         sel2=sel1==1&EL>=4;        
 end
 
+[length(sel1) sum(sel1) sum(sel2)]
 tabulate(sel1)
 tabulate(sel2(sel1))
 
@@ -144,9 +152,51 @@ tabulate(sel2(sel1))
 %plot(cell_locations(sel2,1)*resize_factor,cell_locations(sel2,2)*resize_factor,'r.')
 
 
+set(p(2),'xData',cell_locations(~sel1,1)*resize_factor,'yData',cell_locations(~sel1,2)*resize_factor)
 set(p(1),'xData',cell_locations(sel1,1)*resize_factor,'yData',cell_locations(sel1,2)*resize_factor)
-set(p(2),'xData',cell_locations(sel2,1)*resize_factor,'yData',cell_locations(sel2,2)*resize_factor)
-%axis([-350 350 -250 250])
+set(p(3),'xData',cell_locations(sel2,1)*resize_factor,'yData',cell_locations(sel2,2)*resize_factor)
+axis([570 920 590 920])
 %hold off
 
 %% plot the percentage of neuron within a certain area, relative to scambled values
+
+%% Divide into V1 and non-V1, using in poly
+%V1_coords=[5899 8957 ; 5888 6444 ; 7521 8957];
+V1_coords=[5790 6160 ; 5790 9140 ; 7770 9140];
+V1_selection=inpolygon(cell_locations(:,1),cell_locations(:,2),V1_coords(:,1),V1_coords(:,2));
+
+
+%% Receptive field sizes 
+kruskalwallis(RF_sizes,responsive_cells>0&V1_selection)
+% p<1e-4
+
+%% Sparseness, proxy for 
+
+% V1
+sel1=responsive_cells>0&V1_selection==1;
+sel2=sel1==1&sparseness_avg>3/10;
+tabulate(sel2(sel1))
+
+% extrastriate
+sel1=responsive_cells>0&V1_selection==0;
+sel2=sel1==1&sparseness_avg>3/10;
+tabulate(sel2(sel1))
+
+%% plot
+subplot(211)
+hist(sparseness_avg(responsive_cells>0&V1_selection==1),50)
+axis([0 1 0 100])
+subplot(212)
+hist(sparseness_avg(responsive_cells>0&V1_selection==0),50)
+axis([0 1 0 100])
+
+
+%%
+A=sparseness_avg(responsive_cells>0&V1_selection==1);
+B=sparseness_avg(responsive_cells>0&V1_selection==0);
+kruskalwallis(sparseness_avg,responsive_cells>0&V1_selection)
+% p=0.1587, no difference in sparseness!
+
+
+
+
