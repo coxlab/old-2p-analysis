@@ -44,7 +44,8 @@ imshow(BG,[])
 colormap(green)
 hold on
 p(1)=plot(0,0,'k.');
-p(2)=plot(0,0,'r.');
+p(2)=plot(0,0,'.','color',[1 1 1]*.4);
+p(3)=plot(0,0,'r.');
 axis equal
 axis xy
 axis([400 1000 400 1000])
@@ -93,6 +94,7 @@ cell_size=cat(1,cell_data.cell_size);
 sparseness_avg=cat(1,cell_data.sparseness_avg);
 invariance_avg=cat(1,cell_data.invariance_avg);
 
+%sel1=false(nCells,1);
 sel1=responsive_cells>0;
 %sel1=responsive_cells>0&cell_size>10*10;
 switch 3
@@ -129,6 +131,7 @@ switch 3
         sel2=sel1==1&EL>=4;        
 end
 
+[length(sel1) sum(sel1) sum(sel2)]
 tabulate(sel1)
 tabulate(sel2(sel1))
 
@@ -144,9 +147,10 @@ tabulate(sel2(sel1))
 %plot(cell_locations(sel2,1)*resize_factor,cell_locations(sel2,2)*resize_factor,'r.')
 
 
-set(p(1),'xData',cell_locations(sel1,1)*resize_factor,'yData',cell_locations(sel1,2)*resize_factor)
-set(p(2),'xData',cell_locations(sel2,1)*resize_factor,'yData',cell_locations(sel2,2)*resize_factor)
-%axis([-350 350 -250 250])
+set(p(1),'xData',cell_locations(~sel1,1)*resize_factor,'yData',cell_locations(~sel1,2)*resize_factor)
+set(p(2),'xData',cell_locations(sel1,1)*resize_factor,'yData',cell_locations(sel1,2)*resize_factor)
+set(p(3),'xData',cell_locations(sel2,1)*resize_factor,'yData',cell_locations(sel2,2)*resize_factor)
+axis([570 920 590 920])
 %hold off
 
 %% plot the percentage of neuron within a certain area, relative to scambled values
