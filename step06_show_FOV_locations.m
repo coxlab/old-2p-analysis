@@ -7,7 +7,7 @@ clc
 
 header_script
 
-animal_ID='AH05';
+animal_ID='AH03';
 
 offset_correction=[0 0];
 switch animal_ID
