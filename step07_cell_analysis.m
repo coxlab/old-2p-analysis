@@ -43,9 +43,10 @@ clf
 imshow(BG,[])
 colormap(green)
 hold on
-p(1)=plot(0,0,'k.');
-p(2)=plot(0,0,'.','color',[1 1 1]*.4);
-p(3)=plot(0,0,'r.');
+marker_size=8;
+p(1)=plot(0,0,'k.','markerSize',marker_size);
+p(2)=plot(0,0,'.','color',[1 1 1]*.4,'markerSize',marker_size);
+p(3)=plot(0,0,'r.','markerSize',marker_size);
 axis equal
 axis xy
 axis([400 1000 400 1000])
@@ -166,12 +167,15 @@ axis([570 920 590 920])
 %hold off
 
 %% plot the percentage of neuron within a certain area, relative to scambled values
+% to do
+
 
 %% Divide into V1 and non-V1, using in poly
 %V1_coords=[5899 8957 ; 5888 6444 ; 7521 8957];
 V1_coords=[5790 6160 ; 5790 9140 ; 7770 9140];
 V1_selection=inpolygon(cell_locations(:,1),cell_locations(:,2),V1_coords(:,1),V1_coords(:,2));
 
+cell_selection=responsive_positions>1&cell_size>0;
 
 %% Receptive field sizes 
 % M=[responsive_positions V1_selection RF_sizes];
@@ -181,7 +185,7 @@ V1_selection=inpolygon(cell_locations(:,1),cell_locations(:,2),V1_coords(:,1),V1
 % p_value=kruskalwallis(M(:,3),1-M(:,2))
 
 M=[responsive_positions 1-V1_selection RF_sizes];
-M=M(responsive_positions>1,:);
+M=M(cell_selection,:);
 N=size(M,1);
 
 m_V1=mean(M(M(:,2)==0,3));
@@ -205,23 +209,23 @@ fprintf('RF_sizes (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_value 
 % tabulate(sel2(sel1))
 
 % plot
-subplot(211)
-hist(sparseness_avg(responsive_positions>0&V1_selection==1),50)
-axis([0 1 0 100])
-subplot(212)
-hist(sparseness_avg(responsive_positions>0&V1_selection==0),50)
-axis([0 1 0 100])
+% subplot(211)
+% hist(sparseness_avg(responsive_positions>0&V1_selection==1),50)
+% axis([0 1 0 100])
+% subplot(212)
+% hist(sparseness_avg(responsive_positions>0&V1_selection==0),50)
+% axis([0 1 0 100])
 
 
 % stats
 M=[responsive_positions 1-V1_selection sparseness_avg];
-M=M(responsive_positions>1,:);
+M=M(cell_selection,:);
 N=size(M,1);
 
 m_V1=mean(M(M(:,2)==0,3));
 m_LM=mean(M(M(:,2)==1,3));
-tabulate(M(M(:,2)==0,3)>.3)
-tabulate(M(M(:,2)==1,3)>.3)
+% tabulate(M(M(:,2)==0,3)>.3)
+% tabulate(M(M(:,2)==1,3)>.3)
 
 p_value=kruskalwallis(M(:,3),M(:,2),'off');
 fprintf('Sparseness avg (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_value N])
@@ -231,13 +235,13 @@ fprintf('Sparseness avg (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_
 
 % stats sparseness_max
 M=[responsive_positions 1-V1_selection sparseness_max];
-M=M(responsive_positions>1,:);
+M=M(cell_selection,:);
 N=size(M,1);
 
 m_V1=mean(M(M(:,2)==0,3));
 m_LM=mean(M(M(:,2)==1,3));
-tabulate(M(M(:,2)==0,3)>.3)
-tabulate(M(M(:,2)==1,3)>.3)
+% tabulate(M(M(:,2)==0,3)>.3)
+% tabulate(M(M(:,2)==1,3)>.3)
 
 p_value=kruskalwallis(M(:,3),M(:,2),'off');
 fprintf('Sparseness Max (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_value N])
@@ -247,7 +251,7 @@ fprintf('Sparseness Max (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_
 
 %% invariance
 M=[responsive_positions 1-V1_selection invariance_avg];
-M=M(responsive_positions>1,:);
+M=M(cell_selection,:);
 N=size(M,1);
 
 m_V1=mean(M(M(:,2)==0,3));
@@ -259,8 +263,8 @@ fprintf('Invariance (V1:%3.2f vs. LM:%3.2f) p=%3.2f (N=%d) \n',[m_V1 m_LM p_valu
 
 %%% Story: 
 % for cells with at least 2 RF positions
-% median RF size is on average bigger (p=0.51)
-% median sparseness at best position is lower (p=0.02)
+% median RF size is slightly bigger (ns. p=0.51)
+% median sparseness at best position is lower (p=0.02, ns. if averaged over positions p=0.39)
 % median invariance over positions is higher (p<1e-5)
 
 
