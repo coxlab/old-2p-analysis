@@ -71,7 +71,7 @@ if isfield(handles,'ROI_temp')
                 ROI_temp.coords_MIP=coords_MIP;                
                 
                 %%% show fit on both panels
-                set(handles.subplots(2).p(2),'xData',ellipse_coords(1:end-1,1),'yData',ellipse_coords(1:end-1,2)) % detail
+                set(handles.subplots(2).p(2),'xData',ellipse_coords(1:end,1),'yData',ellipse_coords(1:end,2)) % detail
                 set(handles.subplots(1).p(2),'xData',coords_MIP(:,1),'yData',coords_MIP(:,2),'color','c') % MIP
             else % remove fit from both panels
                 set(handles.subplots(2).p(2),'xData',[],'yData',[])
