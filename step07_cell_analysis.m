@@ -107,24 +107,25 @@ sel1=responsive_positions>0;
 %sel1=responsive_cells>0&cell_size>10*10;
 switch 3
     case 1
-        sel2=responsive_positions>0;
+        sel2=responsive_positions>6;
     case 2        
-        sel2=sel1==1&FOV_mapping==7;        
-        figure(334)
-        MAP_avg=mean(cat(3,cell_data(sel2).RF_map_TH),3);
-        imagesc(flipud(MAP_avg))
-        xlabel('Periphery <=> Center')
+        sel2=sel1==1&FOV_mapping==11;        
+        %figure(334)
+        %MAP_avg=mean(cat(3,cell_data(sel2).RF_map_TH),3);
+        %imagesc(flipud(MAP_avg))
+        %xlabel('Periphery <=> Center')
     case 3
-        sel2=sel1==1&AZ<=4;
+        sel2=sel1==1&AZ<=4; % periphery to center 1-8
+        %sel2=sel1==1&AZ>=9 - 5; % center to periphery 
     case 4
-        sel2=sel1==1&EL<=2;
-    case 5
+        sel2=sel1==1&EL<=1;
+    case 5 % Receptive field size
         sel2=sel1==1&RF_sizes>2;
-    case 6
+    case 6 % somas and not dendrites
         sel2=sel1==1&cell_size>30*10;
-    case 7
+    case 7 % selective cells
         sel2=sel1==1&sparseness_avg>3/10;
-    case 8
+    case 8 % tolerant cells
         sel2=sel1==1&invariance_avg>2/10;
         
     case 9
@@ -168,6 +169,30 @@ axis([570 920 590 920])
 
 %% plot the percentage of neuron within a certain area, relative to scambled values
 % to do
+
+% create a big empty matrix
+
+% fill pixel at each cell_location with value of that cell
+
+% smooth this jittered map, ignore NaNs in between
+
+% try interp smoothed surface
+X=round(cell_locations(sel2,1));
+Y=round(cell_locations(sel2,2));
+Z=AZ(sel2);
+plot(X,Y,'.')
+
+S=sparse(X-min(X)+1,Y-min(Y)+1,Z);
+spy(S)
+
+F=full(S);
+S
+
+imshow(F,[])
+axis xy
+
+
+
 
 
 %% Divide into V1 and non-V1, using in poly
