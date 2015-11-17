@@ -170,27 +170,101 @@ axis([570 920 590 920])
 %% plot the percentage of neuron within a certain area, relative to scambled values
 % to do
 
-% create a big empty matrix
+% decide to work in image space or physical space
 
-% fill pixel at each cell_location with value of that cell
-
-% smooth this jittered map, ignore NaNs in between
-
-% try interp smoothed surface
-X=round(cell_locations(sel2,1));
-Y=round(cell_locations(sel2,2));
-Z=AZ(sel2);
-plot(X,Y,'.')
-
-S=sparse(X-min(X)+1,Y-min(Y)+1,Z);
-spy(S)
-
-F=full(S);
-S
-
-imshow(F,[])
-axis xy
-
+which_space=2;
+switch which_space
+    case 1
+        % create a big empty matrix
+        
+        % fill pixel at each cell_location with value of that cell
+        
+        % smooth this jittered map, ignore NaNs in between
+        
+        % try interp smoothed surface
+        X=round(cell_locations(sel2,1));
+        Y=round(cell_locations(sel2,2));
+        Z=AZ(sel2);
+        plot(X,Y,'.')
+        
+        S=sparse(X-min(X)+1,Y-min(Y)+1,Z);
+        spy(S)
+        
+        F=full(S);
+        F_s=imresize(F,.2);
+                        
+        imshow(rot90(F_s),[])
+        colormap jet
+    case 2
+        %% Set parameters                        
+        analysis_variable=1;
+        resample_factor=1;
+        stride_length=10*resample_factor;
+        window_size=250; % window size in which to look for cells
+        nCells_min=3; % minimal number of cells before doing analysis
+                
+        X=cell_locations(:,1);
+        Y=cell_locations(:,2);
+        range_x=[min(X) max(X)];
+        range_y=[min(Y) max(Y)];
+        nSteps_x=round(diff(range_x)/stride_length);
+        nSteps_y=round(diff(range_y)/stride_length);
+        [rows,cols]=meshgrid(linspace(range_x(1),range_x(2),nSteps_x),linspace(range_y(1),range_y(2),nSteps_y));
+        
+        R=round(rows(:));
+        C=round(cols(:));
+        
+        N=length(R);        
+        res_image_vector=zeros(N,1);
+        pos_rect=[0 0 window_size window_size];
+        
+        if analysis_variable==1
+            pre_selection=responsive_positions>-1;
+        else
+            pre_selection=responsive_positions>1;
+        end
+        nSelected_neurons=sum(pre_selection);
+        
+        tic
+        for iPos=1:N
+            rect=CenterRectOnPoint(pos_rect,R(iPos),C(iPos));
+            sel=inpolygon(X,Y,rect([1 3]),rect([2 4]))&pre_selection;
+            if sum(sel)>nCells_min
+                switch analysis_variable
+                    case 1 % %responsive                        
+                        res_image_vector(iPos)=mean(responsive_positions(sel)>0)*100;
+                    case 2 % responsive positions
+                        res_image_vector(iPos)=mean(responsive_positions(sel));                        
+                    case 3 % Azimuth
+                        res_image_vector(iPos)=mean(9-AZ(sel));
+                    case 4 % elevation
+                        res_image_vector(iPos)=mean(4-EL(sel));
+                    case 5 % receptive field size
+                        res_image_vector(iPos)=mean(RF_sizes(sel));
+                    case 6 % sparseness                         
+                        res_image_vector(iPos)=mean(sparseness_max(sel))*100;
+                    case 7 % invariance
+                        res_image_vector(iPos)=mean(invariance_avg(sel))*100;                        
+                end
+            end
+        end    
+        toc
+        
+        %% Show map
+        res_image=reshape(res_image_vector,nSteps_y,nSteps_x);
+        res_image_smooth=imgaussfilt(res_image,3);
+        imagesc((res_image_smooth))
+        axis xy
+        axis square
+        set(gca,'XTickLabel',get(gca,'XTick')*stride_length)
+        set(gca,'YTickLabel',get(gca,'YTick')*stride_length)
+        xlabel('Medial-lateral position (µm)')
+        ylabel('Posterio-Anterior position (µm)')
+        title(sprintf('Selected %d neurons out of %d total.',[nSelected_neurons nCells]))
+        set(gca,'CLim',[min(res_image(res_image(:)>0)) max(res_image(res_image(:)>0))])
+        colormap(jet)
+        colorbar        
+end
 
 
 
