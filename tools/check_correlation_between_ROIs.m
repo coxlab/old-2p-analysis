@@ -17,7 +17,7 @@ for iFile=1:nFiles
     load(load_name,'session_data')
     
     if ~session_data.is_static_FOV
-        fprintf('Skipping %d',iFile)
+        fprintf('Skipping %d... \n',iFile)
     else
         R=corr(session_data.Activity_traces.spike_matrix);
         R(eye(size(R))==1)=0;
