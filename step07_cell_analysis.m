@@ -33,6 +33,19 @@ switch animal_ID
         end
 end
 
+
+
+%%
+tic
+cell_data=[];
+for iFile=1:nFiles    
+    load_name=fullfile(dataset_folder,dataset_files(iFile).name);
+    S=load(load_name);
+    cell_data=cat(2,cell_data,S.cell_data);
+end
+toc
+nCells=length(cell_data);
+
 %%
 resize_factor=.1;
 BG=double(imread(im_name))/256;
@@ -53,17 +66,6 @@ axis([400 1000 400 1000])
 drawnow
 
 
-
-%%
-tic
-cell_data=[];
-for iFile=1:nFiles    
-    load_name=fullfile(dataset_folder,dataset_files(iFile).name);
-    S=load(load_name);
-    cell_data=cat(2,cell_data,S.cell_data);
-end
-toc
-nCells=length(cell_data);
 
 %%
 % cell_locations=zeros(nCells,2);
@@ -92,7 +94,7 @@ EL=RF_center(:,2);
 RF_sizes=cat(1,cell_data.RF_size);
 cell_size=cat(1,cell_data.cell_size);
 
-%%
+%
 sparseness_avg=cat(1,cell_data.sparseness_avg);
 sparseness_max=NaN(size(sparseness_avg));
 for iCell=1:nCells
@@ -102,14 +104,17 @@ for iCell=1:nCells
 end
 invariance_avg=cat(1,cell_data.invariance_avg);
 %%
+
+analysis_variable=4;
 %sel1=false(nCells,1);
 sel1=responsive_positions>0;
 %sel1=responsive_cells>0&cell_size>10*10;
-switch 3
+switch analysis_variable
     case 1
         sel2=responsive_positions>0;
+        %sel2=responsive_positions>0;
     case 2        
-        sel2=sel1==1&FOV_mapping==11;        
+        sel2=responsive_positions>4;
         %figure(334)
         %MAP_avg=mean(cat(3,cell_data(sel2).RF_map_TH),3);
         %imagesc(flipud(MAP_avg))
@@ -118,7 +123,7 @@ switch 3
         sel2=sel1==1&AZ<=4; % periphery to center 1-8
         %sel2=sel1==1&AZ>=9 - 5; % center to periphery 
     case 4
-        sel2=sel1==1&EL<=1;
+        sel2=sel1==1&EL<=2;
     case 5 % Receptive field size
         sel2=sel1==1&RF_sizes>2;
     case 6 % somas and not dendrites
@@ -196,8 +201,7 @@ switch which_space
         imshow(rot90(F_s),[])
         colormap jet
     case 2
-        %% Set parameters                        
-        analysis_variable=3;
+        %% Set parameters
         resample_factor=1;
         stride_length=10*resample_factor;
         window_size=250; % window size in which to look for cells
@@ -233,7 +237,7 @@ switch which_space
                 switch analysis_variable
                     case 1 % %responsive                        
                         res_image_vector(iPos)=mean(responsive_positions(sel)>0)*100;
-                    case 2 % responsive positions
+                    case 2 % #responsive positions
                         res_image_vector(iPos)=mean(responsive_positions(sel));                        
                     case 3 % Azimuth
                         res_image_vector(iPos)=mean(9-AZ(sel));
@@ -266,6 +270,16 @@ switch which_space
         set(gca,'CLim',[min(res_image(res_image(:)>0)) max(res_image(res_image(:)>0))])
         colormap(jet)
         colorbar        
+        
+        if 0
+            %%
+            file_name='/Users/benvermaercke/Desktop/test.png';
+            
+            A=uint8(res_image_smooth/max(res_image_smooth(:))*256);
+            
+            
+            imwrite(im,file_name)
+        end
 end
 
 
