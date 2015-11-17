@@ -77,7 +77,7 @@ else
         %A=cat(1,handles.ROI.coords_MIP_plot);
         %set(handles.subplots(1).p(1),'xData',A(:,1),'yData',A(:,2));        
         for iROI=1:handles.nROI
-            A=handles.ROI(iROI).coords_MIP;                                   
+            A=handles.ROI(iROI).coords_MIP;            
             set(handles.subplots(1).p(10+iROI),'xData',A(:,1),'yData',A(:,2));
         end        
         set(handles.subplots(1).p(2),'xData',ROI.coords_MIP(:,1),'yData',ROI.coords_MIP(:,2));
