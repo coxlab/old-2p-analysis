@@ -105,7 +105,7 @@ invariance_avg=cat(1,cell_data.invariance_avg);
 %sel1=false(nCells,1);
 sel1=responsive_positions>0;
 %sel1=responsive_cells>0&cell_size>10*10;
-switch 1
+switch 3
     case 1
         sel2=responsive_positions>0;
     case 2        
@@ -197,11 +197,11 @@ switch which_space
         colormap jet
     case 2
         %% Set parameters                        
-        analysis_variable=1;
+        analysis_variable=3;
         resample_factor=1;
         stride_length=10*resample_factor;
         window_size=250; % window size in which to look for cells
-        nCells_min=3; % minimal number of cells before doing analysis
+        nCells_min=2; % minimal number of cells before doing analysis
                 
         X=cell_locations(:,1);
         Y=cell_locations(:,2);
@@ -221,7 +221,7 @@ switch which_space
         if analysis_variable==1
             pre_selection=responsive_positions>-1;
         else
-            pre_selection=responsive_positions>1;
+            pre_selection=responsive_positions>0;
         end
         nSelected_neurons=sum(pre_selection);
         
