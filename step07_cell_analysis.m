@@ -105,9 +105,9 @@ invariance_avg=cat(1,cell_data.invariance_avg);
 %sel1=false(nCells,1);
 sel1=responsive_positions>0;
 %sel1=responsive_cells>0&cell_size>10*10;
-switch 3
+switch 1
     case 1
-        sel2=responsive_positions>6;
+        sel2=responsive_positions>0;
     case 2        
         sel2=sel1==1&FOV_mapping==11;        
         %figure(334)
@@ -253,6 +253,8 @@ switch which_space
         %% Show map
         res_image=reshape(res_image_vector,nSteps_y,nSteps_x);
         res_image_smooth=imgaussfilt(res_image,3);
+        
+        figure(456)
         imagesc((res_image_smooth))
         axis xy
         axis square
