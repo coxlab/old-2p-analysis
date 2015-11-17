@@ -60,6 +60,10 @@ else
             
             fraction=.5;
             T=T/max(T(:));
+            
+            G=bellCurve2(1,size(T)/2+1,size(T)/3,size(T),0);
+            T=T.*G;
+            
             N=double(ROI.mask_neuropil)/max(ROI.mask_neuropil(:))*(1-fraction);
             S=double(ROI.mask_soma)/max(ROI.mask_soma(:))*(1-fraction);
             RGB=cat(3,N,T,S);
