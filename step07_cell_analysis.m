@@ -60,6 +60,7 @@ marker_size=8;
 p(1)=plot(0,0,'k.','markerSize',marker_size);
 p(2)=plot(0,0,'.','color',[1 1 1]*.4,'markerSize',marker_size);
 p(3)=plot(0,0,'r.','markerSize',marker_size);
+t=title('Variable name');
 axis equal
 axis xy
 axis([400 1000 400 1000])
@@ -105,7 +106,9 @@ end
 invariance_avg=cat(1,cell_data.invariance_avg);
 %%
 
+analysis_variable_names={'Responsive','Selective positions','Azimuth','Elevation','RF size','Cell Size','Sparseness','Invariance'};
 analysis_variable=4;
+
 %sel1=false(nCells,1);
 sel1=responsive_positions>0;
 %sel1=responsive_cells>0&cell_size>10*10;
@@ -169,6 +172,7 @@ tabulate(sel2(sel1))
 set(p(2),'xData',cell_locations(~sel1,1)*resize_factor,'yData',cell_locations(~sel1,2)*resize_factor)
 set(p(1),'xData',cell_locations(sel1,1)*resize_factor,'yData',cell_locations(sel1,2)*resize_factor)
 set(p(3),'xData',cell_locations(sel2,1)*resize_factor,'yData',cell_locations(sel2,2)*resize_factor)
+set(t,'string',analysis_variable_names{analysis_variable})
 axis([570 920 590 920])
 %hold off
 
@@ -204,8 +208,11 @@ switch which_space
         %% Set parameters
         resample_factor=1;
         stride_length=10*resample_factor;
-        window_size=250; % window size in which to look for cells
-        nCells_min=2; % minimal number of cells before doing analysis
+        
+        selection_region='circle';
+        window_size=250; % window size in which to look for cells if selection_region is rect
+        inclusion_radius=125; % if selection_region is circle
+        nCells_min=3; % minimal number of cells before doing analysis
                 
         X=cell_locations(:,1);
         Y=cell_locations(:,2);
@@ -231,9 +238,15 @@ switch which_space
         
         tic
         for iPos=1:N
-            rect=CenterRectOnPoint(pos_rect,R(iPos),C(iPos));
-            sel=inpolygon(X,Y,rect([1 3]),rect([2 4]))&pre_selection;
-            if sum(sel)>nCells_min
+            switch selection_region
+                case 'rect'
+                    rect=CenterRectOnPoint(pos_rect,R(iPos),C(iPos));
+                    sel=inpolygon(X,Y,rect([1 3]),rect([2 4]))&pre_selection;
+                case 'circle'
+                    [theta,rho]=cart2pol(X-R(iPos),Y-C(iPos));
+                    sel=rho<inclusion_radius&pre_selection;
+            end            
+            if sum(sel)>nCells_min                
                 switch analysis_variable
                     case 1 % %responsive                        
                         res_image_vector(iPos)=mean(responsive_positions(sel)>0)*100;
@@ -264,9 +277,9 @@ switch which_space
         axis square
         set(gca,'XTickLabel',get(gca,'XTick')*stride_length)
         set(gca,'YTickLabel',get(gca,'YTick')*stride_length)
-        xlabel('Medial-lateral position (µm)')
-        ylabel('Posterio-Anterior position (µm)')
-        title(sprintf('Selected %d neurons out of %d total.',[nSelected_neurons nCells]))
+        xlabel('Medial-Lateral position (µm)')
+        ylabel('Posterior-Anterior position (µm)')
+        title(sprintf([analysis_variable_names{analysis_variable} ' (%d out of %d neurons)'],[nSelected_neurons nCells]))
         set(gca,'CLim',[min(res_image(res_image(:)>0)) max(res_image(res_image(:)>0))])
         colormap(jet)
         colorbar        
