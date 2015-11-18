@@ -107,7 +107,7 @@ invariance_avg=cat(1,cell_data.invariance_avg);
 %%
 
 analysis_variable_names={'Responsive','Selective positions','Azimuth','Elevation','RF size','Cell Size','Sparseness','Invariance'};
-analysis_variable=4;
+analysis_variable=3;
 
 %sel1=false(nCells,1);
 sel1=responsive_positions>0;
@@ -227,6 +227,7 @@ switch which_space
         
         N=length(R);        
         res_image_vector=zeros(N,1);
+        res_image_vector_std=res_image_vector;
         pos_rect=[0 0 window_size window_size];
         
         if analysis_variable==1
@@ -254,6 +255,7 @@ switch which_space
                         res_image_vector(iPos)=mean(responsive_positions(sel));                        
                     case 3 % Azimuth
                         res_image_vector(iPos)=mean(9-AZ(sel));
+                        res_image_vector_std(iPos)=std(9-AZ(sel));
                     case 4 % elevation
                         res_image_vector(iPos)=mean(4-EL(sel));
                     case 5 % receptive field size
@@ -271,8 +273,13 @@ switch which_space
         res_image=reshape(res_image_vector,nSteps_y,nSteps_x);
         res_image_smooth=imgaussfilt(res_image,3);
         
-        figure(456)
-        imagesc((res_image_smooth))
+        
+        res_image_std=reshape(res_image_vector_std,nSteps_y,nSteps_x);
+        res_image_std_smooth=imgaussfilt(res_image_std,3);
+        
+        figure(457)
+        H=imagesc((res_image_smooth));
+        %set(H,'AlphaData',res_image_std_smooth)
         axis xy
         axis square
         set(gca,'XTickLabel',get(gca,'XTick')*stride_length)
