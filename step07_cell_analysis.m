@@ -65,7 +65,7 @@ axis equal
 axis xy
 axis([570 920 590 920])
 drawnow
-colorbar
+%colorbar
 
 
 %%
@@ -105,9 +105,8 @@ for iCell=1:nCells
 end
 invariance_avg=cat(1,cell_data.invariance_avg);
 %%
-
 analysis_variable_names={'Responsive','Selective positions','Azimuth','Elevation','RF size','Cell Size','Sparseness','Invariance','Angle'};
-analysis_variable=4;
+analysis_variable=9;
 
 %sel1=false(nCells,1);
 sel1=responsive_positions>0;
@@ -165,10 +164,9 @@ set(t,'string',analysis_variable_names{analysis_variable})
 %hold off
 
 %% plot the percentage of neuron within a certain area, relative to scambled values
-% to do
 
+analysis_variable=4;
 % decide to work in image space or physical space
-
 which_space=2;
 switch which_space
     case 1
@@ -242,7 +240,7 @@ switch which_space
                     [theta,rho]=cart2pol(X-R(iPos),Y-C(iPos));
                     sel=rho<inclusion_radius&pre_selection;
             end
-            if sum(sel)>nCells_min
+            if sum(sel)>nCells_min                
                 switch analysis_variable
                     case 1 % %responsive
                         res_image_vector(iPos)=mean(responsive_positions(sel)>0)*100;
@@ -338,9 +336,18 @@ switch which_space
         clf
         add_BG=0;
         if add_BG==1
+            %%
             BG_cutout=BG(range_y(1)/10+1:range_y(2)/10,range_x(1)/10+1:range_x(2)/10,2);
-            BG_cutout=BG_cutout/max(BG_cutout(:))*max(res_image_smooth(:));
-            res_image_smooth(res_image(:)==0)=BG_cutout(res_image(:)==0);
+            figure(222)
+            imagesc(BG_cutout)
+            colormap(green)
+            axis xy
+            axis equal
+            colorbar
+            title(animal_ID)
+            
+            %BG_cutout=BG_cutout/max(BG_cutout(:))*max(res_image_smooth(:));
+            %res_image_smooth(res_image(:)==0)=BG_cutout(res_image(:)==0);            
         end
         
         H=imagesc((res_image_smooth));
@@ -350,8 +357,9 @@ switch which_space
             %set(H,'AlphaData',res_image_std_smooth)
         end
         
+        
+        axis equal
         axis xy
-        axis square
         set(gca,'XTickLabel',get(gca,'XTick')*stride_length)
         set(gca,'YTickLabel',get(gca,'YTick')*stride_length)
         xlabel('Medial-Lateral position (µm)')
@@ -365,14 +373,52 @@ switch which_space
         end
         colorbar
         
+        if 1
+            %%
+            if ispc
+                folder_name='C:\Users\LBP\Desktop';
+            else
+                folder_name='/Users/benvermaercke/Desktop';
+            end
+            file_name=fullfile(folder_name,[analysis_variable_names{analysis_variable} '_map.png']);
+            min_values=[0 0 1 1 0 0 0 0 0];
+            max_values=[1 1 8 4 1 1 1 1 360]-min_values;
+            max(res_image_smooth(:))
+            pre=uint8((res_image_smooth-min_values(analysis_variable))/max_values(analysis_variable)*256)+1;
+            pre=flipud(pre);
+            LUT=jet(256);
+            A=reshape(LUT(pre,1),size(res_image_smooth,1),size(res_image_smooth,2));
+            B=reshape(LUT(pre,2),size(res_image_smooth,1),size(res_image_smooth,2));
+            C=reshape(LUT(pre,3),size(res_image_smooth,1),size(res_image_smooth,2));
+            im=cat(3,A,B,C);
+            imshow(im,[0 255])
+            
+            imwrite(im,file_name,'alpha',flipud(res_image_std))
+        end
+        
         if 0
             %%
-            file_name='/Users/benvermaercke/Desktop/test.png';
+            BG_cutout=BG(range_y(1)/10+1:range_y(2)/10,range_x(1)/10+1:range_x(2)/10,2);
             
-            A=uint8(res_image_smooth/max(res_image_smooth(:))*256);
+            min_value=0;
+            max_value=1-min_value;
+            pre=uint8((BG_cutout-min_value)/max_value*256)+1;
+            pre=flipud(pre);
+            LUT=green;
+            A=reshape(LUT(pre,1),size(res_image_smooth,1),size(res_image_smooth,2));
+            B=reshape(LUT(pre,2),size(res_image_smooth,1),size(res_image_smooth,2));
+            C=reshape(LUT(pre,3),size(res_image_smooth,1),size(res_image_smooth,2));
+            im=cat(3,A,B,C);
+            imshow(im,[0 255])
             
-            
+             if ispc
+                folder_name='C:\Users\LBP\Desktop';
+            else
+                folder_name='/Users/benvermaercke/Desktop';
+            end
+            file_name=fullfile(folder_name,['BG_' animal_ID '.png'])
             imwrite(im,file_name)
+            
         end
 end
 
