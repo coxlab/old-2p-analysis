@@ -19,15 +19,7 @@ function [vec] = Interleave(varargin)
 % DN 09-06-2011 Now works fine with empty inputs. Few changes for compatibility
 %               with Octave, might have more up ahead.
 
-% remove empties
-varargin(cellfun(@isempty,varargin)) = [];
-% check if we have any input
-if isempty(varargin)
-    vec = [];
-    return;
-end
-% we have work to do, first some other input checks
-for p=1:length(varargin)  % cannot use nargin as we just possibly deleted input arguments
+for p=1:nargin
     psychassert(isvector(varargin{p}) || isscalar(varargin{p}),'not all inputs are vectors or scalars');
     psychassert(isnumeric(varargin{p}) || iscell(varargin{p}) || ischar(varargin{p}),'not all inputs are numeric, cell or char')
 end

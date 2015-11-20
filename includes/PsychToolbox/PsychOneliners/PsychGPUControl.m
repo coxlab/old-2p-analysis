@@ -54,8 +54,6 @@ function rc = PsychGPUControl(cmd, varargin)
 %                 blanks in path to executable.
 % 16.01.2011  mk  Add function to control desktop composition on Linux with
 %                 Compiz.
-% 18.04.2013  mk  Add use of 64-Bit ATIRadeonperf_Linux64 exe on 64-Bit Linux.
-%
 
 if nargin < 1
 	error('Subfunction command argument missing!');
@@ -88,12 +86,12 @@ if strcmpi(cmd, 'SetGPUPerformance')
 	end
 
 	% Map range 1 to 5 to "minimum performance" on ATI GPU's:
-	if gpuperf > 0 && gpuperf <= 5
+	if gpuperf > 0 & gpuperf <= 5 %#ok<AND2>
 		perfflag = 2;
 	end
 
 	% Map range 6 to 10 to "maximum performance" on ATI GPU's:
-	if gpuperf > 5 && gpuperf <= 10
+	if gpuperf > 5 & gpuperf <= 10 %#ok<AND2>
 		perfflag = 1;
 	end
 
@@ -138,25 +136,14 @@ if strcmpi(cmd, 'FullScreenWindowDisablesCompositor')
 		if compositorOff
 			% Enable un-redirection: Fullscreen windows aren't subject to treatment by compositor,
 			% but can do (e.g. page-flipping) whatever they want:
-			newstate = 'dis';
 			rc(end+1) = system(sprintf('gconftool-2 -s --type bool /apps/compiz/general/screen%i/options/unredirect_fullscreen_windows true', screenId));
 			rc(end+1) = system(sprintf('gconftool-2 -s --type bool /apps/compiz-1/plugins/composite/screen%i/options/unredirect_fullscreen_windows true', screenId));
-			rc(end+1) = system(sprintf('dconf write /org/compiz/profiles/unity/plugins/composite/unredirect-fullscreen-windows true'));
+			fprintf('PsychGPUControl:FullScreenWindowDisablesCompositor: Desktop composition for fullscreen windows on screen %i disabled.\n', screenId)
 		else
 			% Disable un-redirection: Fullscreen windows get composited as all other windows:
-			newstate = 'en';
 			rc(end+1) = system(sprintf('gconftool-2 -s --type bool /apps/compiz/general/screen%i/options/unredirect_fullscreen_windows false', screenId));
 			rc(end+1) = system(sprintf('gconftool-2 -s --type bool /apps/compiz-1/plugins/composite/screen%i/options/unredirect_fullscreen_windows false', screenId));
-			rc(end+1) = system(sprintf('dconf write /org/compiz/profiles/unity/plugins/composite/unredirect-fullscreen-windows false'));
-		end
-
-		if ~all(rc)
-			rc = 0;
-			fprintf('PsychGPUControl:FullScreenWindowDisablesCompositor: Desktop composition for fullscreen windows on screen %i %sabled.\n', screenId, newstate);
-		else
-			rc = 1;
-			fprintf('PsychGPUControl:FullScreenWindowDisablesCompositor: FAILED to %sable desktop composition for fullscreen windows on screen %i!\n', newstate, screenId);
-			fprintf('This can cause visual onset timing problems! See ''help SyncTrouble'' - the Linux specific subsection for tips.\n');
+			fprintf('PsychGPUControl:FullScreenWindowDisablesCompositor: Desktop composition for fullscreen windows on screen %i enabled.\n', screenId);
 		end
 	end
 	return;
@@ -167,6 +154,7 @@ return; %#ok<UNRCH>
 end
 
 function rc = executeRadeoncmd(cmdpostfix)
+    % Default to a return code of 1 for success:
     if IsOSX
         % A no-op on OS/X, as this is not supported at all.
         rc = 1;
@@ -174,20 +162,10 @@ function rc = executeRadeoncmd(cmdpostfix)
     end
 
     if IsLinux
-        % For 32-Bit Linux:
         cmdprefix = '/PsychContributed/ATIRadeonperf_Linux ';
     end
 
-    if IsLinux(1)
-        % For 64-Bit Linux: We have a dedicated 64-Bit executable, so we
-        % do not require installation of 32-Bit compatibility libraries on
-        % 64-Bit Linux systems just for our little exe here, as that would
-        % be wasteful:
-        cmdprefix = '/PsychContributed/ATIRadeonperf_Linux64 ';
-    end
-
     if IsWin
-        % For 32-Bit or 64-Bit Windows we always use a 32-Bit executable:
         cmdprefix = '/PsychContributed/ATIRadeonperf_Windows ';
     end
 
@@ -195,18 +173,11 @@ function rc = executeRadeoncmd(cmdpostfix)
     doCmd = strcat('"', [PsychtoolboxRoot cmdprefix] ,'"');
 
     % Call final command, return its return status code:
-    [rc, msg] = system([doCmd cmdpostfix]);
+    rc = system([doCmd cmdpostfix]);
 
     % Code has it backwards 1 = success, 0 = failure. Remap to our
     % convention:
     rc = 1 - rc;
     
-    % Output potential status or error messages, unless it is a message
-    % that signals we are not executing on a AMD/ATI GPU with Catalyst
-    % driver, ie., that the whole thing was a no-op:
-    if isempty(strfind(msg, 'ADL library not found!'))
-        disp(msg);
-    end
-
     return;
 end

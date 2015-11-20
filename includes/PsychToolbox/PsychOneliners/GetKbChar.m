@@ -48,7 +48,7 @@ else
     end
 end
 
-while down && (secs < untilTime)
+while down & (secs < untilTime) %#ok<AND2>
     [down, secs, keyincode] = KbCheck(varargin{:});
     if down
         keycode = keycode + keyincode;
@@ -94,7 +94,7 @@ elseif length(ch) > 2
     if strcmpi(ch, 'space')
         ch = char(32);
     end
-    if strcmpi(ch, 'DELETE') || strcmpi(ch, 'BackSpace')
+    if strcmpi(ch, 'DELETE')
         ch = char(8);
     end
     
