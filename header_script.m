@@ -70,12 +70,12 @@ switch 0
             %exp_name='2015-08-19_AH02'; % need ROIs
             
             
-            exp_name='2015-08-07_AH03'; % still downloading tif files
+            %exp_name='2015-08-07_AH03'; % still downloading tif files
             %exp_name='2015-08-10_AH03';
             %exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning
             %up, did we do this? nopes
             %exp_name='2015-08-19_AH03';
-            %exp_name='2015-08-21_AH03'; % funky eyedrift up
+            exp_name='2015-08-21_AH03'; % funky eyedrift up
             
             %exp_name='2015-08-14_AH05'; % need ROIs
             %exp_name='2015-08-20_AH05'; % need ROIs

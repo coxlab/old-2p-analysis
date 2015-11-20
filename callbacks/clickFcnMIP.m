@@ -58,6 +58,13 @@ if isfield(handles,'session_data')
                 F=fft2(detail-DC);
                 detail=real(ifft2(fftshift(fftshift(F).*FFT_mask)))+DC;
         end
+               
+        %%% Add gaussian bubble, to focus on the center of where was
+        %%% clicked
+        G=bellCurve2(1,size(detail)/2+1,size(detail)/3,size(detail),0);        
+        detail=detail.*G;
+        
+        %%% Put padded area back to mean, to maintain a clean edge
         detail(cropped_area==1)=mean(detail(:));
         
         switch 2

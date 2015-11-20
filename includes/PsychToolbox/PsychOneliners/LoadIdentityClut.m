@@ -1,28 +1,19 @@
-function oldClut = LoadIdentityClut(windowPtr, loadOnNextFlip, lutType, disableDithering)
-% oldClut = LoadIdentityClut(windowPtr [, loadOnNextFlip=0][, lutType=auto][, disableDithering=1])
+function oldClut = LoadIdentityClut(windowPtr, loadOnNextFlip, lutType)
+% oldClut = LoadIdentityClut(windowPtr [, loadOnNextFlip=0][, lutType=auto])
 %
-% Loads an identity clut on the window specified by windowPtr. If
+% Loads the identity clut on the windows specified by windowPtr.  If
 % loadOnNextFlip is set to 1, then the clut will be loaded on the next call
-% to Screen('Flip'). By default, the clut will be loaded immediately or on
-% the next vertical retrace, depending on OS and graphics card.
-% By default, also tries to disable digital output dithering on supported
-% hardware, setting the optional flag 'disableDithering' to zero will
-% leave dithering alone.
+% to Screen('Flip').  By default, the clut will be loaded immediately or on
+% the next vertical retrace.
 %
-% If you use Linux and have low level hardware access enabled via a call
-% to PsychLinuxConfiguration during installation or later, or if you
-% use OS/X and have the PsychtoolboxKernelDriver loaded
+% If you use Linux and run Matlab or Octave as root user via the "sudo"
+% command, or if you use OS/X and have the PsychtoolboxKernelDriver loaded
 % ("help PsychtoolboxKernelDriver") and the graphics card is a GPU of the
 % ATI/AMD Radeon X1000 series or a HD series card (e.g., HD-2000) or a
 % equivalent model of the FireGL or FirePro series, then this routine will
-% try to use special low-level setup code for optimal identity mapping. It
-% will also disable digital display dithering if disableDithering == 1.
-% On Windows with AMD cards, digital display dithering will also get disabled
-% automatically. On other graphics cards, digital display dithering will not
-% be affected.
-%
-% On other than AMD cards under Linux or OSX, the function will make
-% a best effort to upload a suitable clut, as follows:
+% try to use special low-level setup code for optimal identity mapping.
+% Otherwise it will just make a best effort to upload a suitable clut, as
+% follows:
 %
 % This mechanism relies on heuristics to detect the exact type of LUT to
 % upload into your graphics card. These heuristics may go wrong, thanks to
@@ -42,11 +33,6 @@ function oldClut = LoadIdentityClut(windowPtr, loadOnNextFlip, lutType, disableD
 % RestoreCluts, or sca, but only until you call clear all! The original
 % LUT's are backed up in a global variable for this to work.
 %
-% If you use a Cambridge Research systems Bits+ or Bits# box or a VPixx Inc.
-% DataPixx, ViewPixx or ProPixx device, use the script BitsPlusIdentityClutTest
-% for advanced diagnostic and troubleshooting wrt. identity clut's, display
-% dithering and other evils which could spoil your day for high bit depth
-% visual stimulus display.
 
 % History:
 % ??/??/??   mk  Written.
@@ -58,8 +44,7 @@ function oldClut = LoadIdentityClut(windowPtr, loadOnNextFlip, lutType, disableD
 % 05/30/11   mk  Add option to use Screen's built in low-level GPU setup
 %                methods to achieve an identity mapping. Fallback to old
 %                heuristics if that is unsupported, disabled or failed.
-% 03/05/14   mk  Update help texts and some diagnostic output.
-% 03/06/14   mk  Allow control if dithering should be touched or not.
+%
 
 global ptb_original_gfx_cluts;
 
@@ -81,10 +66,6 @@ if nargin < 3
     lutType = [];
 end
 
-if nargin < 4 || isempty(disableDithering)
-    disableDithering = 1;
-end
-
 % Get screen id for this window:
 screenid = Screen('WindowScreenNumber', windowPtr);
 
@@ -97,37 +78,12 @@ winfo = Screen('GetWindowInfo', windowPtr);
 % Get current clut for use as backup copy later on:
 oldClut = Screen('ReadNormalizedGammaTable', windowPtr);
 
-if disableDithering
-    fprintf('LoadIdentityClut: Info: Trying to disable digital display dithering.\n');
-    % Try to use PsychGPUControl() method to disable display dithering
-    % globally on all connected GPUs and displays. As of March 2014, this
-    % function is only supported on Linux and Windows with AMD/ATI GPU's,
-    % and only when running the proprietary Catalyst display driver.
-    % It will no-op silently on other system configurations.
-    %
-    % We don't use the success status return code of the function, because
-    % we don't know how trustworthy it is. Also this only affects dithering,
-    % not gamma table identity setup, so the code-pathes below must run anyway
-    % for proper setup, even if their dithering disable effect may be redundant.
-    PsychGPUControl('SetDitheringEnabled', 0);
-end
-
 % Ask Screen to use low-level setup code to configure the GPU for
 % untampered framebuffer pixel paththrough. This is only supported on a
 % subset of GPU's under certain conditions if the PsychtoolboxKernelDriver
 % is loaded, but should be the most reliable solution if it works:
 if ~IsWin
-    % Low level control possible for some GPU's (e.g., AMD).
-    % [] will enable full passthrough and force dithering off.
-    % -1 will enable passthrough except for dithering, which is left at the OS default.
-    if disableDithering
-        % Also disable dithering:
-        passthroughrc = Screen('LoadNormalizedGammatable', windowPtr, []);
-    else
-        % Only identity LUTs, no color conversion, degamma etc., but leave the
-        % dither settings untouched, so the OS + graphics driver stays in control:
-        passthroughrc = Screen('LoadNormalizedGammatable', windowPtr, -1);        
-    end
+    passthroughrc = Screen('LoadNormalizedGammatable', windowPtr, []);
 else
     passthroughrc = intmax;
 end
@@ -146,12 +102,8 @@ else
         fprintf('LoadIdentityClut: Warning: GPU low-level setup code for pixel passthrough failed for some reason! Using fallback...\n');
     elseif IsOSX || IsLinux
         fprintf('LoadIdentityClut: Info: Could not use GPU low-level setup for setup of pixel passthrough. Will use fallback method.\n');
-        % AMD GPU, aka GPU core of format 'R100', 'R500', ... starting with a 'R'?
-        if winfo.GPUCoreId(1) == 'R'
-            % Some advice for AMD users on Linux and OSX:
-            fprintf('LoadIdentityClut: Info: On your AMD/ATI GPU, you may get this working by loading the PsychtoolboxKernelDriver\n');
-            fprintf('LoadIdentityClut: Info: on OS/X or using a Linux system properly setup with PsychLinuxConfiguration.\n');
-        end
+        fprintf('LoadIdentityClut: Info: If you have an AMD/ATI GPU, you may get this working by loading the PsychtoolboxKernelDriver\n');
+        fprintf('LoadIdentityClut: Info: on OS/X or using a Linux system properly setup with PsychLinuxConfiguration.\n');
     end
 
     % Carry on with our bag of clut heuristics and other tricks...
@@ -187,7 +139,7 @@ else
         else
             % Full blown LUT given:
             lut = lutconfig;
-            if ~isnumeric(lut) || size(lut,1) < 1 || size(lut,2) ~= 3
+            if ~isnumeric(lut) | size(lut,1) < 1 | size(lut,2) ~= 3 %#ok<OR2>
                 sca;
                 error('LoadIdentityClut: Loaded data from config file is not a valid LUT! Not a numeric matrix or less than 1 row, or not 3 columns!');
             end
@@ -209,7 +161,7 @@ else
         % We derive type of hardware and thereby our strategy from the vendor name:
         gfxhwtype = winfo.GLVendor;
 
-        if ~isempty(strfind(gfxhwtype, 'NVIDIA')) || ~isempty(strfind(gfxhwtype, 'nouveau'))
+        if ~isempty(strfind(gfxhwtype, 'NVIDIA')) | ~isempty(strfind(gfxhwtype, 'nouveau'))
             % NVidia card:
 
             % We start with assumption that it is a "normal" one:
@@ -222,9 +174,9 @@ else
             end
             
             % Is it a Geforce-8000 or later (G80 core or later) and is this OS/X?
-            if ~isempty(strfind(winfo.GPUCoreId, 'G80')) && IsOSX
+            if ~isempty(strfind(winfo.GPUCoreId, 'G80')) & IsOSX %#ok<AND2>
                 % 10.5.x Leopard?
-                if (osxversion(1) == 10) && (osxversion(2) == 5) && (osxversion(3) >=0)
+                if (osxversion(1) == 10) & (osxversion(2) == 5) & (osxversion(3) >=0) %#ok<AND2>
                     % Yes. One of the releases with an embarassing amount of bugs,
                     % brought to you by Apple. Need to apply an especially ugly
                     % clut to force these cards into an identity mapping:
@@ -233,7 +185,7 @@ else
                 end
 
                 % 10.6.x Snow Leopard or later?
-                if (osxversion(1) == 10) && (osxversion(2) >= 6) && (osxversion(3) >=0)
+                if (osxversion(1) == 10) & (osxversion(2) >= 6) & (osxversion(3) >=0) %#ok<AND2>
                     % Yes. One of the releases with an embarassing amount of bugs,
                     % brought to you by Apple. Need to apply an especially ugly
                     % clut to force these cards into an identity mapping:
@@ -259,20 +211,20 @@ else
                 fprintf('LoadIdentityClut: NVidia Quadro or later on Linux with binary Blob detected. Enabling special type-III LUT.\n');
             end
         else
-            if ~isempty(strfind(gfxhwtype, 'ATI')) || ~isempty(strfind(gfxhwtype, 'AMD')) || ~isempty(strfind(gfxhwtype, 'Advanced Micro Devices')) || ...
-                    ~isempty(strfind(winfo.GLRenderer, 'DRI R')) || ~isempty(strfind(winfo.GLRenderer, 'on ATI R'))
+            if ~isempty(strfind(gfxhwtype, 'ATI')) | ~isempty(strfind(gfxhwtype, 'AMD')) | ~isempty(strfind(gfxhwtype, 'Advanced Micro Devices')) | ...
+                    ~isempty(strfind(winfo.GLRenderer, 'DRI R')) | ~isempty(strfind(winfo.GLRenderer, 'on ATI R')) %#ok<OR2>
                 % ATI card:
 
                 % A good default at least on OS/X is type 1:
                 gfxhwtype = 1;
 
-                if (IsWin || IsLinux) && ~isempty(strfind(winfo.GPUCoreId, 'R600'))
+                if (IsWin | IsLinux) & ~isempty(strfind(winfo.GPUCoreId, 'R600')) %#ok<OR2,AND2>
                     % At least the Radeon HD 3470 under Windows Vista and Linux needs type 0
                     % LUT's. Let's assume for the moment this is true for all R600
                     % cores, ie., all Radeon HD series cards.
                     fprintf('LoadIdentityClut: ATI Radeon HD-2000 or later detected. Enabling special type-0 LUT hacks for totally broken drivers.\n');
                     gfxhwtype = 0;
-                elseif (IsLinux) && (~isempty(strfind(winfo.GLRenderer, 'DRI R')) || ~isempty(strfind(winfo.GLRenderer, 'on ATI R')))
+                elseif (IsLinux) & (~isempty(strfind(winfo.GLRenderer, 'DRI R')) | ~isempty(strfind(winfo.GLRenderer, 'on ATI R'))) %#ok<OR2,AND2>
                     % At least the Radeon R3xx/4xx/5xx under Linux with DRI2 Mesa needs type 0
                     % LUT's. Let's assume for the moment this is true for all R600
                     % cores, ie., all Radeon HD series cards.
@@ -319,7 +271,7 @@ else
         oldClut = Screen('LoadNormalizedGammaTable', windowPtr, ((1/256:1/256:1)' * ones(1, 3)), loadOnNextFlip);
     end
 
-    if gfxhwtype == 2 && IsOSX
+    if gfxhwtype == 2 & IsOSX %#ok<AND2>
         % This works on OS/X 10.5 with NVidia GeForce 8800. It is an ugly hack
         % to compensate for the absolutely horrible, embarassing bugs in Apple's NVidia
         % graphics drivers and their clut handling. Does this company still
@@ -333,7 +285,7 @@ else
         oldClut = Screen('LoadNormalizedGammaTable', windowPtr, loadlut, loadOnNextFlip);
     end
 
-    if gfxhwtype == 3 && IsOSX
+    if gfxhwtype == 3 & IsOSX %#ok<AND2>
         % This works on OS/X 10.6.0 with NVidia Geforce-9200M according to CRS
         % and with 10.6.0 with Geforce-8800  in the MacPro according to
         % me. We assume this works on all G80 et al. GPU's:
@@ -348,7 +300,7 @@ else
         oldClut = Screen('LoadNormalizedGammaTable', windowPtr, loadlut, loadOnNextFlip);
     end
 
-    if gfxhwtype == 3 && IsWin
+    if gfxhwtype == 3 & IsWin %#ok<AND2>
         % This is an experimental variant of the OS/X type 3 lut, but with 256
         % slots. It is supposed for WindowsXP, assuming some NVidia GPU's,
         % e.g., some QuadroFX 3700 GPU's have similar problems:
@@ -363,7 +315,7 @@ else
         oldClut = Screen('LoadNormalizedGammaTable', windowPtr, loadlut, loadOnNextFlip);
     end
 
-    if gfxhwtype == 3 && IsLinux
+    if gfxhwtype == 3 & IsLinux %#ok<AND2>
         % NVidia QuadroFX cards with binary blob and lut's with more than
         % 256 slots. Upload a standard linear lut with matching number of
         % slots:

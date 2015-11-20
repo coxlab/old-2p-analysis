@@ -6,7 +6,7 @@ function WinDesk
 % DN 2008-06    Wrote it
 % DN 2008-12-06 Added test if on Windows
 
-if IsWin && ~IsOctave % from PTB - test if windows as we use a COM Automation server (Octave doesn't have those either)
+if IsWin % from PTB - test if windows as we use a COM Automation server
     shell = actxserver('Shell.Application');
     shell.MinimizeAll;
     shell.delete;         % release interface
