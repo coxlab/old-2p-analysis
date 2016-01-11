@@ -18,17 +18,31 @@ figure
 t0=clock;
 if exist(data_folder,'dir')==7
     
-    expt = frGetExpt(exp_name);
-    stack = readtiff(expt.dirs.regrootpn,1:options.nBlocks);
+    switch getenv('computername')
+        case 'bkrunch'
+            expt = frGetExpt(exp_name);
+            stack = readtiff(expt.dirs.regrootpn,1:options.nBlocks);
+            
+            %% Reduce frame_rate
+            nFrames_req=32*options.frame_rate_req; % Hz
+            bin_frames=round(size(stack,3)/nFrames_req)
+            dec = stackGroupProject(stack,bin_frames,'sum');
+            frames = single(dec);
+        otherwise
+            dataset_files=scandir(fullfile(data_folder,'data_analysis'),'mat');
+            load_name=fullfile(data_folder,'data_analysis',dataset_files(3).name);
+            if exist(load_name,'file')==2
+                 load(load_name)
+                 session_data.rebase(data_root)
+                 stack=session_data.get_frames();
+            end
+            frames=single(stack);
+    end
     
-    %% Reduce frame_rate
-    nFrames_req=32*options.frame_rate_req; % Hz
-    bin_frames=round(size(stack,3)/nFrames_req)
-    dec = stackGroupProject(stack,bin_frames,'sum');
-    frames = single(dec);
-    siz = size(dec);
-    fov = imstretch(padnadapt(mean(frames,3)));
-    imshow(fov)
+    %%
+    %siz = size(dec);
+    %fov = imstretch(padnadapt(mean(frames,3)));
+    %imshow(fov)
     
     nRows=size(frames,1);
     nCols=size(frames,2);
@@ -57,9 +71,16 @@ if exist(data_folder,'dir')==7
     
     
     %% smooth average CC image
-    CC_avg_smooth=smooth2(CC_2D,'gauss',options.smoothing_px,options.smoothing_sd);
+    switch getenv('computername')
+        case 'bkrunch'
+            CC_avg_smooth=smooth2(CC_2D,'gauss',options.smoothing_px,options.smoothing_sd);
+        otherwise
+            window_size=[11 11];
+            kernel=bellCurve2(1,window_size/2,[1 1],window_size,0);
+            CC_avg_smooth=imfilter(CC_2D,kernel);
+    end
     
-    %% take local maxima above threshold
+        %% take local maxima above threshold
     local_max=imregionalmax(CC_avg_smooth);
     
     if 0
@@ -101,7 +122,7 @@ if exist(data_folder,'dir')==7
         
         %% Grab correlation of all pixels with seed
         values=CC(idx_list==pxIDx,:);
-        values(values<0.4)=0;
+        values(values<0.1)=0;
         if ~isempty(values)
             
             %% Reconstruct 2D image
@@ -116,9 +137,7 @@ if exist(data_folder,'dir')==7
             A=imdilate(A,SE);
             B=imdilate(B,SE);
             ROI_size=sum(B(:));
-            
-            
-            
+                        
             %%
             if ROI_size>options.min_ROI_size
                 %% check for duplicates
@@ -162,7 +181,7 @@ if exist(data_folder,'dir')==7
         end
     end
     toc
-    nROI=length(ROI_props);
+    nROI=length(ROI_props)
     %%
     tic
     A=zeros(size(ROI_props(1).mask,1),size(ROI_props(1).mask,2),nROI);

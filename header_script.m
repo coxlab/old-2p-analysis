@@ -87,7 +87,7 @@ switch 0
             %exp_name='2015-08-19_AH02'; % need ROIs
             
             
-            %exp_name='2015-08-07_AH03'; % still downloading tif files
+            exp_name='2015-08-07_AH03'; % still downloading tif files
             %exp_name='2015-08-10_AH03';
             %exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning
             %up, did we do this? nopes
@@ -129,7 +129,7 @@ switch 0
             %exp_name='151218_KS154_etl_2P_KS/run03_movingbars_cardinal_plane02'; % plane 01 again... no switches?
             
             % cell
-            exp_name='150119_XH039_2P_XH\sf1_8dir_full';
+            %exp_name='150119_XH039_2P_XH\sf1_8dir_full';
             
         end
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
