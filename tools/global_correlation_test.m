@@ -7,7 +7,7 @@ header_script
 if ismac
     use_GPU=0;
 else
-    use_GPU=1;
+    use_GPU=0;
 end
 load_name=fullfile(data_folder,'data_analysis','2015-08-21_AH03_017.mat');
 
