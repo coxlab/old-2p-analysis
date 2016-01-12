@@ -32,7 +32,7 @@ end
 % define data folder
 switch getenv('computername')
     case 'BKRUNCH'
-        data_root=fullfile(root_folder,'2photon\raw');
+        data_root=fullfile(root_folder,'2photon\reg');
         mworks_folder=fullfile(root_folder,'Analysis/Scripting/Matlab');
         dataset_root=fullfile(root_folder,'2p-datasets');
     otherwise
@@ -87,7 +87,7 @@ switch 0
             %exp_name='2015-08-19_AH02'; % need ROIs
             
             
-            exp_name='2015-08-07_AH03'; % still downloading tif files
+            %exp_name='2015-08-07_AH03'; % still downloading tif files
             %exp_name='2015-08-10_AH03';
             %exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning
             %up, did we do this? nopes
@@ -131,6 +131,9 @@ switch 0
             % cell
             %exp_name='150119_XH039_2P_XH\sf1_8dir_full';
             
+            %exp_name='150206_MS049_2P_MS\run01_checkers2048'; % memory errors
+            exp_name='150122_KS127_2P_KS\run03_sf_tf_V1'; % lot's of processes
+            %exp_name='150123_KS127_2P_KS\run02_retinotopy_V1';
         end
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
@@ -155,6 +158,7 @@ use_GPU=0;
 use_custom_ROI_defs=1; % Relevant for step 3 (GUI)
 
 exp_name_txt=strrep(exp_name,'_',' ');
+exp_name_txt=strrep(exp_name_txt,'\',': ');
 
 
 % display current working folder
