@@ -65,10 +65,12 @@ if exist(data_folder,'dir')==7
         end
     end
     
-    %%
-    %siz = size(dec);
-    %fov = imstretch(padnadapt(mean(frames,3)));
-    %imshow(fov)
+    if 0
+        %%
+        siz = size(dec);
+        fov = imstretch(padnadapt(mean(frames,3)));
+        imshow(fov)
+    end
     
     nRows=size(frames,1);
     nCols=size(frames,2);
@@ -82,13 +84,16 @@ if exist(data_folder,'dir')==7
     toc
     
     %% make preselection based on std per pixel
+    % include temporal smoothing step to reduce noise
     STD=std(g_M);
+    % include spatial smoothing step to get rid of small things getting over the
+    % threshold
     options.std_threshold=prctile(STD,options.std_inclusion_threshold);
     sel_activity=STD>options.std_threshold;
     tabulate(sel_activity)
     idx_list=find(sel_activity);
     
-    %% corr
+    %% create corr matrix between all selected pixels
     g_ACT=g_M(:,sel_activity);
     CC=corr(g_ACT);
     CC_avg=mean(CC);
@@ -112,10 +117,16 @@ if exist(data_folder,'dir')==7
     if 0
         %%
         [X,Y]=find(local_max);
+        
+        subplot(211)
+        imshow(calc_gamma(std(frames,[],3),.5),[])
+        
+        subplot(212)
         imshow(calc_gamma(CC_avg_smooth,.5),[])
         hold on
-        plot(Y,X,'g.')
+        plot(Y,X,'r.')
         hold off
+        colormap(green)
     end
     
     %% use those as seed points
@@ -264,11 +275,11 @@ if exist(data_folder,'dir')==7
         %% cluster
         Z = linkage(C,'average');
         %[out,T]=dendrogram(Z,'ColorThreshold',3)
-        %cluster_allocation_vector=cluster(Z,'CutOff',1+15/100)
-        cluster_allocation_vector=cluster(Z,'MaxClust',16,'Criterion','distance')                
+        cluster_allocation_vector=cluster(Z,'CutOff',1+3/100)
+        %cluster_allocation_vector=cluster(Z,'MaxClust',27,'Criterion','distance')
         nClusters=length(unique(cluster_allocation_vector))
         
-        %%% show spatially clustered ROIs                        
+        %%% show spatially clustered ROIs
         clusterImage=zeros(size(ROI_props(1).mask,1),size(ROI_props(1).mask,2));
         for iROI=1:nROI            
             cluster_nr=cluster_allocation_vector(iROI);

@@ -132,8 +132,10 @@ switch 0
             %exp_name='150119_XH039_2P_XH\sf1_8dir_full';
             
             %exp_name='150206_MS049_2P_MS\run01_checkers2048'; % memory errors
-            exp_name='150122_KS127_2P_KS\run03_sf_tf_V1'; % lot's of processes
+            %exp_name='150122_KS127_2P_KS\run03_sf_tf_V1'; % lot's of processes
             %exp_name='150123_KS127_2P_KS\run02_retinotopy_V1';
+            
+            exp_name='141221_DM044_2P_DM\run02_blank';
         end
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
