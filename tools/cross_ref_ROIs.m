@@ -5,10 +5,10 @@ header_script
 
 expt = frGetExpt(exp_name);
 
-folder_names{1}='151218_KS154_etl_2P_KS/run03_ori8_reversed_plane01';
-folder_names{2}='151218_KS154_etl_2P_KS/run03_ori8_reversed2_plane02';
-folder_names{3}='151218_KS154_etl_2P_KS/run03_movingbars_cardinal_plane01';
-folder_names{4}='151218_KS154_etl_2P_KS/run03_movingbars_cardinal_plane02';
+folder_names{1}='151218_KS154_etl_2P_KS/run03_ori8_reversed/plane01';
+folder_names{2}='151218_KS154_etl_2P_KS/run03_ori8_reversed/plane02';
+folder_names{3}='151218_KS154_etl_2P_KS/run03_movingbars_cardinal/plane01';
+folder_names{4}='151218_KS154_etl_2P_KS/run03_movingbars_cardinal/plane02';
 nFolders=length(folder_names);
 
 %compare_vector=[1 2];

@@ -15,7 +15,7 @@ options.seed_inclusion_threshold=50; % percentage => again, we should transition
 options.seed_threshold=[];
 options.correlation_threshold=0.30;
 options.min_ROI_size=10;
-options.save_it=0;
+options.save_it=1;
 
 %options.smoothing_px=4; % 2 for boutons, 6 for cells
 %options.smoothing_sd=options.smoothing_px/sqrt(12); % 5 for boutons, xx for cells
@@ -24,8 +24,7 @@ options.save_it=0;
 figure
 
 t0=clock;
-if exist(data_folder,'dir')==7
-    
+if exist(data_folder,'dir')==7    
     cache_name=fullfile(root_folder,'user','Ben','cache',[exp_name '.mat']);
     if options.use_cache && exist(cache_name,'file')==2
         D=load(cache_name,'options','frames');
@@ -248,7 +247,7 @@ if exist(data_folder,'dir')==7
     elapsed=etime(clock,t0);
     fprintf('Total time: %d seconds \n',round(elapsed))
     if options.save_it==1
-        save_name=fullfile(expt.dirs.analysis,exp_name,'ROI_masks_ben.mat');
+        save_name=fullfile(expt.dirs.analysis,expt.animal,expt.tif_folder,'ROI_masks_ben.mat');
         savec(save_name)
         save(save_name,'options','nROI','ROI_props','elapsed','CC_2D','labeledImage','coloredLabels')
     end
