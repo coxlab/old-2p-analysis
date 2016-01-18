@@ -84,9 +84,10 @@ if exist(data_folder,'dir')==7
     
     %% make preselection based on std per pixel
     % include temporal smoothing step to reduce noise
+    
     STD=std(g_M);
-    % include spatial smoothing step to get rid of small things getting over the
-    % threshold
+    
+    % include spatial smoothing step to get rid of small things getting over the threshold
     options.std_threshold=prctile(STD,options.std_inclusion_threshold);
     sel_activity=STD>options.std_threshold;
     tabulate(sel_activity)

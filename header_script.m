@@ -121,12 +121,12 @@ switch 0
             
             % Vincent lab data
             % ETL
-            %exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed_plane01'; % werkt
+            exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed/plane01'; % werkt
             %X exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed_plane02'; % ugly
             %X exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed2_plane01'; % looks a lot like plane02 reversed
-            %exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed2_plane02'; % looks like plane 01 reversed
+            %exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed2/plane02'; % looks like plane 01 reversed
             %exp_name='151218_KS154_etl_2P_KS/run03_movingbars_cardinal/plane01'; % plane 01!
-            exp_name='151218_KS154_etl_2P_KS/run03_movingbars_cardinal/plane02'; % plane 01 again... no switches?
+            %exp_name='151218_KS154_etl_2P_KS/run03_movingbars_cardinal/plane02'; % plane 01 again... no switches?
             
             % cell
             %exp_name='150119_XH039_2P_XH\sf1_8dir_full';
