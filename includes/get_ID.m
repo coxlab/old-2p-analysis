@@ -12,12 +12,16 @@ elseif isunix
         platform='Mac';
         %%% Mac
         [~,host]=system('hostname');
+        host=host(1:end-1);
         [~,user]=system('whoami');
+        user=user(1:end-1);
     else
         %%% Linux
         platform='Unix';
         [~,host]=system('hostname');
+        host=host(1:end-1);
         [~,user]=system('whoami');
+        user=user(1:end-1);
     end
 else
     %% Unknown
