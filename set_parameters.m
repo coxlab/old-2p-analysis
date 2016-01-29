@@ -9,6 +9,12 @@ function parameters=set_parameters(exp_name)
 % exp_name='2015-08-07_AH03/FOV01';
 % parameters=set_parameters(exp_name)
 
+%%% Get script folder
+dirs.script_dir=fileparts(mfilename('fullpath'));
+
+%%% Add subfolder to path
+addpath(genpath(dirs.script_dir))
+
 %%% Get info about the environment
 [system.host,system.user,system.platform]=get_ID();
 
@@ -78,10 +84,6 @@ else
     files=scandir(dirs.raw_folder,'.tif');        
     fprintf('Folder found and contains %d files! \n',length(files))
 end
-
-%%% get script folder
-dirs.script_dir=fileparts(mfilename('fullpath'));
-addpath(genpath(dirs.script_dir))
 
 %%% Set popular look-up tables
 colormaps.red=[linspace(0,1,256)' zeros(256,1) zeros(256,1)];
