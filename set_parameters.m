@@ -27,7 +27,7 @@ switch system.host
         switch system.user
             case 'benvermaercke'
                 root_folder='/nas/volume1/2photon';
-                ROI_params.ROI_definition_nr=2; 
+                ROI_params.ROI_definition_nr=2;
             case ''
             otherwise
                 error('Username unknown')
@@ -40,7 +40,7 @@ switch system.host
             case ''
             otherwise
                 error('Username unknown')
-        end    
+        end
     case 'COXLAB-2P'
         switch system.user
             case 'labuser'
@@ -64,8 +64,8 @@ switch system.host
                 error('Username unknown')
         end
         
-    %case ''
-    otherwise        
+        %case ''
+    otherwise
         error('Hostname unknown...')
 end
 
@@ -79,9 +79,9 @@ dirs.eyeTracker_folder=fullfile(root_folder,'eyetracker',exp_name);
 dirs.analysis_folder=fullfile(root_folder,'analysis',exp_name);
 
 if isdir(dirs.raw_folder)==0
-    warning('Data folder not found on this machine...') 
+    warning('Data folder not found on this machine...')
 else
-    files=scandir(dirs.raw_folder,'.tif');        
+    files=scandir(dirs.raw_folder,'.tif');
     fprintf('Folder found and contains %d files! \n',length(files))
 end
 
@@ -92,6 +92,7 @@ colormaps.green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
 %%% Construct output
 parameters.system=system;
 parameters.dirs=dirs;
+parameters.files=files;
 parameters.ROI_params=ROI_params;
 parameters.colormaps=colormaps;
 
