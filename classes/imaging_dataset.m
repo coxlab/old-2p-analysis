@@ -474,6 +474,7 @@ classdef imaging_dataset < handle
                     else
                         T_scim=cat(1,self.frame_info(:).timestamp);
                         offset_temp=loc-length(A)+1
+                        length(self.bitCodes.MWorks_bitCodes)
                         T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
                         
                         diff(T_scim)
@@ -1615,6 +1616,76 @@ classdef imaging_dataset < handle
             
             %switch self.Activity_traces.calc_delta_f_method
             switch extraction_options.calc_delta_f_method
+                case 0
+                    delta_F_no_drift=F_no_drift; % leave signal as is
+                    y_label='raw F';
+                    fixed_y_scale=30000;
+                case 1 % naive way
+                    delta_F_no_drift=(F_no_drift-mean(F_no_drift))/mean(F_no_drift);
+                    y_label='\DeltaF/F';
+                    fixed_y_scale=30;
+                case 2 % Feinberg
+                    delta_F_no_drift=F_no_drift/mean(F_no_drift)-1;
+                    y_label='\DeltaF/F';
+                    fixed_y_scale=30;
+                case 3 % z-score naive
+                    delta_F_no_drift=(F_no_drift-mean(F_no_drift))/std(F_no_drift);
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                case 4 % minimal std for z-score
+                    disp('Under construction')
+                    delta_F_no_drift=(F_no_drift-median(F_no_drift));
+                    
+                    % estimate sigma, minimum from 10s sliding window sigma's
+                    averaging_interval=10; % seconds
+                    nFrames_avg=averaging_interval*round(frame_rate);
+                    if rem(nFrames_avg,2)==1
+                        nFrames_avg=nFrames_avg+1;
+                    end
+                    
+                    sigma_vector=zeros(size(delta_F_no_drift));
+                    for iSample=1:nFrames
+                        if between(iSample,[nFrames_avg/2+1 nFrames-nFrames_avg/2])
+                            sigma_values=delta_F_no_drift(iSample-nFrames_avg/2+1:iSample+nFrames_avg/2);
+                        elseif iSample<nFrames_avg
+                            sigma_values=delta_F_no_drift(1:iSample+nFrames_avg/2);
+                        elseif iSample>nFrames-nFrames_avg
+                            sigma_values=delta_F_no_drift(iSample-nFrames_avg/2+1:end);
+                        else
+                            die
+                        end
+                        sigma_vector(iSample)=std(sigma_values);
+                    end
+                    sigma_est=min(sigma_vector);
+                    delta_F_no_drift=delta_F_no_drift/sigma_est;
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                case 5 % z-score based on e-phys analysis
+                    % find regions without 'spike' and use rest for std and mean calculation
+                    F_temp=F_no_drift-median(F_no_drift);
+                    noiseSTD=median(abs(F_temp))/.6745;
+                    min_heigth_factor=4;
+                    TH=noiseSTD*min_heigth_factor;
+                    selection_vector=F_temp<TH;
+                    mu=mean(F_no_drift(selection_vector));
+                    sigma=std(F_no_drift(selection_vector));
+                    
+                    % Store normalizaion values
+                    self.Activity_traces.normalization_matrix(iROI,1:4)=[iROI extraction_options.calc_delta_f.method mu sigma];
+                    
+                    delta_F_no_drift=(F_no_drift-mu)/sigma;
+                    if 0
+                        %%
+                        T=1:length(F_temp);
+                        plot(T,F_temp)
+                        hold on
+                        plot([0 length(F_temp)],[TH TH])
+                        plot(T(selection_vector==1),F_temp(selection_vector==1),'r')
+                        hold off
+                    end
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                    
                 case 6
                     % use rolling average to select no-modulation parts
                     F_no_drift_smooth=smooth(F_no_drift(blank_frames==0),round(frame_rate*4));
