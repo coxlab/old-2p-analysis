@@ -1376,45 +1376,50 @@ classdef imaging_dataset < handle
                     if ~isfield(temp(end),'timeseries_soma')||isempty(temp(end).timeseries_soma)
                         ROIs=self.extract_traces();
                         self.ROI_definitions(self.ROI_definition_nr).ROI=ROIs;
-                    else % load existing definitions
-                        ROIs=get_ROI_definitions(self);
                     end
-                    
-                    %ROI_vector=cat(1,ROIs.ROI_nr);
-                    nROI=length(ROIs);
-                    nFrames=self.mov_info.nFrames;
-                    
-                    activity_matrix=zeros(nROI,nFrames);
-                    spike_matrix=activity_matrix;
-                    for iROI=1:nROI
-                        trace=self.process_trace(ROIs,iROI);
-                        %subplot(nROI,1,iROI)
-                        %plot(trace)
-                        
-                        activity_matrix(iROI,:)=trace;
-                        
-                        if self.Activity_traces.extraction_options.do_FastNegDeconv==1
-                            %if self.Activity_traces.do_FastNegDeconv==1
-                            %% Fast oopsi
-                            oopsi_options.Ncells=1;
-                            oopsi_options.T=nFrames;
-                            oopsi_options.dt=1/self.mov_info.frame_rate*0.7;
-                            [n_best, P_best, oopsi_options, C]=fast_oopsi(trace,oopsi_options);
-                            spike_matrix(iROI,:)=n_best;
-                        end
-                    end
-                    
-                    self.Activity_traces.activity_matrix=activity_matrix';
-                    self.Activity_traces.spike_matrix=spike_matrix';
-                    self.Activity_traces.oopsi_options=oopsi_options;
-                    
-                    self.elapsed=toc;
-                    self.last_action='do_trace_extraction';
-                    self.updated=1;
                 end
             else
+                % load existing definitions
+                ROIs=get_ROI_definitions(self);
                 disp('Using existing trace_matrix')
             end
+            
+            %ROI_vector=cat(1,ROIs.ROI_nr);
+            nROI=length(ROIs);
+            nFrames=self.mov_info.nFrames;
+            
+            activity_matrix=zeros(nROI,nFrames);
+            spike_matrix=activity_matrix;
+            
+            fprintf('Using extraction method #%d\n',self.Activity_traces.extraction_options.calc_delta_f_method)
+            for iROI=1:nROI
+                trace=self.process_trace(ROIs,iROI);
+                %subplot(nROI,1,iROI)
+                %plot(trace)
+                
+                activity_matrix(iROI,:)=trace;
+                
+                if self.Activity_traces.extraction_options.do_FastNegDeconv==1
+                    %if self.Activity_traces.do_FastNegDeconv==1
+                    %% Fast oopsi
+                    oopsi_options.Ncells=1;
+                    oopsi_options.T=nFrames;
+                    oopsi_options.dt=1/self.mov_info.frame_rate*0.7;
+                    [n_best, P_best, oopsi_options, C]=fast_oopsi(trace,oopsi_options);
+                    spike_matrix(iROI,:)=n_best;
+                end
+            end
+            
+            self.Activity_traces.activity_matrix=activity_matrix';
+            self.Activity_traces.spike_matrix=spike_matrix';
+            self.Activity_traces.oopsi_options=oopsi_options;
+            
+            self.elapsed=toc;
+            self.last_action='do_trace_extraction';
+            self.updated=1;
+            
+            
+            
         end
         
         function reset_trace_matrix(varargin)
@@ -1614,12 +1619,12 @@ classdef imaging_dataset < handle
             end
             
             
-            %switch self.Activity_traces.calc_delta_f_method
+            %switch self.Activity_traces.calc_delta_f_method            
             switch extraction_options.calc_delta_f_method
                 case 0
                     delta_F_no_drift=F_no_drift; % leave signal as is
                     y_label='raw F';
-                    fixed_y_scale=30000;
+                    fixed_y_scale=10000;
                 case 1 % naive way
                     delta_F_no_drift=(F_no_drift-mean(F_no_drift))/mean(F_no_drift);
                     y_label='\DeltaF/F';
@@ -1706,6 +1711,7 @@ classdef imaging_dataset < handle
             end
             extraction_options.y_label=y_label;
             extraction_options.fixed_y_scale=fixed_y_scale;
+            self.Activity_traces.extraction_options=extraction_options;
             %self.Activity_traces.normalization_matrix=normalization_matrix;
             
             delta_F_no_drift(blank_frames)=0;
@@ -2139,7 +2145,7 @@ classdef imaging_dataset < handle
             for iROI=1:nROI
                 subplot(nRows,nCols,iROI)
                 plot(A(:,iROI))
-                axis([1 size(A,1) -10 40])
+                axis([1 size(A,1) self.Activity_traces.extraction_options.fixed_y_scale*-.1 self.Activity_traces.extraction_options.fixed_y_scale])
                 title(sprintf('ROI #%d',iROI))
                 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
