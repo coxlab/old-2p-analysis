@@ -23,9 +23,11 @@ classdef imaging_dataset < handle
         ROI_definitions=struct('ROI',struct(...
             'ROI_nr',[],'base_coord',[],'nCoords',[],'coords',[],...
             'ellipse_properties',[],'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],...
-            'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[],'time_series_neuropil',[])...
+            'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[])...
             );
         ROI_definition_nr=[];
+        
+        ROI_matrix=struct;
         
         Activity_traces=struct('activity_matrix',[],...
             'normalization_matrix',[],...
@@ -86,7 +88,7 @@ classdef imaging_dataset < handle
             self.save_name=fullfile(self.folder_info.save_folder,[self.folder_info.raw_name '.mat']);
         end
         
-                %%% In case we need to change the root_folder to raw files
+        %%% In case we need to change the root_folder to raw files
         function rebase_tif(varargin)
             self=varargin{1};
             if nargin>=2
@@ -94,7 +96,7 @@ classdef imaging_dataset < handle
             else
                 error('Rebase_tif() needs folder to be used as root...')
             end
-            self.file_name=fullfile(new_folder,[self.folder_info.raw_name '.tif']);            
+            self.file_name=fullfile(new_folder,[self.folder_info.raw_name '.tif']);
         end
         
         
@@ -395,65 +397,73 @@ classdef imaging_dataset < handle
             tic
             self=varargin{1};
             
-            if ismac
-                if isempty(self.bitCodes.MWorks_bitCodes)
-                    if nargin>=2
-                        F=varargin{2};
-                    else % if none specified, use first mwk file found in data_folder
-                        %F='2015-07-17_AG02.mwk';
-                        files=scandir(self.folder_info.data_folder,'.mwk');
-                        if isempty(files)
-                            error('No .mwk file found in folder')
-                        else
-                            F=files(1).name;
-                        end
+            if isempty(self.bitCodes.MWorks_bitCodes)
+                if nargin>=2
+                    F=varargin{2};
+                else % if none specified, use first mwk file found in data_folder
+                    files=scandir(self.folder_info.data_folder,'.mwk');
+                    if isempty(files)
+                        error('No .mwk file found in folder')
+                    else
+                        F=files(1).name;
                     end
-                    mwk_file_name=fullfile(self.folder_info.data_folder,F);
+                end
+                mwk_file_name=fullfile(self.folder_info.data_folder,F);
+                
+                if ismac
                     %disp('Reading MWK file...')
                     A=getCodecs(mwk_file_name);
                     event_codec=A.codec;
-                    
-                    %%% Get stim update events
-                    tag_name='#stimDisplayUpdate';
-                    [MW_events,nEvents]=get_events_by_name(mwk_file_name,tag_name,event_codec);
-                    
-                    MW_bitCodes=zeros(nEvents,3);
-                    for iEvent=1:nEvents
-                        event=MW_events(iEvent);
-                        register=1;
-                        if length(event.data)==3
-                            bitCode=event.data{3}.bit_code;
-                        elseif length(event.data)==2
-                            bitCode=event.data{2}.bit_code;
-                        else
-                            % ignore
-                            register=0;
-                        end
-                        if register==1
-                            MW_bitCodes(iEvent,:)=[double(event.time_us)/1e6 double(bitCode) [0;diff(double(event.time_us)/1e6)]];
-                        end
+                else
+                    mat_file_name=strrep(mwk_file_name,'.mwk','.mat');
+                    if exist(mat_file_name,'file')==2
+                        load(mat_file_name,'codecs','event_code_strings','event_code_selection','events')
+                    else
+                        error('No converted .mwk file found for this session...')
                     end
                     
-                    self.bitCodes.MWorks_bitCodes=MW_bitCodes;
-                    self.bitCodes.mwk_file_name=mwk_file_name;
-                    self.bitCodes.event_codec=event_codec;
-                    
-                    self.elapsed=toc;
-                    self.last_action='get_MWorks_bitCodes';
-                    self.updated=1;
-                else
-                    disp('Using existing MWorks_bitCodes...')
+                    event_codec=codecs.codec;
                 end
+                
+                %%% Get stim update events
+                tag_name='#stimDisplayUpdate';
+                [MW_events,nEvents]=get_events_by_name(mwk_file_name,tag_name);
+                
+                MW_bitCodes=zeros(nEvents,3);
+                for iEvent=1:nEvents
+                    event=MW_events(iEvent);
+                    register=1;
+                    if length(event.data)==3
+                        bitCode=event.data{3}.bit_code;
+                    elseif length(event.data)==2
+                        bitCode=event.data{2}.bit_code;
+                    else
+                        % ignore
+                        register=0;
+                    end
+                    if register==1
+                        MW_bitCodes(iEvent,:)=[double(event.time_us)/1e6 double(bitCode) [0;diff(double(event.time_us)/1e6)]];
+                    end
+                end
+                
+                self.bitCodes.MWorks_bitCodes=MW_bitCodes;
+                self.bitCodes.mwk_file_name=mwk_file_name;
+                self.bitCodes.event_codec=event_codec;
+                
+                self.elapsed=toc;
+                self.last_action='get_MWorks_bitCodes';
+                self.updated=1;
             else
-                disp('MWorks magic only works in Matlab for mac...')
+                disp('Using existing MWorks_bitCodes...')
             end
-            
         end
         
         function find_offset(varargin)
             tic
-            if ismac
-                self=varargin{1};
+            self=varargin{1};
+            if isempty(self.bitCodes.MWorks_bitCodes)
+                error('Bitcodes have to be extracted first using the get_MWorks_bitCodes method...')
+            else
                 if isempty(self.bitCodes.offset)
                     A=self.bitCodes.scim_bitCodes(:,2);
                     B=self.bitCodes.MWorks_bitCodes(:,2);
@@ -461,12 +471,10 @@ classdef imaging_dataset < handle
                     [self.bitCodes.max_val,loc]=max(CC);
                     if self.bitCodes.max_val>.99
                         self.bitCodes.offset=loc-length(A)+1;
-                    else                       
-                        
+                    else
                         T_scim=cat(1,self.frame_info(:).timestamp);
-                        
-                        
                         offset_temp=loc-length(A)+1
+                        length(self.bitCodes.MWorks_bitCodes)
                         T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
                         
                         diff(T_scim)
@@ -490,8 +498,6 @@ classdef imaging_dataset < handle
                 else
                     disp('Using existing offset...')
                 end
-            else
-                
             end
         end
         
@@ -548,7 +554,7 @@ classdef imaging_dataset < handle
                 TF=0; % never existed
                 disp('g_frames not found on GPU')
             end
-                        
+            
             if TF==1
                 nFrames=size(g_frames,3);
                 fprintf('%d frames are already loaded to GPU...\n',nFrames)
@@ -572,14 +578,14 @@ classdef imaging_dataset < handle
                 end
             end
         end
-                        
+        
         function find_blank_frames(varargin)
             %%% Check for unusually dark frames, laser power not turned up
             %%% yet.
             tic
             self=varargin{1};
             if isempty(self.mov_info.mean_lum)
-                %info=imfinfo(self.file_name); % never save info, is huge                
+                %info=imfinfo(self.file_name); % never save info, is huge
                 %self.mov_info.mean_lum=zeros(self.mov_info.nFrames,1);
                 %for iFrame=1:self.mov_info.nFrames
                 %    frame=double(imread(self.file_name,iFrame,'info',info,'PixelRegion',{[1 self.mov_info.Height-1],[1 self.mov_info.Width]}));
@@ -607,50 +613,46 @@ classdef imaging_dataset < handle
         function get_exp_type(varargin)
             self=varargin{1};
             
-            if ismac
-                exp_type=[];
-                exp_name='';
+            exp_type=[];
+            exp_name='';
+            
+            %%% Try first to read from the MWorks variable exptype directly
+            tag_name='ExpType';
+            expType_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+            if ~isempty(expType_events)
+                exp_type=mode(cat(1,expType_events.data));
                 
-                %%% Try first to read from the MWorks variable exptype directly
-                tag_name='ExpType';
-                expType_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
+                tag_name='ExpName_short';
+                expName_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
                 if ~isempty(expType_events)
-                    exp_type=mode(cat(1,expType_events.data));
-                    
-                    tag_name='ExpName_short';
-                    expName_events=get_events_by_name(self.bitCodes.mwk_file_name,tag_name,self.bitCodes.event_codec);
-                    if ~isempty(expType_events)
-                        exp_name=expName_events(1).data;
-                    else
-                        exp_name_vector={'RSVP','Retinomapping'};
-                        exp_name=exp_name_vector{exp_type};
-                    end
+                    exp_name=expName_events(1).data;
                 else
-                    %%% Fallback is to look for the existance of specific tags
-                    %%% unique to either experiment
-                    tag_names={self.bitCodes.event_codec.tagname}';
-                    tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
-                    if ~isempty(tag_nr)
-                        exp_type=1; % RSVP
-                        exp_name='RSVP';
-                    end
-                    tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
-                    if ~isempty(tag_nr)
-                        exp_type=2; % Retinomapping
-                        exp_name='Retinomapping';
-                    end
-                    
-                    if isempty(exp_type)
-                        disp('Unable to determine experiment type...')
-                    end
+                    exp_name_vector={'RSVP','Retinomapping'};
+                    exp_name=exp_name_vector{exp_type};
+                end
+            else
+                %%% Fallback is to look for the existance of specific tags
+                %%% unique to either experiment
+                tag_names={self.bitCodes.event_codec.tagname}';
+                tag_nr=find(ismember(tag_names,'stm_pos_x'),1);
+                if ~isempty(tag_nr)
+                    exp_type=1; % RSVP
+                    exp_name='RSVP';
+                end
+                tag_nr=find(ismember(tag_names,'show_vertical_bar'),1);
+                if ~isempty(tag_nr)
+                    exp_type=2; % Retinomapping
+                    exp_name='Retinomapping';
                 end
                 
-                self.Experiment_info.exp_type=exp_type;
-                self.Experiment_info.exp_name=exp_name;
-                self.updated=1;
-            else
-                % no option
+                if isempty(exp_type)
+                    disp('Unable to determine experiment type...')
+                end
             end
+            
+            self.Experiment_info.exp_type=exp_type;
+            self.Experiment_info.exp_name=exp_name;
+            self.updated=1;
         end
         
         function get_MWorks_stimulus_info(varargin)
@@ -1241,11 +1243,11 @@ classdef imaging_dataset < handle
                 ROI.mask_neuropil=mask_neuropil;
                 
                 ROI.timeseries_soma=[];
-                ROI.time_series_neuropil=[];
+                %ROI.time_series_neuropil=[];
                 
-                if isfield(self.ROI_definitions(1).ROI,'timeseries_neuropil')
-                    self.ROI_definitions(1).ROI=rmfield(self.ROI_definitions(1).ROI,'timeseries_neuropil');
-                end
+                %if isfield(self.ROI_definitions(1).ROI,'timeseries_neuropil')
+                %    self.ROI_definitions(1).ROI=rmfield(self.ROI_definitions(1).ROI,'timeseries_neuropil');
+                %end
                 %%% Store ROI properties
                 try
                     self.ROI_definitions(1).ROI(iROI)=ROI;
@@ -1271,7 +1273,7 @@ classdef imaging_dataset < handle
             blank_ROI=struct('ROI',struct(...
                 'ROI_nr',[],'base_coord',[],'nCoords',[],'coords',[],...
                 'ellipse_properties',[],'ellipse_coords',[],'coords_MIP',[],'coords_MIP_plot',[],'center_coords',[],'ellipse_coords_centered',[],...
-                'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[],'time_series_neuropil',[])...
+                'ROI_rect',[],'mask_soma',[],'mask_neuropil',[],'timeseries_soma',[])...
                 );
             
         end
@@ -1298,6 +1300,67 @@ classdef imaging_dataset < handle
         
         
         %%% Do ROI extraction
+        function create_mask_from_ROI(varargin)
+            self=varargin{1};
+            
+            ROIs=get_ROI_definitions(self);
+            N=length(ROIs);
+            
+            %%% loop tru ROIs and create sparse matrix with masks
+            for iROI=1:N
+                FOV_rect_px=self.FOV_info.size_px;
+                
+                stretch_factor=round(self.FOV_info.pixel_size_micron/min(self.FOV_info.pixel_size_micron));
+                stretch_coords=round(fliplr(self.FOV_info.size_px).*stretch_factor);
+                
+                ROI=ROIs(iROI);
+                
+                %%% Construct mask for soma
+                mask_soma=poly2mask(ROI.coords_MIP(:,1),ROI.coords_MIP(:,2),self.FOV_info.size_px(2),self.FOV_info.size_px(1));
+                
+                %%% Construct mask for neuropil
+                mask_soma=imresize(mask_soma,stretch_coords,'nearest');
+                mask_neuropil=bwmorph(mask_soma,'thicken',4)-mask_soma;
+                
+                %%% Resize to original aspect ratio
+                mask_soma=imresize(mask_soma,fliplr(FOV_rect_px),'nearest');
+                mask_neuropil=imresize(mask_neuropil,fliplr(FOV_rect_px),'nearest');
+                
+                %%% Store data
+                self.ROI_matrix(iROI).mask_soma=sparse(mask_soma);
+                self.ROI_matrix(iROI).mask_neuropil=sparse(mask_neuropil);
+                self.ROI_matrix(iROI).data=[iROI ROI.ROI_nr sum(mask_neuropil(:)) sum(mask_soma(:)) sum(mask_neuropil(:))/sum(mask_soma(:))];
+                
+                %%% Add bounding box info
+                P=regionprops(mask_soma,'boundingBox');
+                self.ROI_matrix(iROI).rect_soma=floor(P.BoundingBox);
+                P=regionprops(mask_neuropil,'boundingBox');
+                self.ROI_matrix(iROI).rect_neuropil=floor(P.BoundingBox);
+            end
+            
+            if 0
+                %% Vizualize using this code
+                mask_soma=combine_sparse_masks(self.ROI_matrix,'mask_soma');
+                mask_neuropil=combine_sparse_masks(self.ROI_matrix,'mask_neuropil');
+                
+                figure(132)
+                imshow(imresize(mask_neuropil*.5+mask_soma,stretch_coords,'nearest'),[])
+            end
+        end
+        
+        function clean_neuropil_shell(varargin)
+            % This method removes all pixels from the neuropil shell that
+            % overlap with neighboring cells
+            self=varargin{1};
+            ROIs=get_ROI_definitions(self);
+            N=length(ROIs);
+            mask_soma=combine_sparse_masks(self.ROI_matrix,'mask_soma');
+            for iROI=1:N
+                hole=(self.ROI_matrix(iROI).mask_neuropil+mask_soma) > 1; % find overlapping pixels
+                self.ROI_matrix(iROI).mask_neuropil(hole==1)=0; % reject overlapping pixels
+            end
+        end
+        
         function do_trace_extraction(varargin)
             tic
             self=varargin{1};
@@ -1373,6 +1436,12 @@ classdef imaging_dataset < handle
             fprintf('Loading frames... ')
             %self.file_name
             frames=self.get_frames([],1); % get all frames, apply motion correction
+            %frames=self.get_frames(1:20,1); % get all frames, apply motion correction
+            F=frames(:);
+            H=size(frames,1);
+            W=size(frames,2);
+            nFrames=size(frames,3);
+            
             %nFrames=size(frames,3);
             fprintf('took: %3.1fs\n',toc);
             
@@ -1382,24 +1451,109 @@ classdef imaging_dataset < handle
             fprintf('Extracting %d ROIs data... ',nROI)
             for iROI=1:nROI
                 rect=ROIs(iROI).ROI_rect;
-                vol=frames(rect(2):rect(4),rect(1):rect(3),:);
-                mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
-                res=vol.*mask;
-                ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
-                %squeeze(mean(mean(res,1),2))
                 
-                %figure()
-                %subplot(221)
-                %self.imshow(mean(vol,3))
-                %subplot(222)
-                %self.imshow(mean(res,3))
+                %%% Allow selection of ROI close to border, pad with zeros
+                %%% if over!
+                switch 3
+                    case 1
+                        tic
+                        vol=frames(rect(2):rect(4),rect(1):rect(3),:);
+                        
+                        %%% Extract soma pixels
+                        mask=repmat(ROIs(iROI).mask_soma,1,1,size(vol,3));
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
+                        
+                        %%% Extract neuropil pixels
+                        mask=repmat(ROIs(iROI).mask_neuropil,1,1,size(vol,3));
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_neuropil=squeeze(mean(mean(res,1),2));
+                        %squeeze(mean(mean(res,1),2))
+                        
+                        %figure()
+                        %subplot(221)
+                        %self.imshow(mean(vol,3))
+                        %subplot(222)
+                        %self.imshow(mean(res,3))
+                        %subplot(223)
+                        %self.imshow(mean(res,3))
+                        toc
+                    case 2
+                        tic
+                        % create and store outside contour of soma
+                        % upon extraction, fill this and get indices in
+                        % whole image space
+                        % crop indices outside of image
+                        % repeat indices for nFrames
+                        % extract pixels
+                        % reshape and average per image plane
+                        
+                        %vol=frames(rect(2):rect(4),rect(1):rect(3),:);
+                        w=size(ROIs(iROI).mask_soma,1)/2;
+                        
+                        % get indices in image space
+                        [x,y]=find(ROIs(iROI).mask_soma);
+                        x=x+round(ROIs(iROI).center_coords(1)-w);
+                        y=y+round(ROIs(iROI).center_coords(2)-w);
+                        
+                        % crop indices
+                        x(x<0)=0;x(x>W)=W;
+                        y(y<0)=0;y(y>H)=H;
+                        
+                        % vectorize
+                        indices=y*W+x;
+                        A=zeros(W*H,1);
+                        A(indices)=1;
+                        
+                        % repeat
+                        I=repmat(A,nFrames,1);
+                        
+                        % extract pixels
+                        pixels=F(I==1);
+                        
+                        % reshape and average
+                        response=reshape(pixels,[],nFrames);
+                        
+                        % write to data
+                        ROIs(iROI).timeseries_soma=mean(response)';
+                        size(mean(response)')
+                        toc
+                    case 3
+                        % use newly created sparse matrix as input,
+                        % create bounding box
+                        % extract only that from the 3D frames matrix
+                        % now replicated the selection plane to a matching
+                        % 3D matrix
+                        
+                        rect_soma=self.ROI_matrix(iROI).rect_soma;
+                        mask_soma=self.ROI_matrix(iROI).mask_soma;
+                        rect_neuropil=self.ROI_matrix(iROI).rect_neuropil;
+                        mask_neuropil=self.ROI_matrix(iROI).mask_neuropil;
+                        
+                        %%% Get time series for soma pixels
+                        indices_X=rect_soma(2)+1:rect_soma(2)+rect_soma(4)-1;
+                        indices_Y=rect_soma(1)+1:rect_soma(1)+rect_soma(3)-1;
+                        vol=frames(indices_X,indices_Y,:);
+                        mask=repmat(full(mask_soma(indices_X,indices_Y)),1,1,nFrames);
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_soma=squeeze(mean(mean(res,1),2));
+                        
+                        %%% Get time series for soma pixels
+                        indices_X=rect_neuropil(2)+1:rect_neuropil(2)+rect_neuropil(4)-1;
+                        indices_Y=rect_neuropil(1)+1:rect_neuropil(1)+rect_neuropil(3)-1;
+                        vol=frames(indices_X,indices_Y,:);
+                        mask=repmat(full(mask_neuropil(indices_X,indices_Y)),1,1,nFrames);
+                        res=vol.*mask;
+                        ROIs(iROI).timeseries_neuropil=squeeze(mean(mean(res,1),2));
+                        
+                        if 0
+                            %%
+                            figure(123)
+                            imshow(mean(res,3),[])
+                            colormap(self.green)
+                        end
+                end
                 
-                
-                mask=repmat(ROIs(iROI).mask_neuropil,1,1,size(vol,3));
-                res=vol.*mask;
-                ROIs(iROI).time_series_neuropil=squeeze(mean(mean(res,1),2));
-                %subplot(223)
-                %self.imshow(mean(res,3))
             end
             fprintf('took: %3.1fs\n',toc);
         end
@@ -1417,7 +1571,7 @@ classdef imaging_dataset < handle
             if extraction_options.neuropil_subtraction.use
                 %%% Step 01: get F
                 F_raw=ROI.timeseries_soma;
-                F_neuropil=ROI.time_series_neuropil;
+                F_neuropil=ROI.timeseries_neuropil;
                 
                 if any(blank_frames)
                     F_raw(blank_frames)=mean(F_raw(~blank_frames));
@@ -1462,6 +1616,76 @@ classdef imaging_dataset < handle
             
             %switch self.Activity_traces.calc_delta_f_method
             switch extraction_options.calc_delta_f_method
+                case 0
+                    delta_F_no_drift=F_no_drift; % leave signal as is
+                    y_label='raw F';
+                    fixed_y_scale=30000;
+                case 1 % naive way
+                    delta_F_no_drift=(F_no_drift-mean(F_no_drift))/mean(F_no_drift);
+                    y_label='\DeltaF/F';
+                    fixed_y_scale=30;
+                case 2 % Feinberg
+                    delta_F_no_drift=F_no_drift/mean(F_no_drift)-1;
+                    y_label='\DeltaF/F';
+                    fixed_y_scale=30;
+                case 3 % z-score naive
+                    delta_F_no_drift=(F_no_drift-mean(F_no_drift))/std(F_no_drift);
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                case 4 % minimal std for z-score
+                    disp('Under construction')
+                    delta_F_no_drift=(F_no_drift-median(F_no_drift));
+                    
+                    % estimate sigma, minimum from 10s sliding window sigma's
+                    averaging_interval=10; % seconds
+                    nFrames_avg=averaging_interval*round(frame_rate);
+                    if rem(nFrames_avg,2)==1
+                        nFrames_avg=nFrames_avg+1;
+                    end
+                    
+                    sigma_vector=zeros(size(delta_F_no_drift));
+                    for iSample=1:nFrames
+                        if between(iSample,[nFrames_avg/2+1 nFrames-nFrames_avg/2])
+                            sigma_values=delta_F_no_drift(iSample-nFrames_avg/2+1:iSample+nFrames_avg/2);
+                        elseif iSample<nFrames_avg
+                            sigma_values=delta_F_no_drift(1:iSample+nFrames_avg/2);
+                        elseif iSample>nFrames-nFrames_avg
+                            sigma_values=delta_F_no_drift(iSample-nFrames_avg/2+1:end);
+                        else
+                            die
+                        end
+                        sigma_vector(iSample)=std(sigma_values);
+                    end
+                    sigma_est=min(sigma_vector);
+                    delta_F_no_drift=delta_F_no_drift/sigma_est;
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                case 5 % z-score based on e-phys analysis
+                    % find regions without 'spike' and use rest for std and mean calculation
+                    F_temp=F_no_drift-median(F_no_drift);
+                    noiseSTD=median(abs(F_temp))/.6745;
+                    min_heigth_factor=4;
+                    TH=noiseSTD*min_heigth_factor;
+                    selection_vector=F_temp<TH;
+                    mu=mean(F_no_drift(selection_vector));
+                    sigma=std(F_no_drift(selection_vector));
+                    
+                    % Store normalizaion values
+                    self.Activity_traces.normalization_matrix(iROI,1:4)=[iROI extraction_options.calc_delta_f.method mu sigma];
+                    
+                    delta_F_no_drift=(F_no_drift-mu)/sigma;
+                    if 0
+                        %%
+                        T=1:length(F_temp);
+                        plot(T,F_temp)
+                        hold on
+                        plot([0 length(F_temp)],[TH TH])
+                        plot(T(selection_vector==1),F_temp(selection_vector==1),'r')
+                        hold off
+                    end
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                    
                 case 6
                     % use rolling average to select no-modulation parts
                     F_no_drift_smooth=smooth(F_no_drift(blank_frames==0),round(frame_rate*4));
@@ -1508,7 +1732,7 @@ classdef imaging_dataset < handle
                 load_name=fullfile(folder,files(iFile).name);
                 load(load_name,'session_data')
                 
-                if session_data.is_static_FOV()
+                if session_data.is_static_FOV()&&session_data.mov_info.nFrames>300
                     center_coords(iFile,:)=session_data.FOV_info.coords;
                     valid_FOV(iFile)=1;
                 else
@@ -1527,7 +1751,7 @@ classdef imaging_dataset < handle
                 clusters(sel)=iC;
             end
             clusters(valid_FOV==0)=NaN;
-            %cluster_numbers=1:size(C,1);            
+            %cluster_numbers=1:size(C,1);
             cluster_vector=unique(clusters(~isnan(clusters)));
             nClusters=length(unique(clusters(~isnan(clusters))));
         end
@@ -1894,7 +2118,7 @@ classdef imaging_dataset < handle
                 ROI=CenterRectOnPoint(FOV_rect,center(1),center(2))/1000;
                 %name=session_data.folder_info.raw_name;
                 %name=strrep(name,'_',' ');
-                                
+                
                 circle([0 0],2,100,'r-',2);
                 plotRect(ROI,'k');
                 text(ROI(1)+.05,ROI(2)+.25,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))

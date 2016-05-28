@@ -104,7 +104,7 @@ if session_data.is_static_FOV()
     hold on
     handles.subplots(1).p(1)=plot(-1,-1,'r-'); % all ROIs
     axis off % hide plot labels
-    handles.nROI_preload=200;
+    
     for iROI=1:handles.nROI_preload
         handles.subplots(1).p(10+iROI)=plot(-1,-1,'r-','buttonDownFcn',{@selectROI,iROI}); % individual ROIs
     end

@@ -33,6 +33,9 @@ function step03_ROI_GUI(varargin)
 % BV20150518: allow ROI definitions made by different people, specific
 % ROI_definitions struct based on username
 
+% 2do:
+% - V allow ROI definition closer to the border
+% - V extract other ROIs from neuropil area
 
 %%% Add subfolders
 path_dir=fileparts(mfilename('fullpath'));
@@ -71,7 +74,7 @@ set(handles.figure1,'WindowKeyPressFcn',@keyDownFcn)
 set(handles.figure1,'WindowKeyReleaseFcn',@keyUpFcn)
 set(handles.figure1,'WindowScrollWheelFcn',@scrollFcn)
 
-handles.modifiers=zeros(3,1);
+handles.modifiers=zeros(4,1);
 handles.MIP_type=0;
 handles.MIP_gamma_val=1;
 handles.detail_gamma_val=1;
@@ -81,6 +84,9 @@ handles.status=0;
 blank_im=zeros(512,512);
 handles.subplots(1).fig=subplot(1,2,1,'Parent',graphPanel);
 handles.subplots(1).h(1)=imshow(blank_im);
+
+handles.nROI_preload=400;
+
 % add gamma value buttons
 uicontrol(graphPanel,'Style','pushbutton','units','normalized','position',[.01 .35 .04 .1],'string','^','callback',{@MIP_gamma,'up'})
 uicontrol(graphPanel,'Style','pushbutton','units','normalized','position',[.01 .25 .04 .1],'string','v','callback',{@MIP_gamma,'down'})

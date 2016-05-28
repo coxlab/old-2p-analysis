@@ -25,6 +25,8 @@ nFiles=length(files);
 % Run step 03
 % Rest of pipeline is sort of same
 
+
+
 %ROI_definition_nr=1; % use auto ROIs
 
 for iFile=1:nFiles
@@ -46,21 +48,30 @@ for iFile=1:nFiles
         error('Raw tif files not found, need those for ROI extraction...')
     end
         
-    if session_data.is_static_FOV==1
-        session_data.ROI_definition_nr=ROI_definition_nr;
+    if session_data.is_static_FOV==1&&session_data.mov_info.nFrames>300
+        session_data.ROI_definition_nr=ROI_definition_nr;        
         if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
             
             %session_data.ROI_definition_nr=ROI_definition_nr;
             
+            
+            %%% Create sparse ROI regions based on coords_MIP
+            tic
+            session_data.create_mask_from_ROI()
+            session_data.clean_neuropil_shell()
+            toc
+            
             %%% Extract activity traces
-            %session_data.reset_trace_matrix() % allows to recalculate the traces
+            session_data.reset_trace_matrix() % allows to recalculate the traces
+            session_data.Activity_traces.extraction_options.calc_delta_f_method=0;
             session_data.do_trace_extraction()
-            session_data.save_data()
+            %session_data.save_data()
             %session_data.plot_traces()
             
             %% Extract stimulus relevant information
             %session_data.bitCodes.MWorks_bitCodes=[];
             if ismac==1 % don't try this stuff on the server, use step1b first
+                %%
                 try
                     session_data.get_scim_bitCodes()
                     session_data.get_MWorks_bitCodes()

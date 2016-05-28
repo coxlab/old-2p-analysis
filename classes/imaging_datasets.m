@@ -16,7 +16,7 @@ classdef imaging_datasets < handle
         ROI_definition_nr=[];
         exp_type=[];
         exp_name='';
-        stim_duration=[];        
+        stim_duration=[];
         STIM=[];
         RESP=[];
         SPIKE=[];
@@ -77,7 +77,7 @@ classdef imaging_datasets < handle
                 text(center(1)/1000,center(2)/1000,sprintf('Depth %3.1fµm',session_data.FOV_info.Z_depth))
                 text(ROI(1),ROI(2)+.1,sprintf('#%d',dataset_nr))
             end
-            hold off            
+            hold off
         end
         
         function results=RF_analysis(varargin)
@@ -106,7 +106,7 @@ classdef imaging_datasets < handle
             
             frame_selector_trace=[-6 12];
             %frame_selector_resp=[1 4];
-            frame_selector_resp=round([0 self.stim_duration(1)/1000]*self.frame_rate);            
+            frame_selector_resp=round([0 self.stim_duration(1)/1000]*self.frame_rate);
             
             results.nROIs=length(ROI_vector);
             results.ROI_vector=ROI_vector;
@@ -183,6 +183,63 @@ classdef imaging_datasets < handle
             end
         end
         
+        function results=Analyze_stimulus_selectivity(varargin)
+            self=varargin{1};
+            ROI_nr=varargin{2};
+            selected_positions=varargin{3};
+            
+            results=struct;
+            
+            stim_matrix=parse_conditions(self.STIM(:,5));
+            position_matrix=parse_conditions(self.STIM(:,6));
+            
+            stim_matrix(:,6)=position_matrix(:,5);
+            nStim=12;
+            
+            for iStim=1:nStim
+                sel=stim_matrix(:,5)==iStim&ismember(stim_matrix(:,6),selected_positions);
+                selection_vector=find(sel);
+                nConditions=sum(sel);
+                
+                results.resp(iStim).nConditions=nConditions;
+                if nConditions>=1
+                    for iCond=1:nConditions
+                        frames_vector=stim_matrix(selection_vector(iCond),2:3);
+                        results.resp(iStim).iCondition=iStim;
+                        try
+                            results.resp(iStim).condition_resp(iCond,:)=self.RESP(frames_vector(1):frames_vector(2),ROI_nr);
+                        catch
+                            disp('Wrong number of frames...')
+                        end
+                    end
+                    results.resp(iStim).condition_avg=mean(results.resp(iStim).condition_resp,1);
+                    results.resp(iStim).condition_mean=mean(results.resp(iStim).condition_avg);
+                end
+            end
+            
+            %condition_vector=self.STIM(:,5);
+            %conditions=unique(condition_vector(condition_vector>-1));
+            %nConditions=length(conditions);
+            
+            %condition_matrix=parse_conditions(condition_vector);
+            
+            %% use data from selected positions only
+            %selected_condition_vector=self.STIM(:,6),selected_positions);
+            %selected_condition_matrix=parse_conditions(self.STIM(:,6));
+            %selected_condition_vector=ismember(selected_condition_matrix(:,5),selected_positions);
+            %condition_matrix(selected_condition_vector,:)
+            
+            
+            %nTrials=size(condition_matrix,1); % ignore final trial, because it is rarely complete
+            
+            %frame_selector_trace=[-6 12];
+            %frame_selector_resp=[1 4];
+            %frame_selector_resp=round([0 self.stim_duration(1)/1000]*self.frame_rate);
+            
+            
+            %results=[];
+        end
+        
         function plot_RF_map(varargin)
             self=varargin{1};
             if length(self)>1
@@ -208,7 +265,7 @@ classdef imaging_datasets < handle
                 iROI=ROI_vector(1);
                 onset_times=find(diff(self.STIM(:,3))==1);
                 offset_times=find(diff(self.STIM(:,3))==-1);
-
+                
                 %%% plot trace
                 if results.deconvolve==0
                     y_range=[-5 40];

@@ -19,7 +19,6 @@
 %   CreateUniformDotsIn3DFrustum - Sample dots in 3D frustum uniformly.
 %   CropBlackEdges          - Detects if there are any black edges around an image and returns indices that can be used to cut away these edges.
 %   DeEmptify               - Deletes empty cells or rows from cellarray.
-%   DegToMrad               - Convert angle in degrees to milliradians (mrad).
 %   DescribeComputer        - Print a description of the environment.
 %   DotOffset               - Calculate offsets for a 3D movement. Various per-dot options.
 %   Ellipse                 - Returns a boolean mask in the shape of a (super-) Ellipse.
@@ -36,7 +35,6 @@
 %   GetNumber               - Get a number typed at the keyboard.
 %   GetString               - Get a string typed at the keyboard.
 %   GetSubversionPath       - Return path required to invoke snv.
-%   GetSVNInfo              - Find info on SVN version number of directory or file.
 %   GetWithDefault          - Get string or number with prompt and default value.
 %   GrayIndex               - Any graylevel from black (0) to white (1).
 %   GroupStructArrayByFields - An aid to sorting data kept in structure arrays.
@@ -45,19 +43,13 @@
 %   Ind2Str                 - Converts numbers to characters (decimal to base 26 conversion). Useful for character indices.
 %   Interleave              - Interleaves any number of arrays. Can handle different data types.
 %   IsACell                 - Tests (recursively--cells in cells) if a cell satisfies a user-supplied condition.
-%   IsARM                   - Return if running on a processor with ARM architecture, typically a mobile or embedded system.
-%   IsGLES                  - Return if the current rendering api in use is OpenGL-ES, the "OpenGL Embedded Subset".
-%   IsGLES1                 - Return if the current rendering api in use is OpenGL-ES 1.x.
-%   IsGUI                   - Is the Matlab or Octave GUI enabled in this session?
 %   IsLinux                 - Shorthand for testing whether running under Linux.
 %   IsMinimumOSXVersion     - Query if this is a specific OS/X version or higher.
 %   IsOctave                - Shortand for testing whether running under Octave.
-%   IsOSX                   - Return if running on a Apple OSX operating system.
-%   IsWin                   - Return if running on a MS-Windows operating system.
-%   Is64Bit                 - Return if script is running on a 64-Bit Octave or Matlab.
+%   IsOS9                   - Shorthand for streq(computer,'MAC2').
+%   IsOSX                   - Shorthand for streq(computer,'MAC').
+%   IsWin                   - Shorthand for streq(computer,'PCWIN').
 %   KbMapKey                - Checks if any of specified keys is depressed in a vector returned by KbCheck, KbWait etc.
-%   kPsychGUIWindow         - Flag to ask Screen() to create onscreen windows with behaviour similar to normal GUI windows.
-%   kPsychGUIWindowWMPositioned - Flag to ask Screen() to leave onscreen GUI window placement to the window manager.
 %   LoadIdentityClut        - Loads the identity CLUT on a specified monitor.
 %   log10nw                 - Compute log base 10 without annoying warnings.
 %   MacModelName            - Mac model name, e.g. 'PowerBook G4 15"'.
@@ -69,7 +61,6 @@
 %   MakeSineImage           - Make a sinusoidal image.
 %   MapIndexColorThroughClut - Convert an index color image and clut to a true color image.
 %   MergeCell               - Concatenates contents of input cells element-wise.
-%   MradToDeg               - Convert angle in milliradians (mrad) to degrees.
 %   NameBytes               - Nicely format memory size for human readers.
 %   NameFrequency           - Nicely format clock rate for human readers.
 %   NearestResolution       - Find a screen resolution that most closely matches a requested resolution.
@@ -77,12 +68,10 @@
 %   PackColorImage          - Pack three color planes into one m by n by three matrix.
 %   ProgressBar             - Displays a progress bar in MATLAB's command window.
 %   PsychDebugWindowConfiguration - Enable special debug window configuration to aid single display debugging.
-%   PsychDefaultSetup       - Setup various defaults for Psychtoolbox session.
 %   PsychGPUControl         - Control low-level operating parameters of certain supported GPU's.
 %   PsychNumel              - Drop-in replacement for numel() on old Matlab versions that don't support it.
 %   PsychtoolboxRoot        - Robust way to get path to Psychtoolbox folder, even if renamed.
-%   RemoveMatchingPaths     - Removes folders that contain a given string from the path.
-%   RemoveSVNPaths          - Removes ".svn" folders from the path.
+%   RemoveSVNPaths          - Removes .svn folders from the path.
 %   Replace                 - Perform exact Replace on strings or numeric arrays.
 %   Resolute                - Cuts from and adds to a matrix to make it the specified dimensions.
 %   RestoreCluts            - Restore original CLUT's for all monitors from backups made during LoadIdentityClut().
@@ -129,4 +118,3 @@
 %   ScreenUsesHighGammaBits - Does this card use the high 10 bits of the gamma values?
 %   SCREENWinToFront      - Bring Screen window back in front of Command window.
 %   ShowTiff              - Show a TIFF file, calibrated.
-

@@ -35,8 +35,9 @@ else
         
         %%% Show detail
         if 1
-            %%
-            T=handles.MIP(ROI.ROI_rect(2):ROI.ROI_rect(4),ROI.ROI_rect(1):ROI.ROI_rect(3));
+            %%            
+            %T=handles.MIP(ROI.ROI_rect(2):ROI.ROI_rect(4),ROI.ROI_rect(1):ROI.ROI_rect(3));            
+            T=crop_selection(handles.MIP,fliplr(round(ROI.center_coords)),handles.window_size);
             switch 2
                 case 0
                     % do nothing
@@ -59,6 +60,10 @@ else
             
             fraction=.5;
             T=T/max(T(:));
+            
+            G=bellCurve2(1,size(T)/2+1,size(T)/3,size(T),0);
+            T=T.*G;
+            
             N=double(ROI.mask_neuropil)/max(ROI.mask_neuropil(:))*(1-fraction);
             S=double(ROI.mask_soma)/max(ROI.mask_soma(:))*(1-fraction);
             RGB=cat(3,N,T,S);
@@ -74,9 +79,9 @@ else
         
         %%% Show all ROIs
         %A=cat(1,handles.ROI.coords_MIP_plot);
-        %set(handles.subplots(1).p(1),'xData',A(:,1),'yData',A(:,2));
+        %set(handles.subplots(1).p(1),'xData',A(:,1),'yData',A(:,2));        
         for iROI=1:handles.nROI
-            A=handles.ROI(iROI).coords_MIP;
+            A=handles.ROI(iROI).coords_MIP;            
             set(handles.subplots(1).p(10+iROI),'xData',A(:,1),'yData',A(:,2));
         end        
         set(handles.subplots(1).p(2),'xData',ROI.coords_MIP(:,1),'yData',ROI.coords_MIP(:,2));

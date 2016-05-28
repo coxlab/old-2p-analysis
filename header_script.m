@@ -9,15 +9,37 @@ if isunix==1
         root_folder=fullfile('/home/',user_name,'/Dropbox (coxlab)/'); % temp location
     end
 else % 2p windows
-    [~, user_name] = system('whoami');user_name=user_name(1:end-1);
-    %root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
-    root_folder='D:\Dropbox (coxlab)'; % seagate external drive
+    user_name=getenv('username');
+    switch getenv('computername')
+        case 'BKRUNCH'
+             root_folder='Q:\data\'; % quadraraid
+        case 'BEN-PC'
+            root_folder='C:\Users\LBP\Dropbox (coxlab)';
+        case 'COXLAB-2P'
+             root_folder='D:\Dropbox (coxlab)'; % seagate external drive
+        otherwise
+            [~, user_name] = system('whoami');user_name=user_name(1:end-1);
+            switch user_name
+                case 'ben-pc\lbp'
+                    root_folder='C:\Users\LBP\Dropbox (coxlab)';
+                otherwise
+                    %root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
+                    root_folder='D:\Dropbox (coxlab)'; % seagate external drive
+            end
+    end
 end
 
 % define data folder
-data_root=fullfile(root_folder,'2p-data');
-mworks_folder=fullfile(root_folder,'Analysis/Scripting/Matlab');
-dataset_root=fullfile(root_folder,'2p-datasets');
+switch getenv('computername')
+    case 'BKRUNCH'
+        data_root=fullfile(root_folder,'2photon\reg');
+        mworks_folder=fullfile(root_folder,'Analysis/Scripting/Matlab');
+        dataset_root=fullfile(root_folder,'2p-datasets');
+    otherwise
+        data_root=fullfile(root_folder,'2p-data');
+        mworks_folder=fullfile(root_folder,'Analysis/Scripting/Matlab');
+        dataset_root=fullfile(root_folder,'2p-datasets');
+end
 
 % Add code for MWK analysis scripts
 addpath(genpath(mworks_folder))
@@ -65,16 +87,19 @@ switch 0
             %exp_name='2015-08-19_AH02'; % need ROIs
             
             
-            %exp_name='2015-08-07_AH03';
+            %exp_name='2015-08-07_AH03'; % still downloading tif files
+            %exp_name='2015-08-07_AH03/FOV01'; % new structure on NAS/Volume1/2photon/2p-data/raw
+            
+            
             %exp_name='2015-08-10_AH03';
-            % exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up
+            exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up, did we do this? nopes
             %exp_name='2015-08-19_AH03';
             %exp_name='2015-08-21_AH03'; % funky eyedrift up
             
             %exp_name='2015-08-14_AH05'; % need ROIs
             %exp_name='2015-08-20_AH05'; % need ROIs
             %exp_name='2015-09-01_AH05'; % need ROIs
-            exp_name='2015-09-02_AH05'; % need ROIs
+            %exp_name='2015-09-02_AH05'; % need ROIs
             
             
             %exp_name='2015-08-18_AH06'; % fix bit Codes
@@ -95,6 +120,24 @@ switch 0
             %exp_name='20150502_jrat3/Session23-25';
             %exp_name='20150502_JR0013';
             
+            
+            % Vincent lab data
+            % ETL
+            %exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed/plane01'; % werkt
+            %X exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed_plane02'; % ugly
+            %X exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed2_plane01'; % looks a lot like plane02 reversed
+            %exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed2/plane02'; % looks like plane 01 reversed
+            %exp_name='151218_KS154_etl_2P_KS/run03_movingbars_cardinal/plane01'; % plane 01!
+            %exp_name='151218_KS154_etl_2P_KS/run03_movingbars_cardinal/plane02'; % plane 01 again... no switches?
+            
+            % cell
+            %exp_name='150119_XH039_2P_XH\sf1_8dir_full';
+            
+            %exp_name='150206_MS049_2P_MS\run01_checkers2048'; % memory errors
+            %exp_name='150122_KS127_2P_KS\run03_sf_tf_V1'; % lot's of processes
+            %exp_name='150123_KS127_2P_KS\run02_retinotopy_V1';
+            
+            %exp_name='141221_DM044_2P_DM\run02_blank';
         end
         %data_folder=['/Users/' user_name '/Dropbox (coxlab)/2p-data/' exp_name];
         data_folder=fullfile(data_root,exp_name);
@@ -109,6 +152,7 @@ switch 0
 end
 %cd(root_folder)
 
+
 % suppress output so we can run in -nojvm mode
 animal_ID=exp_name(12:15);
 %session_date=datevec(exp_name(1:11));
@@ -116,6 +160,9 @@ plot_it=0;
 save_it=1;
 use_GPU=0;
 use_custom_ROI_defs=1; % Relevant for step 3 (GUI)
+
+exp_name_txt=strrep(exp_name,'_',' ');
+exp_name_txt=strrep(exp_name_txt,'\',': ');
 
 
 % display current working folder
@@ -128,7 +175,10 @@ if use_custom_ROI_defs==1
         case 'benvermaercke'
             ROI_definition_nr=2;
         case 'ben'
-            ROI_definition_nr=2; % on the server
+            ROI_definition_nr=2; % on the server | bkrunch
+        case 'ben-pc\lbp'
+            ROI_definition_nr=2; % KUL workstation
+            
         case 'juliana'
             ROI_definition_nr=3;
             
