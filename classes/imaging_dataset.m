@@ -1676,7 +1676,7 @@ classdef imaging_dataset < handle
                     sigma=std(F_no_drift(selection_vector));
                     
                     % Store normalizaion values
-                    self.Activity_traces.normalization_matrix(iROI,1:4)=[iROI extraction_options.calc_delta_f.method mu sigma];
+                    self.Activity_traces.normalization_matrix(iROI,1:4)=[iROI extraction_options.calc_delta_f_method mu sigma];
                     
                     delta_F_no_drift=(F_no_drift-mu)/sigma;
                     if 0
@@ -2149,6 +2149,7 @@ classdef imaging_dataset < handle
                 title(sprintf('ROI #%d',iROI))
                 set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
+            title(self.Activity_traces.extraction_options.y_label)
         end
         
         function CC=corr_traces(varargin)
