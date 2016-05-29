@@ -61,12 +61,17 @@ for iFile=1:nFiles
             session_data.clean_neuropil_shell()
             toc
             
-            %%% Extract activity traces
-            session_data.reset_trace_matrix() % allows to recalculate the traces
-            session_data.Activity_traces.extraction_options.calc_delta_f_method=0;
+            %% Extract activity traces
+            %session_data.reset_trace_matrix() % allows to recalculate the traces
+            session_data.Activity_traces.extraction_options.calc_delta_f_method=6;
             session_data.do_trace_extraction()
-            %session_data.save_data()
-            %session_data.plot_traces()
+            
+            
+            % to check how traces look:
+            session_data.plot_traces()
+            
+            % save if you like the results:
+            session_data.save_data()
             
             %% Extract stimulus relevant information
             %session_data.bitCodes.MWorks_bitCodes=[];
