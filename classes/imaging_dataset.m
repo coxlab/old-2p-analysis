@@ -2147,9 +2147,9 @@ classdef imaging_dataset < handle
                 plot(A(:,iROI))
                 axis([1 size(A,1) self.Activity_traces.extraction_options.fixed_y_scale*-.1 self.Activity_traces.extraction_options.fixed_y_scale])
                 title(sprintf('ROI #%d',iROI))
-                set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+                ylabel(self.Activity_traces.extraction_options.y_label)
+                set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})                
             end
-            title(self.Activity_traces.extraction_options.y_label)
         end
         
         function CC=corr_traces(varargin)
