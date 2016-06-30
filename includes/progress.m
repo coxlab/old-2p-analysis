@@ -24,14 +24,14 @@ else
     blockSize=round(nIterations/6);
 end
 if nargin>=2
-    if mod(iteration,blockSize)==1
+    if mod(iteration,blockSize)==2
         fprintf('Progress: %04d / %04d (%03.2f%%)\n',[iteration nIterations iteration/nIterations*100])
         drawnow
     end
 end
 
 if nargin>=3
-    if mod(iteration,blockSize)==1
+    if mod(iteration,blockSize)==2
         elapsed=etime(clock,startTime);
         perIteration=elapsed/iteration;
         remaining=perIteration*(nIterations-iteration);
@@ -42,7 +42,7 @@ if nargin>=3
 end
 
 if nargin>=4
-    if mod(iteration,blockSize)==1
+    if mod(iteration,blockSize)==2
         disp('Extra info:')
         disp(sci(userData,2))
         drawnow
