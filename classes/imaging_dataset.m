@@ -474,6 +474,7 @@ classdef imaging_dataset < handle
                     else
                         T_scim=cat(1,self.frame_info(:).timestamp);
                         offset_temp=loc-length(A)+1
+                        length(self.bitCodes.MWorks_bitCodes)
                         T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
                         
                         diff(T_scim)
@@ -1375,45 +1376,50 @@ classdef imaging_dataset < handle
                     if ~isfield(temp(end),'timeseries_soma')||isempty(temp(end).timeseries_soma)
                         ROIs=self.extract_traces();
                         self.ROI_definitions(self.ROI_definition_nr).ROI=ROIs;
-                    else % load existing definitions
-                        ROIs=get_ROI_definitions(self);
                     end
-                    
-                    %ROI_vector=cat(1,ROIs.ROI_nr);
-                    nROI=length(ROIs);
-                    nFrames=self.mov_info.nFrames;
-                    
-                    activity_matrix=zeros(nROI,nFrames);
-                    spike_matrix=activity_matrix;
-                    for iROI=1:nROI
-                        trace=self.process_trace(ROIs,iROI);
-                        %subplot(nROI,1,iROI)
-                        %plot(trace)
-                        
-                        activity_matrix(iROI,:)=trace;
-                        
-                        if self.Activity_traces.extraction_options.do_FastNegDeconv==1
-                            %if self.Activity_traces.do_FastNegDeconv==1
-                            %% Fast oopsi
-                            oopsi_options.Ncells=1;
-                            oopsi_options.T=nFrames;
-                            oopsi_options.dt=1/self.mov_info.frame_rate*0.7;
-                            [n_best, P_best, oopsi_options, C]=fast_oopsi(trace,oopsi_options);
-                            spike_matrix(iROI,:)=n_best;
-                        end
-                    end
-                    
-                    self.Activity_traces.activity_matrix=activity_matrix';
-                    self.Activity_traces.spike_matrix=spike_matrix';
-                    self.Activity_traces.oopsi_options=oopsi_options;
-                    
-                    self.elapsed=toc;
-                    self.last_action='do_trace_extraction';
-                    self.updated=1;
                 end
             else
+                % load existing definitions
+                ROIs=get_ROI_definitions(self);
                 disp('Using existing trace_matrix')
             end
+            
+            %ROI_vector=cat(1,ROIs.ROI_nr);
+            nROI=length(ROIs);
+            nFrames=self.mov_info.nFrames;
+            
+            activity_matrix=zeros(nROI,nFrames);
+            spike_matrix=activity_matrix;
+            
+            fprintf('Using extraction method #%d\n',self.Activity_traces.extraction_options.calc_delta_f_method)
+            for iROI=1:nROI
+                trace=self.process_trace(ROIs,iROI);
+                %subplot(nROI,1,iROI)
+                %plot(trace)
+                
+                activity_matrix(iROI,:)=trace;
+                
+                if self.Activity_traces.extraction_options.do_FastNegDeconv==1
+                    %if self.Activity_traces.do_FastNegDeconv==1
+                    %% Fast oopsi
+                    oopsi_options.Ncells=1;
+                    oopsi_options.T=nFrames;
+                    oopsi_options.dt=1/self.mov_info.frame_rate*0.7;
+                    [n_best, P_best, oopsi_options, C]=fast_oopsi(trace,oopsi_options);
+                    spike_matrix(iROI,:)=n_best;
+                end
+            end
+            
+            self.Activity_traces.activity_matrix=activity_matrix';
+            self.Activity_traces.spike_matrix=spike_matrix';
+            self.Activity_traces.oopsi_options=oopsi_options;
+            
+            self.elapsed=toc;
+            self.last_action='do_trace_extraction';
+            self.updated=1;
+            
+            
+            
         end
         
         function reset_trace_matrix(varargin)
@@ -1613,8 +1619,78 @@ classdef imaging_dataset < handle
             end
             
             
-            %switch self.Activity_traces.calc_delta_f_method
+            %switch self.Activity_traces.calc_delta_f_method            
             switch extraction_options.calc_delta_f_method
+                case 0
+                    delta_F_no_drift=F_no_drift; % leave signal as is
+                    y_label='raw F';
+                    fixed_y_scale=10000;
+                case 1 % naive way
+                    delta_F_no_drift=(F_no_drift-mean(F_no_drift))/mean(F_no_drift);
+                    y_label='\DeltaF/F';
+                    fixed_y_scale=30;
+                case 2 % Feinberg
+                    delta_F_no_drift=F_no_drift/mean(F_no_drift)-1;
+                    y_label='\DeltaF/F';
+                    fixed_y_scale=30;
+                case 3 % z-score naive
+                    delta_F_no_drift=(F_no_drift-mean(F_no_drift))/std(F_no_drift);
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                case 4 % minimal std for z-score
+                    disp('Under construction')
+                    delta_F_no_drift=(F_no_drift-median(F_no_drift));
+                    
+                    % estimate sigma, minimum from 10s sliding window sigma's
+                    averaging_interval=10; % seconds
+                    nFrames_avg=averaging_interval*round(frame_rate);
+                    if rem(nFrames_avg,2)==1
+                        nFrames_avg=nFrames_avg+1;
+                    end
+                    
+                    sigma_vector=zeros(size(delta_F_no_drift));
+                    for iSample=1:nFrames
+                        if between(iSample,[nFrames_avg/2+1 nFrames-nFrames_avg/2])
+                            sigma_values=delta_F_no_drift(iSample-nFrames_avg/2+1:iSample+nFrames_avg/2);
+                        elseif iSample<nFrames_avg
+                            sigma_values=delta_F_no_drift(1:iSample+nFrames_avg/2);
+                        elseif iSample>nFrames-nFrames_avg
+                            sigma_values=delta_F_no_drift(iSample-nFrames_avg/2+1:end);
+                        else
+                            die
+                        end
+                        sigma_vector(iSample)=std(sigma_values);
+                    end
+                    sigma_est=min(sigma_vector);
+                    delta_F_no_drift=delta_F_no_drift/sigma_est;
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                case 5 % z-score based on e-phys analysis
+                    % find regions without 'spike' and use rest for std and mean calculation
+                    F_temp=F_no_drift-median(F_no_drift);
+                    noiseSTD=median(abs(F_temp))/.6745;
+                    min_heigth_factor=4;
+                    TH=noiseSTD*min_heigth_factor;
+                    selection_vector=F_temp<TH;
+                    mu=mean(F_no_drift(selection_vector));
+                    sigma=std(F_no_drift(selection_vector));
+                    
+                    % Store normalizaion values
+                    self.Activity_traces.normalization_matrix(iROI,1:4)=[iROI extraction_options.calc_delta_f_method mu sigma];
+                    
+                    delta_F_no_drift=(F_no_drift-mu)/sigma;
+                    if 0
+                        %%
+                        T=1:length(F_temp);
+                        plot(T,F_temp)
+                        hold on
+                        plot([0 length(F_temp)],[TH TH])
+                        plot(T(selection_vector==1),F_temp(selection_vector==1),'r')
+                        hold off
+                    end
+                    y_label='Z(F)';
+                    fixed_y_scale=30;
+                    
                 case 6
                     % use rolling average to select no-modulation parts
                     F_no_drift_smooth=smooth(F_no_drift(blank_frames==0),round(frame_rate*4));
@@ -1635,6 +1711,7 @@ classdef imaging_dataset < handle
             end
             extraction_options.y_label=y_label;
             extraction_options.fixed_y_scale=fixed_y_scale;
+            self.Activity_traces.extraction_options=extraction_options;
             %self.Activity_traces.normalization_matrix=normalization_matrix;
             
             delta_F_no_drift(blank_frames)=0;
@@ -2068,9 +2145,10 @@ classdef imaging_dataset < handle
             for iROI=1:nROI
                 subplot(nRows,nCols,iROI)
                 plot(A(:,iROI))
-                axis([1 size(A,1) -10 40])
+                axis([1 size(A,1) self.Activity_traces.extraction_options.fixed_y_scale*-.1 self.Activity_traces.extraction_options.fixed_y_scale])
                 title(sprintf('ROI #%d',iROI))
-                set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
+                ylabel(self.Activity_traces.extraction_options.y_label)
+                set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})                
             end
         end
         

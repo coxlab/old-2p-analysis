@@ -88,9 +88,11 @@ switch 0
             
             
             %exp_name='2015-08-07_AH03'; % still downloading tif files
+            %exp_name='2015-08-07_AH03/FOV01'; % new structure on NAS/Volume1/2photon/2p-data/raw
+            
+            
             %exp_name='2015-08-10_AH03';
-            %exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning
-            %up, did we do this? nopes
+            exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up, did we do this? nopes
             %exp_name='2015-08-19_AH03';
             %exp_name='2015-08-21_AH03'; % funky eyedrift up
             
@@ -121,7 +123,7 @@ switch 0
             
             % Vincent lab data
             % ETL
-            exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed/plane01'; % werkt
+            %exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed/plane01'; % werkt
             %X exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed_plane02'; % ugly
             %X exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed2_plane01'; % looks a lot like plane02 reversed
             %exp_name='151218_KS154_etl_2P_KS/run03_ori8_reversed2/plane02'; % looks like plane 01 reversed
