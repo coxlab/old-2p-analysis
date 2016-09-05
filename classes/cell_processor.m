@@ -134,7 +134,11 @@ classdef cell_processor < handle
             STIM=varargin{2};
             self.condition_matrix=parse_conditions(STIM(:,4));
             A=parse_conditions(STIM(:,5));
-            self.condition_matrix(:,6)=A(:,5);
+            try
+                self.condition_matrix(:,6)=A(:,5);
+            catch
+                [size(A) size(self.condition_matrix)]
+            end
             B=parse_conditions(STIM(:,6));
             self.condition_matrix(:,7)=B(:,5);
             self.nTrials=size(self.condition_matrix,1);

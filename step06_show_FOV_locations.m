@@ -7,7 +7,7 @@ clc
 
 header_script
 
-animal_ID='AH03';
+animal_ID='AH05';
 
 offset_correction=[0 0];
 switch animal_ID
@@ -25,6 +25,7 @@ switch animal_ID
         calibration_file_name='/Users/benvermaercke/CoxLab/MotionGUI/Calibrations/AH05_20150901.mat';
         
         offset_correction_conditional=[-.4 .5];
+        
         % first session was done in window coords, with correction from
         % AH03 still active, in the second session, we reversed this
         % correction.
@@ -72,6 +73,25 @@ for iFolder=1:nFolders
         load(load_name,'session_data')
         if session_data.is_static_FOV()==1
             S(count)=session_data;
+                        
+            export_MIP=1;
+            if export_MIP==1
+                %% export MIP for each FOV
+                save_folder='/Users/benvermaercke/Desktop/AH05_MIPs';
+                MIP_matrix.data(:,:,count)=session_data.MIP_std;                
+                MIP_matrix.coords(count,:)=session_data.FOV_info.center;
+                im=session_data.MIP_std.data;
+                im=calc_gamma(im,.5);
+                im=im/max(im(:))*256;
+                
+                im=imresize(im,[size(im,1)*2 size(im,2)],'bicubic');
+                im=cat(3,im*0,im,im*0);
+                save_name=sprintf('%s/FOV%03d_%d_%d.png',save_folder,[count round(session_data.FOV_info.center)]);
+                savec(save_name)
+                imwrite(uint8(im),save_name)
+            end
+            
+            % increase counter
             count=count+1;
         else
             fprintf('skipping %s\n',session_names(iSession).name)
@@ -80,26 +100,31 @@ for iFolder=1:nFolders
 end
 
 
+
 %% collect coords
 nSessions=length(S);
-coords=[];
+coords=zeros(nSessions,2);
 count=1;
 for iSession=1:nSessions
-    [f,folder_name]=fileparts(S(iSession).folder_info.data_folder);
-    folder_name
-    switch folder_name        
-        case '2015-08-20_AH05'
-            coords(count,:)=S(iSession).FOV_info.center+offset_correction_conditional*1e3;
+    folder_name=S(iSession).folder_info.data_folder
+    parts=strsplit(folder_name,{'\','/'});
+    %[f,folder_name]=fileparts();
+    parts{end}
+    switch parts{end}
+        case '2015-08-14_AH05'
+        %case '2015-08-20_AH05'
+            coords(count,:)=S(iSession).FOV_info.center;
             count=count+1;
         otherwise
-            coords(count,:)=S(iSession).FOV_info.center;
+            coords(count,:)=S(iSession).FOV_info.center+offset_correction_conditional*1e3;
             count=count+1;
     end
     
 end
 %%
-
+(coords(:,1)-offset_correction_conditional(1)*1e3)*1e3
 coords_unique=round(unique(coords,'rows','stable'))/10;
+
 
 switch 2
     case 1
@@ -117,7 +142,12 @@ switch 2
         im=flipud(im(:,:,2));
         session_data.imshow(im,.7)
         hold on
-        plot(coords_unique(:,1)+offset(1),coords_unique(:,2)+offset(2),'rs')
+        for iCoord=1:size(coords_unique,1)
+            x=coords_unique(iCoord,1)+offset(1);
+            y=coords_unique(iCoord,2)+offset(2);
+            plot(x,y,'rs')
+            text(x+20,y,sprintf('%d',iCoord))
+        end
         hold off
         axis xy
         axis equal

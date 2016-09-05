@@ -10,34 +10,38 @@ clc
 % a variety of methods. The extracted time traces of these ROIs will then
 % be combined with stimulation and other datastreams.
 
-%%% Set a folder containing raw tiffs you want to crunch
-%exp_name='2015-08-07_AH03/FOV01';
+%% Split planes if needed: before running this pipeline
 
-exp_name='160201_KS159_2P_KS/run03_ori8_V1_random';
-lab_name='boninlab';
+%%% Set a folder containing raw tiffs you want to crunch
+switch 1
+    case 1
+        exp_name='2015-08-07_AH03/FOV01';
+        lab_name='coxlab';
+    case 2
+        exp_name='160201_KS159_2P_KS/run03_ori8_V1_random';
+        lab_name='boninlab';
+end
+
 
 %%% Get parameters for running the rest of the pipeline
 %parameters=set_parameters(exp_name); % function
 dataset=data_object(exp_name);   % object
 %dataset.toggle_save();
-%%
 
+
+%% Pre-process / Reconstruct
 switch lab_name
     case 'coxlab'
         %%% For coxlab galvo data:
-        %%% Split data and flyback line, 
-        %split_data(parameters)
-        dataset.preprocess_data()        
-        
+        %%% Split data and flyback line,
         %%% Dump in respective folders (rec and MWorks)
-        %parameters.dirs.rec_folder
-        %parameters.dirs.MWorks_folder        
+        dataset.preprocess_data()
         
     case 'boninlab'
         %%% For bonin lab res data: reconstruct
         dataset.reconstruct_data()
 end
-dataset.save_data()
+dataset.save_data() % update log file
 
 %% Do motion correction using parameters set earlier
 dataset.register_data()

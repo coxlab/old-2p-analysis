@@ -6,7 +6,7 @@ header_script
 files=scandir(fullfile(data_folder,'data_analysis'),'mat');
 nFiles=length(files);
 
-% 
+%
 % files=scandir(data_folder,'tif');
 % nFiles=length(files);
 % tif_in_sub_folder=0;
@@ -31,6 +31,7 @@ nFiles=length(files);
 
 for iFile=1:nFiles
     
+    
     %save_name=fullfile(data_folder,'data_analysis',files(iFile).name)
     %save_name=strrep(save_name,'tif','mat');
     load_name=fullfile(data_folder,'data_analysis',files(iFile).name);
@@ -47,9 +48,9 @@ for iFile=1:nFiles
     else
         error('Raw tif files not found, need those for ROI extraction...')
     end
-        
+    
     if session_data.is_static_FOV==1&&session_data.mov_info.nFrames>300
-        session_data.ROI_definition_nr=ROI_definition_nr;        
+        session_data.ROI_definition_nr=ROI_definition_nr;
         if length(session_data.ROI_definitions)>=ROI_definition_nr&&~isempty(session_data.ROI_definitions(ROI_definition_nr).ROI(1).ROI_nr)
             
             %session_data.ROI_definition_nr=ROI_definition_nr;
@@ -68,7 +69,7 @@ for iFile=1:nFiles
             
             
             % to check how traces look:
-            session_data.plot_traces()
+            %session_data.plot_traces()
             
             % save if you like the results:
             session_data.save_data()
@@ -78,10 +79,12 @@ for iFile=1:nFiles
             if ismac==1 % don't try this stuff on the server, use step1b first
                 %%
                 try
+                    %session_data.bitCodes.scim_bitCodes=[];
                     session_data.get_scim_bitCodes()
+                    %session_data.bitCodes.MWorks_bitCodes=[];
                     session_data.get_MWorks_bitCodes()
+                    %session_data.bitCodes.offset=[]
                     session_data.find_offset()
-                    session_data.get_MWorks_bitCodes()
                     session_data.get_exp_type()
                     session_data.get_MWorks_stimulus_info()
                     session_data.create_stim_matrix()
@@ -96,7 +99,8 @@ for iFile=1:nFiles
             end
             
         else
-            error('No custom ROIs defined... Run Step03 first!!!')
+            iFile
+            error('No custom ROIs defined... Complete Step03 first!!!')
             %step03_ROI_GUI()
             
         end

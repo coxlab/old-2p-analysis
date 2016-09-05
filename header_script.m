@@ -46,6 +46,12 @@ addpath(genpath(mworks_folder))
 path_dir=fileparts(mfilename('fullpath'));
 addpath(genpath(path_dir))
 
+
+tools_dir='/Users/benvermaercke/Bonin/2p_repo/tools';
+addpath(genpath(tools_dir))
+tools_dir='/Users/benvermaercke/Dropbox (coxlab)/tools';
+addpath(genpath(tools_dir))
+
 red=[linspace(0,1,256)' zeros(256,1) zeros(256,1)];
 green=[zeros(256,1) linspace(0,1,256)' zeros(256,1)];
 
@@ -92,14 +98,14 @@ switch 0
             
             
             %exp_name='2015-08-10_AH03';
-            exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up, did we do this? nopes
+            %exp_name='2015-08-14_AH03'; % session bitcodes needs cleaning up, did we do this? nopes
             %exp_name='2015-08-19_AH03';
             %exp_name='2015-08-21_AH03'; % funky eyedrift up
             
-            %exp_name='2015-08-14_AH05'; % need ROIs
-            %exp_name='2015-08-20_AH05'; % need ROIs
-            %exp_name='2015-09-01_AH05'; % need ROIs
-            %exp_name='2015-09-02_AH05'; % need ROIs
+            %exp_name='2015-08-14_AH05'; % 
+            %exp_name='2015-08-20_AH05'; % 
+            exp_name='2015-09-01_AH05'; % fix bitcodes: lsb was always off
+            %exp_name='2015-09-02_AH05'; % no bitcodes... constant 15
             
             
             %exp_name='2015-08-18_AH06'; % fix bit Codes
@@ -120,6 +126,8 @@ switch 0
             %exp_name='20150502_jrat3/Session23-25';
             %exp_name='20150502_JR0013';
             
+            
+            %exp_name='20160321_JR005W'; % bitcode issues
             
             % Vincent lab data
             % ETL
