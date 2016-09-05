@@ -58,7 +58,13 @@ for iClust=1:nClusters
         
         
         %% Check whether same number of ROIs are defined in all sessions
-        ROI_counts=S.get_ROI_counts(ROI_definition_nr);
+        try
+            S.get_ROI_counts(ROI_definition_nr)
+            ROI_counts=S.get_ROI_counts(ROI_definition_nr);
+        catch
+            rethrow(lasterror)
+            %error('error getting ROI counts...')
+        end
         if all(ROI_counts==ROI_counts(1))
             nROIs=mean(ROI_counts);
         else
