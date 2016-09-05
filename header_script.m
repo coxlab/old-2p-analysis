@@ -7,7 +7,7 @@ if isunix==1
     else % on linux, define path to current location of dropbox folders
         [~, user_name] = system('whoami');user_name=user_name(1:end-1);
         %root_folder=fullfile('/home/',user_name,'/Dropbox (coxlab)/'); % temp location
-        root_folder='/nas/volume1/2photon/2p-data'; % temp location
+        root_folder='/nas/volume1/2photon/'; % temp location
     end
 else % 2p windows
     user_name=getenv('username');
