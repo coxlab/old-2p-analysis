@@ -1,4 +1,4 @@
-% depends on 
+% depends on
 % - get_MWorks_info(), which needs an (converted) *.mwk file
 % - the existance of frame_info.bitCode_vector, extracted directly from the flyback line
 
@@ -7,6 +7,7 @@ clc
 
 nBits=4;
 are_you_sure=true;
+batch_files=1;
 scenario=1;
 switch scenario
     case 1
@@ -15,7 +16,7 @@ switch scenario
         data_root='/Users/benvermaercke/Desktop/coxlab_stuff/data_analysis';
 end
 
-batch_files=1;
+
 switch batch_files
     case 1
         f=uigetdir(data_root,'Select your datafile');
@@ -44,6 +45,10 @@ for iFile=1:nFiles
             
             if session_data.is_static_FOV==1
                 fprintf('>> Checking file: %s \n',load_name)
+                
+                %session_data.folder_info.data_folder
+                session_data.rebase(data_root)
+                %session_data.folder_info.data_folder
                 
                 scim_bitCodes=mode(cat(2,session_data.frame_info.bitCode_vector))';
                 bit_codes_unique=unique(scim_bitCodes);
@@ -85,15 +90,15 @@ for iFile=1:nFiles
                 try
                     session_data.get_MWorks_info()
                 catch
-                    session_data.folder_info.data_folder=data_root;
-                    session_data.get_MWorks_info('20160321_JR005W_rsvp.mwk')
+                    %session_data.folder_info.data_folder=data_root;
+                    %session_data.get_MWorks_info('20160321_JR005W_rsvp.mwk')
                 end
                 MWorks_info=session_data.bitCodes.MWorks_info;
                 T=double(cat(1,MWorks_info.timestamp));
                 MWorks_bitCodes=[cat(1,MWorks_info.event_id) T cat(1,MWorks_info.bit_code) [diff(T)/1e6;3]];
                 
                 
-                %% resample MWorks bitCodes to scim frame_rate, 
+                %% resample MWorks bitCodes to scim frame_rate,
                 frame_rate=session_data.mov_info.frame_rate;
                 nFrames_per_bitCode=round(MWorks_bitCodes(:,4)*frame_rate);
                 MWork_bitCodes_interpolated=[0 0];
@@ -105,14 +110,14 @@ for iFile=1:nFiles
                 cc=normxcorr2(scim_bitCodes,MWork_bitCodes_interpolated(:,2));
                 [max_corr,loc]=max(cc);
                 if max_corr<1
-                    max_corr                    
+                    max_corr
                 end
-                offset=loc-length(scim_bitCodes);                
+                offset=loc-length(scim_bitCodes);
                 new_vector=MWork_bitCodes_interpolated(offset+1:offset+length(scim_bitCodes),:);
                 
                 if 0
                     %%
-                    plot([new_vector(:,2) scim_bitCodes]) 
+                    plot([new_vector(:,2) scim_bitCodes])
                 end
                 
                 %% now from this new_vector, we can recall all stim properties
@@ -148,7 +153,7 @@ for iFile=1:nFiles
                 
                 %% put new matrix in Experiment_info
                 session_data.Experiment_info.cond_matrix=cond_matrix;
-                if ~isfield(session_data.Experiment_info,'stim_matrix_bkp')
+                if isfield(session_data.Experiment_info,'stim_matrix') && ~isfield(session_data.Experiment_info,'stim_matrix_bkp')
                     % store original in backup
                     session_data.Experiment_info.stim_matrix_bkp=session_data.Experiment_info.stim_matrix;
                 end
@@ -161,7 +166,7 @@ for iFile=1:nFiles
                     B=session_data.Experiment_info.stim_matrix;
                     all(eq(A(:),B(:)))
                 end
-                    
+                
                 
                 if are_you_sure==true
                     %% when we are sure this code is solid, save it to the data file
@@ -169,7 +174,7 @@ for iFile=1:nFiles
                     session_data.updated=1;
                     session_data.save_data()
                 else
-                    %cond_matrix(:,[1 3:9])                   
+                    %cond_matrix(:,[1 3:9])
                     session_data.Experiment_info
                 end
             end
