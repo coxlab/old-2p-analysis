@@ -466,30 +466,139 @@ classdef imaging_dataset < handle
             else
                 if isempty(self.bitCodes.offset)
                     A=self.bitCodes.scim_bitCodes(:,2);
-                    B=self.bitCodes.MWorks_bitCodes(:,2);
-                    CC=normxcorr2(A,B);
-                    [self.bitCodes.max_val,loc]=max(CC);
-                    if self.bitCodes.max_val>.99
-                        self.bitCodes.offset=loc-length(A)+1;
+                    
+                    if length(unique(A))==16                        
+                        B=self.bitCodes.MWorks_bitCodes(:,2);
                     else
-                        T_scim=cat(1,self.frame_info(:).timestamp);
-                        offset_temp=loc-length(A)+1
-                        length(self.bitCodes.MWorks_bitCodes)
-                        T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
-                        
-                        diff(T_scim)
-                        diff(T_MWorks)
-                        
-                        
-                        D_scim=diff(T_scim);
-                        subplot(211)
-                        %plot((1:length(D_scim))/6.2,D_scim)
-                        plot(D_scim)
-                        subplot(212)
-                        plot(diff(T_MWorks))
-                        %[(1:length(A))' B(offset_temp:offset_temp+length(A)-1) A]
-                        error('no good match found')
-                        self.bitCodes.offset=offset_temp;
+                        self.bitCodes.offset=-1;
+                        warning('Found issue in the bitCodes, run fix_missing_bitCodes')
+%                         %%% make MWorks codes show the same defect as
+%                         %%% the scim codes - in this case, least
+%                         %%% significant bit was disabled
+%                         B=floor((self.bitCodes.MWorks_bitCodes(:,2))/2)*2;
+%                         sel=[0;diff(B)]==0;
+%                         B(sel)=[];
+%                         
+%                         %%% ok, now find match and recover actual codes
+%                         %%% in scim series
+%                         CC=normxcorr2(A,B);
+%                         [self.bitCodes.max_val,loc]=max(CC);
+%                         offset=loc-length(A)+1; % based on the reduced matrix
+%                         
+%                         %%% find offset in full matrix
+%                         MW_reduced=self.bitCodes.MWorks_bitCodes(~sel,:);
+%                         %size(MW_reduced)
+%                         idx=[offset offset+length(A)-1];
+%                         time_values=MW_reduced(idx,1);
+%                         time_slice=between(self.bitCodes.MWorks_bitCodes(:,1),time_values'+[0 .5]);
+%                         M=self.bitCodes.MWorks_bitCodes(time_slice,:);
+%                         M(:,1)=M(:,1)-min(M(:,1));
+%                         M(:,3)=[0;diff(M(:,1))];
+%                         M(:,4)=sel(time_slice);
+%                         
+%                         M(~sel(time_slice),5)=self.bitCodes.scim_bitCodes(:,1);
+%                         M(sel(time_slice),5)=-1;
+%                         M(~sel(time_slice),6)=self.bitCodes.scim_bitCodes(:,2);
+%                         M(~sel(time_slice),7)=self.bitCodes.scim_bitCodes(:,3);
+%                         %M
+%                         
+%                         
+%                         %%% restore scim series using times from MWorks
+%                         new_scim_bitCodes=[M(:,5) M(:,2) M(:,3) M(:,7)];
+%                         missing=new_scim_bitCodes(:,1)==-1;
+%                         %lines_to_solve=new_scim_bitCodes(missing,:)
+%                         line_nrs=find(missing);
+%                         nLines=length(line_nrs);
+%                         for iLine=1:nLines
+%                             line_nr=line_nrs(iLine);
+%                             
+%                             fixing=new_scim_bitCodes(line_nr-1:line_nr+1,:);
+%                             context=round(fixing(:,4));
+%                             if context(1)==1&&context(3)==3
+%                                 new_scim_bitCodes(line_nr,4)=2;
+%                                 new_scim_bitCodes(line_nr+1,4)=1;
+%                             elseif context(1)==2&&context(3)==3
+%                                 new_scim_bitCodes(line_nr,4)=1;
+%                                 new_scim_bitCodes(line_nr+1,4)=2;
+%                             elseif context(1)==3&&context(3)==1
+%                                 new_scim_bitCodes(line_nr-1,4)=1;
+%                                 new_scim_bitCodes(line_nr,4)=2;
+%                             else
+%                                 %disp('unable to solve this case:')
+%                                 %fixing
+%                             end
+%                         end
+%                         
+%                         % overwrite the existing scim_bitCodes matrix
+%                         self.bitCodes.scim_bitCodes=new_scim_bitCodes;
+%                         
+%                         A=self.bitCodes.scim_bitCodes(:,2);
+%                         B=self.bitCodes.MWorks_bitCodes(:,2);
+%                         %[size(A) size(B)]
+%                         
+%                         %
+%                         %                             MW=self.bitCodes.MWorks_bitCodes(~sel,:);
+%                         %                             MW(:,2)=B;
+%                         %                             idx=offset:offset+size(A)-1;
+%                         %                             M=MW(idx,:);
+%                         %                             %M(:,1)=M(:,1)-min(M(:,1));
+%                         %                             M(:,3)=[0;diff(M(:,1))];
+%                         
+%                         
+%                         %                             %self.bitCodes.scim_bitCodes
+%                         %                             N=self.bitCodes.scim_bitCodes;
+%                         %                             C=[M N]
+%                         %                             %C(1:20,:)
+%                         %
+%                         %                             %%% Find full range of MW codes including
+%                         %                             %%% location of missing values
+%                         %                             full=between(self.bitCodes.MWorks_bitCodes(:,1),C([1 end],1)'+[-1 1]);
+%                         %                             idx_full=offset:offset+sum(full)-1;
+%                         %                             M=self.bitCodes.MWorks_bitCodes(idx_full,:);
+%                         %                             M(:,1)=M(:,1)-min(M(:,1));
+%                         %                             [C(:,2) M(1:size(C,1),2)]
+%                         %
+%                         %                             sum(sel)
+%                         %                             die
+%                         %
+%                         %                             %%% now create a holes matrix
+%                         %                             holes=zeros(length(idx_full),4);
+%                         %                             holes(sel(idx_full),:)=-1;
+%                         %                             holes(:,2)=M(:,2);
+%                         %                             holes(:,3)=floor(M(:,2)/2)*2;
+%                         %                             holes(1:size(N,1),4)=N(:,2);
+%                         %                             holes
+%                         %                             %size(holes)
+%                         %                             %sum(~sel(idx_full))
+%                         %                             %T(~sel(idx_full),:)=N
+%                         %                             sum(holes)
+%                         %                             die
+%                     end
+%                     
+%                     % find offset by using crosscorrelation
+%                     CC=normxcorr2(A,B);
+%                     [self.bitCodes.max_val,loc]=max(CC);
+%                     if self.bitCodes.max_val>.99
+%                         self.bitCodes.offset=loc-length(A)+1;
+%                     else
+%                         T_scim=cat(1,self.frame_info(:).timestamp);
+%                         offset_temp=loc-length(A)+1
+%                         length(self.bitCodes.MWorks_bitCodes)
+%                         T_MWorks=self.bitCodes.MWorks_bitCodes(offset_temp:offset_temp+length(A)-1,1);
+%                         
+%                         %diff(T_scim)
+%                         %diff(T_MWorks)
+%                         
+%                         D_scim=diff(T_scim);
+%                         subplot(211)
+%                         %plot((1:length(D_scim))/6.2,D_scim)
+%                         plot(D_scim)
+%                         subplot(212)
+%                         plot(diff(T_MWorks))
+%                         %[(1:length(A))' B(offset_temp:offset_temp+length(A)-1) A]
+%                         self.bitCodes.max_val
+%                         error('no good match found')
+%                         self.bitCodes.offset=offset_temp;
                     end
                     
                     self.elapsed=toc;
@@ -498,6 +607,109 @@ classdef imaging_dataset < handle
                 else
                     disp('Using existing offset...')
                 end
+            end
+        end
+        
+        
+        function get_MWorks_info(varargin)
+            tic
+            self=varargin{1};
+            
+            if ~isfield(self.bitCodes,'MWworks_info') || isempty(self.bitCodes.MWorks_info)
+                if nargin>=2
+                    F=varargin{2};
+                else % if none specified, use first mwk file found in data_folder
+                    files=scandir(self.folder_info.data_folder,'.mwk');
+                    if isempty(files)
+                        error('No .mwk file found in folder')
+                    else
+                        F=files(1).name;
+                    end
+                end
+                mwk_file_name=fullfile(self.folder_info.data_folder,F);
+                
+                if ismac
+                    %disp('Reading MWK file...')
+                    A=getCodecs(mwk_file_name);
+                    event_codec=A.codec;
+                else
+                    mat_file_name=strrep(mwk_file_name,'.mwk','.mat');
+                    if exist(mat_file_name,'file')==2
+                        load(mat_file_name,'codecs','event_code_strings','event_code_selection','events')
+                    else
+                        error('No converted .mwk file found for this session...')
+                    end
+                    
+                    event_codec=codecs.codec;
+                end
+                
+                %%% Get stim update events
+                tag_name='#stimDisplayUpdate';
+                [MW_events,nEvents]=get_events_by_name(mwk_file_name,tag_name);
+                
+                %stimulus_data=self.Experiment_info.stimulus_data;
+                MWorks_info=struct();
+                event_nr=0;
+                for iEvent=1:nEvents
+                    event=MW_events(iEvent);
+                    %stim_duration=diff([self.bitCodes.MWorks_bitCodes(self.bitCodes.offset-1+iEvent) self.bitCodes.MWorks_bitCodes(self.bitCodes.offset+iEvent)]);
+                    
+                    if isempty(event.data{1})
+                        %disp('No data...')
+                    else                   
+                        event_nr=event_nr+1;
+                        MWorks_info(iEvent).event_nr=event_nr;
+                        MWorks_info(iEvent).event_id=iEvent;                        
+                        MWorks_info(iEvent).timestamp=double(event.time_us);
+                        MWorks_info(iEvent).bit_code=double(event.data{end}.bit_code);
+                        %MWorks_info(iEvent).stim_duration=stim_duration;
+                        switch length(event.data)
+                            case 2 % blank
+                                MWorks_info(iEvent).stim_present=0;
+                            case 3 % stim
+                                MWorks_info(iEvent).stim_present=1;
+                                MWorks_info(iEvent).stim_id=str2double(event.data{2}.name)+1;
+                                MWorks_info(iEvent).size_x=event.data{2}.size_x;
+                                MWorks_info(iEvent).size_y=event.data{2}.size_y;
+                                MWorks_info(iEvent).pos_x=event.data{2}.pos_x;
+                                MWorks_info(iEvent).pos_y=event.data{2}.pos_y;
+                                MWorks_info(iEvent).position_nr=self.get_position_number([MWorks_info(iEvent).pos_x MWorks_info(iEvent).pos_y]);
+                                MWorks_info(iEvent).rotation=event.data{2}.rotation;
+                                nPositions=32;
+                                MWorks_info(iEvent).condition_nr=(MWorks_info(iEvent).stim_id-1)*nPositions+MWorks_info(iEvent).position_nr;
+                            otherwise
+                                error('Unexpected amount of fields in event data...')
+                        end
+                    end
+                end
+                
+%                 MW_bitCodes=zeros(nEvents,3);
+%                 for iEvent=1:nEvents
+%                     event=MW_events(iEvent);
+%                     register=1;
+%                     if length(event.data)==3
+%                         bitCode=event.data{3}.bit_code;
+%                     elseif length(event.data)==2
+%                         bitCode=event.data{2}.bit_code;
+%                     else
+%                         % ignore
+%                         register=0;
+%                     end
+%                     if register==1
+%                         MW_bitCodes(iEvent,:)=[double(event.time_us)/1e6 double(bitCode) [0;diff(double(event.time_us)/1e6)]];
+%                     end
+%                 end
+                
+                self.bitCodes.MWorks_info=MWorks_info;
+                %self.bitCodes.MWorks_bitCodes=MW_bitCodes;
+                %self.bitCodes.mwk_file_name=mwk_file_name;
+                %self.bitCodes.event_codec=event_codec;
+                
+                self.elapsed=toc;
+                self.last_action='get_MWorks_info';
+                self.updated=1;
+            else
+                disp('Using existing MWorks_bitCodes...')
             end
         end
         
@@ -658,6 +870,7 @@ classdef imaging_dataset < handle
         function get_MWorks_stimulus_info(varargin)
             self=varargin{1};
             
+            %mean(eq(self.bitCodes.scim_bitCodes(:,2),self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),2)))            
             if mean(eq(self.bitCodes.scim_bitCodes(:,2),self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),2)))>.99
                 stim_times=self.bitCodes.MWorks_bitCodes(self.bitCodes.offset:self.bitCodes.offset-1+size(self.bitCodes.scim_bitCodes,1),1);
                 %stim_times([1 end]); % these time are sufficient to capture all events for this experiment
@@ -739,9 +952,15 @@ classdef imaging_dataset < handle
             stimulus_data=self.Experiment_info.stimulus_data;
             % map each event to a range of frames
             %A=self.bitCodes.scim_bitCodes; % fixed!
-            B=mode(reshape(self.bitCodes.scim_bitCodes_raw,self.bitCodes.nBitCodes,[]))'; % BV20150816:this line had a 50 hardcoded as nBitCodes, made sessions with different frame_rate return randomized results
-            %B=clean_up_bitCodes_raw();
             
+            %B=self.bitCodes.scim_bitCodes(:,2); % 160827: BV, we optimized these in case of lost pxClock bits
+            %B=clean_up_bitCodes_raw();
+%             if isfield(self.bitCodes,'scim_bitCodes_reconstructed')
+%                 B=self.bitCodes.scim_bitCodes_reconstructed(:,2); % 160904: BV created and tested fix_missing_bitCodes.m
+%                 disp('Using reconstructed bitCodes!')
+%             else
+            B=mode(reshape(self.bitCodes.scim_bitCodes_raw,self.bitCodes.nBitCodes,[]))'; % BV20150816:this line had a 50 hardcoded as nBitCodes, made sessions with different frame_rate return randomized results
+%             end
             trial_mapping=self.expand_trial_numbers(B);
             stim_matrix=zeros(self.mov_info.nFrames,10)-1;
             for iTrial=1:length(stimulus_data)
@@ -1300,8 +1519,8 @@ classdef imaging_dataset < handle
         
         
         %%% Do ROI extraction
-        function create_mask_from_ROI(varargin)
-            self=varargin{1};
+        function create_mask_from_ROI(self,varargin)
+            %self=varargin{1};
             
             ROIs=get_ROI_definitions(self);
             N=length(ROIs);
@@ -1619,7 +1838,7 @@ classdef imaging_dataset < handle
             end
             
             
-            %switch self.Activity_traces.calc_delta_f_method            
+            %switch self.Activity_traces.calc_delta_f_method
             switch extraction_options.calc_delta_f_method
                 case 0
                     delta_F_no_drift=F_no_drift; % leave signal as is
@@ -1719,6 +1938,43 @@ classdef imaging_dataset < handle
             trace=delta_F_no_drift;
         end
         
+        function varargout=get_ROI_definitions(self,varargin)
+            
+            %% are we sure this is safe?
+            if nargin>=2&&~isempty(varargin{1})
+                self.ROI_definition_nr=varargin{1};
+            end
+            
+            if isfield(self,'ROI_definitions')
+                if isfield(self.ROI_definitions,'ROI_nr')
+                    %disp('Reading old data format')
+                    ROIs=self.ROI_definitions;
+                end
+                
+                if isfield(self.ROI_definitions,'ROI')
+                    %disp('Reading new data format')
+                    ROIs=self.ROI_definitions(self.ROI_definition_nr).ROI;
+                end
+                
+                varargout{1}=ROIs;
+            elseif isprop(self,'ROI_definitions')
+                if isfield(self.ROI_definitions,'ROI')
+                    ROIs=self.ROI_definitions(self.ROI_definition_nr).ROI;
+                    
+                    if ~isempty(ROIs(1).ROI_nr)
+                        varargout{1}=ROIs;
+                    else
+                        varargout{1}=[];
+                    end
+                else
+                    varargout{1}=[];
+                end
+            else
+                error('No field "ROIs" found...')
+            end
+            
+        end
+        
         
         %%% Join datasets
         function [clusters,cluster_vector,nClusters,files]=find_FOV_clusters(varargin)
@@ -1762,12 +2018,13 @@ classdef imaging_dataset < handle
             nClusters=length(unique(clusters(~isnan(clusters))));
         end
         
-        function ROI_counts=get_ROI_counts(varargin)
-            self=varargin{1};
-            nSessions=length(self);
+        function ROI_counts=get_ROI_counts(all_sessions,varargin)
+            %all=varargin{1};
+            nSessions=length(all_sessions);
             ROI_counts=zeros(nSessions,1);
             for iSession=1:nSessions
-                ROIs=get_ROI_definitions(self(iSession));
+                iSession
+                ROIs=all_sessions(iSession).get_ROI_definitions();
                 %ROIs=self(iSession).ROI_definitions(self.ROI_definition_nr).ROI;
                 ROI_counts(iSession)=length(ROIs);
             end
@@ -1802,7 +2059,7 @@ classdef imaging_dataset < handle
                 RESP=[];
                 SPIKE=[];
                 for iSession=1:nSessions
-                    M=self(iSession).Experiment_info.stim_matrix;
+                    M=self(iSession).Experiment_info.stim_matrix;                    
                     R=self(iSession).Activity_traces.activity_matrix;
                     S=self(iSession).Activity_traces.spike_matrix;
                     
@@ -2148,7 +2405,7 @@ classdef imaging_dataset < handle
                 axis([1 size(A,1) self.Activity_traces.extraction_options.fixed_y_scale*-.1 self.Activity_traces.extraction_options.fixed_y_scale])
                 title(sprintf('ROI #%d',iROI))
                 ylabel(self.Activity_traces.extraction_options.y_label)
-                set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})                
+                set(gca,'ButtonDownFcn',{@switchFcn,get(gca,'position')})
             end
         end
         
