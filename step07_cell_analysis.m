@@ -106,7 +106,7 @@ end
 invariance_avg=cat(1,cell_data.invariance_avg);
 %%
 analysis_variable_names={'Responsive','Selective positions','Azimuth','Elevation','RF size','Cell Size','Sparseness','Invariance','Angle'};
-analysis_variable=9;
+analysis_variable=1;
 
 %sel1=false(nCells,1);
 sel1=responsive_positions>0;
@@ -115,7 +115,7 @@ switch analysis_variable
     case 1
         sel2=responsive_positions>0;
         %sel2=responsive_positions>0;
-    case 2
+    case 2 
         sel2=responsive_positions>4;
         %figure(334)
         %MAP_avg=mean(cat(3,cell_data(sel2).RF_map_TH),3);
@@ -137,8 +137,8 @@ switch analysis_variable
         
     case 9
         %V1_coords=[5899 8957 ; 5888 6444 ; 7521 8957];
-        %V1_coords=[5790 6160 ; 5790 9140 ; 7770 9140];
-        %sel2=inpolygon(cell_locations(:,1),cell_locations(:,2),V1_coords(:,1),V1_coords(:,2));
+        V1_coords=[5790 6160 ; 5790 9140 ; 7770 9140];
+        sel2=inpolygon(cell_locations(:,1),cell_locations(:,2),V1_coords(:,1),V1_coords(:,2));
         %case 9
         % combos
     case 10
@@ -200,7 +200,7 @@ switch which_space
         inclusion_radius=125; % if selection_region is circle
         nCells_min=3; % minimal number of cells before doing analysis
         
-        switch 2
+        switch 1
             case 1
                 X=cell_locations(:,1);
                 Y=cell_locations(:,2);
