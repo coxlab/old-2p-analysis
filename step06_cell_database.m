@@ -2,7 +2,7 @@ clear all
 clc
 
 header_script
-animal_ID='AH03';
+animal_ID='AH05';
 plot_it=0;
 save_data=1;
 
@@ -84,6 +84,7 @@ for iFile=1:nFiles
             
             %%% Build condition matrix
             cell_data(iROI).build_condition_matrix(dataset.STIM)
+            
             %trace=dataset.RESP(:,iROI);
             trace=dataset.SPIKE(:,iROI);
             cell_data(iROI).add_trace(trace)            
