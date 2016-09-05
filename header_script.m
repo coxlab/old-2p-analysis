@@ -6,7 +6,8 @@ if isunix==1
         root_folder=fullfile('/Users',user_name,'/Dropbox (coxlab)');
     else % on linux, define path to current location of dropbox folders
         [~, user_name] = system('whoami');user_name=user_name(1:end-1);
-        root_folder=fullfile('/home/',user_name,'/Dropbox (coxlab)/'); % temp location
+        %root_folder=fullfile('/home/',user_name,'/Dropbox (coxlab)/'); % temp location
+        root_folder='/nas/volume1/2photon/2p-data'; % temp location
     end
 else % 2p windows
     user_name=getenv('username');
@@ -104,7 +105,7 @@ switch 0
             
             %exp_name='2015-08-14_AH05'; % 
             %exp_name='2015-08-20_AH05'; % 
-            exp_name='2015-09-01_AH05'; % fix bitcodes: lsb was always off
+            %exp_name='2015-09-01_AH05'; % fix bitcodes: lsb was always off
             %exp_name='2015-09-02_AH05'; % no bitcodes... constant 15
             
             
