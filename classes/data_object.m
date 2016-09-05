@@ -159,6 +159,7 @@ classdef data_object < handle
         end
         
         function reconstruct_data(self,varargin)
+            error('function not finished...')
             t0=clock;
             nFiles=length(self.files);
             
